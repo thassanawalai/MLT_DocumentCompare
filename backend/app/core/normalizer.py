@@ -1,9 +1,9 @@
 import re
 
-def normalize_text(text: str) -> str:
+def normalize_text(text: str | None) -> str:
     """
-    ฟังก์ชันทำความสะอาดข้อมูล (Case-Sensitive)
-    พร้อมตั้งกฎยกเว้น (Exception) ให้แปลงเฉพาะคำว่า TEL และ FAX เป็นมาตรฐานเดียวกัน
+    ฟังก์ชันสำหรับทำความสะอาดและแปลงข้อมูลให้อยู่ในรูปแบบมาตรฐาน
+    เพื่อใช้ในการเปรียบเทียบข้อมูลแบบ 100%
     """
     if not text:
         return ""
@@ -11,21 +11,29 @@ def normalize_text(text: str) -> str:
     cleaned = str(text)
     
     # 1. กฎอนุโลมเฉพาะคำ (Standardize specific words)
-    # (?i) คือการสั่งให้ Regex มองข้ามตัวพิมพ์เล็ก-ใหญ่ (Ignore Case)
-    # \b คือ Word Boundary ป้องกันการไปแปลงคำอื่นที่มีอักษรติดกัน (เช่น ไม่ให้เปลี่ยน hoTEL)
-    cleaned = re.sub(r'(?i)\btel\b', 'TEL', cleaned)
-    cleaned = re.sub(r'(?i)\bfax\b', 'FAX', cleaned)
+    cleaned = re.sub(r'\btel\b', 'TEL', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'\bfax\b', 'FAX', cleaned, flags=re.IGNORECASE)
     # ลบคำนำหน้า Voyage Number (เช่น V. , V , VOY. , VOY)
     cleaned = re.sub(r'\b(V|VOY)\.?\s*', '', cleaned, flags=re.IGNORECASE)    
     
     # 2. จัดการตัวเลขและหน่วยวัด
     # 2.1 ลบ comma ที่เป็น thousand separator (เช่น 18,808 -> 18808)
-    # ใช้ lookbehind (?<=\d) และ lookahead (?=\d) เพื่อให้แน่ใจว่า comma อยู่ระหว่างตัวเลข
     cleaned = re.sub(r'(?<=\d),(?=\d)', '', cleaned)
     
     # 2.2 ลบหน่วยวัดที่พบบ่อย (Weight/Measurement units)
-    # \b คือ word boundary, i คือ ignore case
-    cleaned = re.sub(r'\b(KGS|KGM|CBM|CASES|CASE)\b', '', cleaned, flags=re.IGNORECASE)
+    # ใช้ (?<![a-zA-Z]) (Negative Lookbehind) แทน \b เพื่อให้ลบหน่วยที่ติดกับตัวเลขได้ (เช่น 100KGS) 
+    # แต่ยังคงป้องกันการลบกลางคำ (เช่น SOMECASESTUDY) ได้เหมือนเดิม
+    cleaned = re.sub(r'(?<![a-zA-Z])(KGS|KGM|CBM|CASES|CASE)\b', '', cleaned, flags=re.IGNORECASE)
+    
+    # --- แปลงรูปแบบตัวเลขให้เป็นมาตรฐาน (แก้ปัญหา '123.450' vs '123.45') ---
+    try:
+        float_value = float(cleaned.strip())
+        if float_value.is_integer():
+            cleaned = str(int(float_value))
+        else:
+            cleaned = str(float_value)
+    except (ValueError, TypeError):
+        pass
     
     # 3. ลบอักขระพิเศษที่ไม่ต้องการ (เช่น * และ +)
     cleaned = re.sub(r'[*+]', '', cleaned)

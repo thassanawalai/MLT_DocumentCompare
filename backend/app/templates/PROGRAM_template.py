@@ -102,9 +102,9 @@ TEMPLATE = {
         "anchor_text": "Kind of Packg",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 30,
+        "offset_y": 50,
         "width": 45,
-        "height": 100
+        "height": 60
     },
 
     "description_of_good": {

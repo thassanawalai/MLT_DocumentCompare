@@ -47,9 +47,11 @@ const DocumentPane = ({
   useEffect(() => {
     if (selectedField && fileData?.data?.[selectedField]) {
       const { bbox } = parseFieldData(fileData.data[selectedField]);
-      if (bbox && containerRef.current) {
+      // หาก bbox เป็น Array ให้ใช้กล่องแรกเป็นจุดอ้างอิงในการเลื่อนจอ
+      const firstBbox = Array.isArray(bbox) ? bbox[0] : bbox;
+      if (firstBbox && containerRef.current) {
         containerRef.current.scrollTo({
-          top: (bbox.y * scale) - 50,
+          top: (firstBbox.y * scale) - 50,
           behavior: 'smooth'
         });
       }
@@ -59,9 +61,15 @@ const DocumentPane = ({
   const renderBoxes = () => {
     if (!fileData || !fileData.data) return null;
 
-    return Object.entries(fileData.data).map(([key, item]) => {
-      const { bbox } = parseFieldData(item);
-      if (!bbox || bbox.x === undefined) return null;
+    // ใช้ flatMap เพื่อให้สามารถ render หลายกล่องจาก field เดียวได้
+    return Object.entries(fileData.data).flatMap(([key, item]) => {
+      const { bbox: rawBbox } = parseFieldData(item);
+      // แปลง bbox ให้เป็น Array เสมอ เพื่อให้จัดการง่าย
+      const bboxes = Array.isArray(rawBbox) ? rawBbox : (rawBbox ? [rawBbox] : []);
+
+      if (bboxes.length === 0) {
+        return []; // ถ้าไม่มี bbox ก็ไม่ต้องวาดอะไร
+      }
 
       const mismatch = isFieldMismatch(key);
 
@@ -94,44 +102,50 @@ const DocumentPane = ({
         zIndex = 2;
       }
 
-      return (
-        <div
-          key={`box-${key}`}
-          onClick={() => setSelectedField(key)}
-          onMouseEnter={() => setHoveredField(key)}
-          onMouseLeave={() => setHoveredField(null)}
-          style={{
-            position: 'absolute',
-            left: `${bbox.x * scale}px`,
-            top: `${bbox.y * scale}px`,
-            width: `${bbox.width * scale}px`,
-            height: `${bbox.height * scale}px`,
-            backgroundColor: bgColor, // สีไฮไลต์จะทำงานตรงนี้
-            border: `2px solid ${borderColor}`,
-            cursor: 'pointer',
-            pointerEvents: 'auto', 
-            zIndex: zIndex,
-            transition: 'all 0.2s ease-in-out'
-          }}
-        >
-          {(isHovered || mismatch) && (
-            <span style={{
+      // วนลูปวาดทุกกล่องที่อยู่ใน bboxes array
+      return bboxes.map((box, index) => {
+        if (!box || box.x === undefined) return null;
+
+        return (
+          <div
+            key={`box-${key}-${index}`} // สร้าง key ที่ไม่ซ้ำกัน
+            onClick={() => setSelectedField(key)}
+            onMouseEnter={() => setHoveredField(key)}
+            onMouseLeave={() => setHoveredField(null)}
+            style={{
               position: 'absolute',
-              top: '-18px',
-              left: '-2px',
-              backgroundColor: borderColor,
-              color: '#fff',
-              fontSize: '10px',
-              padding: '2px 4px',
-              borderRadius: '2px',
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none' 
-            }}>
-              {key.replace(/_/g, ' ')}
-            </span>
-          )}
-        </div>
-      );
+              left: `${box.x * scale}px`,
+              top: `${box.y * scale}px`,
+              width: `${box.width * scale}px`,
+              height: `${box.height * scale}px`,
+              backgroundColor: bgColor,
+              border: `2px solid ${borderColor}`,
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              zIndex: zIndex,
+              transition: 'all 0.2s ease-in-out'
+            }}
+          >
+            {/* แสดงชื่อฟิลด์ที่กล่องแรกของกลุ่มเท่านั้น เพื่อไม่ให้รก */}
+            {(isHovered || mismatch) && index === 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-18px',
+                left: '-2px',
+                backgroundColor: borderColor,
+                color: '#fff',
+                fontSize: '10px',
+                padding: '2px 4px',
+                borderRadius: '2px',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none'
+              }}>
+                {key.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+        );
+      });
     });
   };
 
