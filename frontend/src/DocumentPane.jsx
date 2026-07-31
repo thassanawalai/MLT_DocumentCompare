@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-// ฟังก์ชันช่วยดึงข้อความ (เอามาไว้ในไฟล์นี้ด้วย คอมโพเนนต์จะได้ทำงานจบในตัวมันเอง)
+// ฟังก์ชันช่วยดึงข้อความ
 const parseFieldData = (val) => {
   if (val === null || val === undefined || val === '') return { text: '', bbox: null };
   if (typeof val === 'object') {
@@ -63,10 +63,8 @@ const DocumentPane = ({
       const { bbox } = parseFieldData(item);
       if (!bbox || bbox.x === undefined) return null;
 
-      // 1. เช็ก mismatch แค่รอบเดียวพอ!
       const mismatch = isFieldMismatch(key);
 
-      // 2. ฟังก์ชันช่วยเช็กว่าอยู่กลุ่มเดียวกันไหม
       const isSameGroup = (fieldA, fieldB) => {
         if (!fieldA || !fieldB) return false;
         const baseA = fieldA.split('_')[0];
@@ -74,46 +72,65 @@ const DocumentPane = ({
         return baseA === baseB;
       };
 
-      // 3. เอามาเช็กสถานะ Hover / Select
       const isSelected = isSameGroup(selectedField, key);
       const isHovered = isSameGroup(hoveredField, key);
 
-      let bgColor = 'transparent';
-      let borderColor = 'transparent';
+      // 🎯 เปลี่ยนตรงนี้! ใส่สีพื้นหลังเริ่มต้นให้เป็นไฮไลต์สีเขียวจางๆ แทน transparent
+      let bgColor = 'rgba(76, 175, 80, 0.15)'; // ไฮไลต์สีเขียว (Matched)
+      let borderColor = '#4caf50'; // กรอบสีเขียว (Matched)
       let zIndex = 1;
 
       if (isSelected) {
         bgColor = 'rgba(255, 235, 59, 0.4)'; 
-        borderColor = '#fbc02d';
+        borderColor = '#fbc02d'; // สีเหลือง (Selected)
         zIndex = 10;
       } else if (isHovered) {
         bgColor = 'rgba(0, 123, 255, 0.3)'; 
-        borderColor = '#007BFF';
+        borderColor = '#007BFF'; // สีฟ้า (Hover)
         zIndex = 5;
       } else if (mismatch) {
-        bgColor = 'rgba(255, 0, 0, 0.15)'; 
-        borderColor = '#ff4d4f';
+        bgColor = 'rgba(244, 67, 54, 0.2)'; // ไฮไลต์สีแดงจางๆ (Mismatch)
+        borderColor = '#f44336'; // สีแดง (Mismatch)
         zIndex = 2;
-      } else {
-        return null; 
       }
 
       return (
         <div
           key={`box-${key}`}
+          onClick={() => setSelectedField(key)}
+          onMouseEnter={() => setHoveredField(key)}
+          onMouseLeave={() => setHoveredField(null)}
           style={{
             position: 'absolute',
             left: `${bbox.x * scale}px`,
             top: `${bbox.y * scale}px`,
             width: `${bbox.width * scale}px`,
             height: `${bbox.height * scale}px`,
-            backgroundColor: bgColor,
+            backgroundColor: bgColor, // สีไฮไลต์จะทำงานตรงนี้
             border: `2px solid ${borderColor}`,
-            pointerEvents: 'none', 
+            cursor: 'pointer',
+            pointerEvents: 'auto', 
             zIndex: zIndex,
-            transition: 'all 0.3s ease'
+            transition: 'all 0.2s ease-in-out'
           }}
-        />
+        >
+          {(isHovered || mismatch) && (
+            <span style={{
+              position: 'absolute',
+              top: '-18px',
+              left: '-2px',
+              backgroundColor: borderColor,
+              color: '#fff',
+              fontSize: '10px',
+              padding: '2px 4px',
+              borderRadius: '2px',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none' 
+            }}>
+              {key.replace(/_/g, ' ')}
+            </span>
+          )}
+        </div>
       );
     });
   };
@@ -183,5 +200,4 @@ const DocumentPane = ({
   );
 };
 
-// ส่งออกให้ไฟล์อื่นเรียกใช้ได้
 export default DocumentPane;

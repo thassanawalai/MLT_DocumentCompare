@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import DocumentPane from './DocumentPane'; // 👈 Import เข้ามาตรงนี้!
+import DocumentPane from './DocumentPane';
 
 // ฟังก์ชันนี้ยังต้องเก็บไว้ใน App.jsx เพราะใช้ตอนวาดตาราง Error List ข้างล่าง
 const parseFieldData = (val) => {
@@ -16,6 +16,10 @@ const parseFieldData = (val) => {
 function App() {
   const [fileOriginal, setFileOriginal] = useState(null);
   const [fileProgram, setFileProgram] = useState(null);
+  
+  // State สำหรับเก็บค่าบริษัทที่เลือก (ค่าเริ่มต้นเป็น OOCL)
+  const [selectedCompany, setSelectedCompany] = useState('OOCL'); 
+  
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -36,7 +40,8 @@ function App() {
     setSelectedField(null);
     
     const formData = new FormData();
-    formData.append('company', 'OOCL');
+    // ส่งชื่อบริษัทตามที่ผู้ใช้งานเลือกผ่าน Dropdown
+    formData.append('company', selectedCompany); 
     formData.append('file_original', fileOriginal);
     formData.append('file_program', fileProgram);
 
@@ -81,6 +86,27 @@ function App() {
         </div>
       </div>
 
+      {/* ส่วนเลือกบริษัท (Dropdown) */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <label style={{ marginRight: '15px', fontWeight: 'bold', fontSize: '1.2em' }}>
+          เลือกบริษัท (Shipping Line):
+        </label>
+        <select 
+          value={selectedCompany} 
+          onChange={(e) => setSelectedCompany(e.target.value)}
+          style={{ 
+            padding: '10px 20px', 
+            fontSize: '1.1em', 
+            borderRadius: '6px', 
+            border: '2px solid #ccc',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="OOCL">OOCL</option>
+          <option value="B_FOODS">B.FOODS</option>
+        </select>
+      </div>
+
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <button 
           onClick={handleProcessFiles} 
@@ -100,7 +126,6 @@ function App() {
       {results && (
         <>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-            {/* เรียกใช้งาน DocumentPane ที่เรา Import เข้ามา */}
             <DocumentPane 
               title="Original Document (ซ้าย)" 
               fileData={results.original} 

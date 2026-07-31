@@ -112,7 +112,7 @@ TEMPLATE = {
         "anchor_text": "QUANTITY",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 50,
+        "offset_y": 25,
         "width": 40,
         "height": 20
     },

@@ -3,7 +3,7 @@ TEMPLATE = {
         "anchor_text": "BOOKING NO:",
         "anchor_point": "top_right",
         "offset_x": 2,
-        "offset_y": 5,
+        "offset_y": 0,
         "width": 60,
         "height": 10
     },
@@ -21,7 +21,7 @@ TEMPLATE = {
         "anchor_text": "Consignee ( complete name and address )",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 5,
+        "offset_y": 3,
         "width": 250,
         "height": 40
     },
@@ -39,7 +39,7 @@ TEMPLATE = {
         "anchor_text": "PRE-CARRIAGE BY",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": -10,
+        "offset_y": 0,
         "width": 150,
         "height": 10
     },
