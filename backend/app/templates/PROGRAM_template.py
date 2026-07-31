@@ -1,109 +1,136 @@
 TEMPLATE = {
     "booking_no": {
-        "anchor_text": "BOOKING NO:", 
-        "direction": "right",
-        "width_offset": 60,
-        "height_offset": 10,
-        #"x_shift_left": 10,
-        "y_shift_down": 5
+        "anchor_text": "BOOKING NO:",
+        "anchor_point": "top_right",
+        "offset_x": 2,
+        "offset_y": 5,
+        "width": 60,
+        "height": 10
     },
+
     "shipper": {
         "anchor_text": "Shipper / Exportor ( complete name and address )",
-        "direction": "bottom",
-        "width_offset": 250,
-        "height_offset": 60 
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 0,
+        "width": 250,
+        "height": 60
     },
+
     "consignee": {
-        "anchor_text": "Consignee ( complete name and address )", 
-        "direction": "bottom",
-        "width_offset": 250,
-        "height_offset": 40,
-        "y_shift_down": 5
+        "anchor_text": "Consignee ( complete name and address )",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 5,
+        "width": 250,
+        "height": 40
     },
+
     "notify_party": {
         "anchor_text": "Notify Party ( complete name and address )",
-        "direction": "bottom",
-        "width_offset": 250,  
-        "height_offset": 50,
-        "y_shift_down": 5
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 5,
+        "width": 250,
+        "height": 50
     },
+
     "pre_carriage_by": {
         "anchor_text": "PRE-CARRIAGE BY",
-        "direction": "bottom",
-        "width_offset": 150,
-        "height_offset": 10,
-        "y_shift_up": 10
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": -10,
+        "width": 150,
+        "height": 10
     },
+
     "place_of_receipt": {
         "anchor_text": "PLACE OF RECEIPT",
-        "direction": "bottom",
-        "width_offset": 120,
-        "height_offset": 10,
-        "x_shift_left": 25  
+        "anchor_point": "bottom_left",
+        "offset_x": -25,
+        "offset_y": 0,
+        "width": 120,
+        "height": 10
     },
+
     "port_of_loading": {
         "anchor_text": "PORT OF LOADING",
-        "direction": "bottom",
-        "width_offset": 120,
-        "height_offset": 10,
-        "x_shift_left": 25
+        "anchor_point": "bottom_left",
+        "offset_x": -25,
+        "offset_y": 0,
+        "width": 120,
+        "height": 10
     },
+
     "vessel": {
         "anchor_text": "OCEAN VESSEL",
-        "direction": "bottom",
-        "width_offset": 120,  
-        "height_offset": 10
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 0,
+        "width": 120,
+        "height": 10
     },
+
     "port_of_discharge": {
         "anchor_text": "PLACE OF DISCHARGE",
-        "direction": "bottom",
-        "width_offset": 120,
-        "height_offset": 10,
-        "x_shift_left": 20  
+        "anchor_point": "bottom_left",
+        "offset_x": -20,
+        "offset_y": 0,
+        "width": 120,
+        "height": 10
     },
+
     "place_of_delivery": {
         "anchor_text": "PLACE OF DELIVERY",
-        "direction": "bottom",
-        "width_offset": 110,
-        "height_offset": 10,
-        "x_shift_left": 20
+        "anchor_point": "bottom_left",
+        "offset_x": -20,
+        "offset_y": 0,
+        "width": 110,
+        "height": 10
     },
+
     "mark": {
         "anchor_text": "Marks & No.",
-        "direction": "bottom",
-        "width_offset": 100, 
-        "height_offset": 20, 
-        "x_shift_left": 30,
-        "y_shift_down": 60
+        "anchor_point": "bottom_left",
+        "offset_x": -30,
+        "offset_y": 60,
+        "width": 100,
+        "height": 20
     },
+
     "quantity": {
-        "anchor_text": "Kind of Packg", 
-        "direction": "bottom",
-        "width_offset": 45,  
-        "height_offset": 100,
-        "y_shift_down": 30 
+        "anchor_text": "Kind of Packg",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 30,
+        "width": 45,
+        "height": 100
     },
+
     "description_of_good": {
         "anchor_text": "Description of packages and goods",
-        "direction": "bottom",
-        "width_offset": 190,  
-        "height_offset": 80, 
-        "x_shift_left": 20,
-        "y_shift_down": 75
+        "anchor_point": "bottom_left",
+        "offset_x": -20,
+        "offset_y": 75,
+        "width": 190,
+        "height": 80
     },
+
     "gross_weight": {
         "anchor_text": "Gross weight",
-        "direction": "bottom",
-        "width_offset": 80,
-        "height_offset": 150, 
-        "x_shift_left": 20,
-        "y_shift_down": 25 
+        "anchor_point": "bottom_left",
+        "offset_x": -20,
+        "offset_y": 25,
+        "width": 80,
+        "height": 150
     },
+
     "measurement": {
         "anchor_text": "Measurement",
-        "direction": "bottom",
-        "width_offset": 50,  
-        "height_offset": 150,
-        "y_shift_down": 25 
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 25,
+        "width": 50,
+        "height": 150
     }
 }
