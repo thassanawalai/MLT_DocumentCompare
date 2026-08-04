@@ -7,20 +7,20 @@ from app.core.pdf_parser import extract_bl_with_hybrid_bbox
 from app.core.comparator import compare_data
 from app.templates.registry import get_template
 
-def process_pdf(company: str, file_original, file_program):
+def process_pdf(company_original: str, company_program: str, file_original, file_program):
     """
     ฟังก์ชันหลักสำหรับรับไฟล์ เซฟลง Temp, สกัดข้อมูล และเปรียบเทียบ
     """
     
     # 1. โหลด Template แบบ Dynamic ผ่าน registry
-    template = get_template(company)
-    program_template = get_template("PROGRAM")
+    template = get_template(company_original)
+    program_template = get_template(company_program)
 
     # 2. ตรวจสอบว่ามี Template รองรับหรือไม่
     if not template:
-        raise HTTPException(status_code=400, detail=f"Unknown company: {company}")
+        raise HTTPException(status_code=400, detail=f"Unknown company for original document: {company_original}")
     if not program_template:
-        raise HTTPException(status_code=500, detail="Program template not found in registry.")
+        raise HTTPException(status_code=400, detail=f"Unknown company for program document: {company_program}")
 
     # 3. ตรวจสอบนามสกุลไฟล์
     if not file_original.filename.lower().endswith(".pdf"):

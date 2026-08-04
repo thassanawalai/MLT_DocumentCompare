@@ -114,7 +114,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 25,
         "width": 40,
-        "height": 20
+        "height": 40
     },
 
     "description_of_good": {

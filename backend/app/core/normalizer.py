@@ -36,6 +36,10 @@ def normalize_text(text: str | None) -> str:
         pass
     
     # 3. ลบอักขระพิเศษที่ไม่ต้องการ (เช่น * และ +)
+    # New rule: If "++++++" is found, remove "++++++" and everything after it.
+    if '++++++' in cleaned:
+        cleaned = cleaned.split('++++++')[0]
+    
     cleaned = re.sub(r'[*+]', '', cleaned)
     # 4. จัดการ Whitespace ให้เคาะบรรทัดหรือช่องว่างหลายๆ ตัวเหลือเพียง Space เดียว
     cleaned = re.sub(r'\s+', ' ', cleaned)

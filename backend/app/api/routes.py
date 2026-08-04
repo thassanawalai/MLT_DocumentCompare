@@ -1,18 +1,26 @@
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from app.services.process_service import process_pdf
+from app.templates.registry import _template_map
 
 router = APIRouter()
 
+@router.get("/templates")
+def get_templates():
+    """ส่งรายชื่อเทมเพลตที่มีทั้งหมดกลับไป"""
+    return {"templates": list(_template_map.keys())}
+
 @router.post("/process-pdf")
 def compare_pdfs(
-    company: str = Form(...),
-    file_original: UploadFile = File(...),  # <--- ตรวจสอบตรงนี้ว่าประกาศชื่อ file_original ไว้แล้วหรือยัง
-    file_program: UploadFile = File(...)    # <--- ตรวจสอบตรงนี้ว่าประกาศชื่อ file_program ไว้แล้วหรือยัง
+    company_original: str = Form(...),
+    company_program: str = Form(...),
+    file_original: UploadFile = File(...),
+    file_program: UploadFile = File(...)
 ):
     try:
         result = process_pdf(
-            company=company, 
-            file_original=file_original, 
+            company_original=company_original,
+            company_program=company_program,
+            file_original=file_original,
             file_program=file_program
         )
         return result
