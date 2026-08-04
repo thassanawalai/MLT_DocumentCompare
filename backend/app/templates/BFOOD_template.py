@@ -36,25 +36,25 @@ TEMPLATE = {
     },
 
     "pre_carriage_by": {
-        "anchor_text": "FEEDER VESSEL:", 
+        "anchor_text": "SHIPPING:", 
         "anchor_point": "top_right",
         "offset_x": 5,
         "offset_y": 0,
-        "width": 150,
+        "width": 100,
         "height": 15
     },
 
     "port_of_loading": {
         "anchor_text": "PORT OF LOADING:",
-        "anchor_point": "bottom_left",
-        "offset_x": 0,
-        "offset_y": 5,
-        "width": 200,
+        "anchor_point": "top_right",
+        "offset_x": 5,
+        "offset_y": 0,
+        "width": 100,
         "height": 20
     },
 
     "vessel": {
-        "anchor_text": "OCEAN VESSEL:",
+        "anchor_text": "FEEDER VESSEL:",
         "anchor_point": "top_right",
         "offset_x": 5,
         "offset_y": 0,

@@ -88,8 +88,9 @@ def compare_data(original_data, program_data):
         prog_val = prog_obj.get("value", "") if isinstance(prog_obj, dict) else str(prog_obj)
         
         # ผ่านฟังก์ชัน normalizer 
-        clean_orig = normalize_text(orig_val)
-        clean_prog = normalize_text(prog_val)
+        is_port_field = key in {"port_of_loading", "port_of_discharge"}
+        clean_orig = normalize_text(orig_val, commas_as_whitespace=is_port_field)
+        clean_prog = normalize_text(prog_val, commas_as_whitespace=is_port_field)
         
         # --- ตรรกะการเปรียบเทียบแบบเข้มงวด 100% ---
         is_match = False

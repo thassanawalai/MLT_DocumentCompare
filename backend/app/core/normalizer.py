@@ -1,6 +1,7 @@
 import re
+import unicodedata
 
-def normalize_text(text: str | None) -> str:
+def normalize_text(text: str | None, *, commas_as_whitespace: bool = False) -> str:
     """
     ฟังก์ชันสำหรับทำความสะอาดและแปลงข้อมูลให้อยู่ในรูปแบบมาตรฐาน
     เพื่อใช้ในการเปรียบเทียบข้อมูลแบบ 100%
@@ -8,7 +9,10 @@ def normalize_text(text: str | None) -> str:
     if not text:
         return ""
     
-    cleaned = str(text)
+    # Normalize Unicode first so non-breaking/full-width spaces cannot bypass
+    # the whitespace rule. Remove invisible zero-width characters as well.
+    cleaned = unicodedata.normalize("NFKC", str(text))
+    cleaned = re.sub(r"[\u200B-\u200D\uFEFF]", "", cleaned)
     
     # 1. กฎอนุโลมเฉพาะคำ (Standardize specific words)
     cleaned = re.sub(r'\btel\b', 'TEL', cleaned, flags=re.IGNORECASE)
@@ -41,6 +45,10 @@ def normalize_text(text: str | None) -> str:
         cleaned = cleaned.split('++++++')[0]
     
     cleaned = re.sub(r'[*+]', '', cleaned)
+    # Commas separate city and country in port fields. Keep this opt-in so
+    # punctuation in reference numbers and other fields remains significant.
+    if commas_as_whitespace:
+        cleaned = re.sub(r'\s*,\s*', ' ', cleaned)
     # 4. จัดการ Whitespace ให้เคาะบรรทัดหรือช่องว่างหลายๆ ตัวเหลือเพียง Space เดียว
     cleaned = re.sub(r'\s+', ' ', cleaned)
     # 5. ลบช่องว่างส่วนเกินที่หัวและท้ายข้อความ

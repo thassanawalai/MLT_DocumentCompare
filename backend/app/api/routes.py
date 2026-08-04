@@ -11,8 +11,11 @@ def get_templates():
 
 @router.post("/process-pdf")
 def compare_pdfs(
-    company_original: str = Form(...),
-    company_program: str = Form(...),
+    # Keep this endpoint compatible with clients deployed before the template
+    # selectors were added.  Current clients still send these values and take
+    # precedence over the defaults.
+    company_original: str = Form("OOCL"),
+    company_program: str = Form("PROGRAM"),
     file_original: UploadFile = File(...),
     file_program: UploadFile = File(...)
 ):

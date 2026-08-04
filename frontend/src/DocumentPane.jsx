@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-// ฟังก์ชันช่วยดึงข้อความ
+// Helper function to parse field data
 const parseFieldData = (val) => {
   if (val === null || val === undefined || val === '') return { text: '', bbox: null };
   if (typeof val === 'object') {
@@ -12,6 +12,36 @@ const parseFieldData = (val) => {
   return { text: String(val), bbox: null };
 };
 
+// --- Style Objects ---
+const paneStyle = { 
+  flex: 1, 
+  padding: '20px', 
+  border: '1px solid #ddd', 
+  borderRadius: '8px', 
+  backgroundColor: '#fafafa' 
+};
+
+const titleStyle = { 
+  textAlign: 'center', 
+  color: '#333', 
+  borderBottom: '2px solid #ccc', 
+  paddingBottom: '10px' 
+};
+
+const imageContainerStyle = { 
+  height: '500px', 
+  overflowY: 'auto', 
+  position: 'relative',
+  border: '1px solid #ccc',
+  backgroundColor: '#fff'
+};
+
+const imageStyle = { 
+  width: '100%', 
+  display: 'block' 
+};
+
+// --- Component ---
 const DocumentPane = ({ 
   title, 
   fileData, 
@@ -19,15 +49,14 @@ const DocumentPane = ({
   selectedField, 
   setSelectedField, 
   hoveredField, 
-  setHoveredField 
+  setHoveredField,
+
 }) => {
   const containerRef = useRef(null);
   const imgRef = useRef(null);
   const [scale, setScale] = useState(1);
 
-  const isFieldMismatch = (fieldKey) => {
-    return discrepancies?.some(diff => diff.field === fieldKey);
-  };
+  const isFieldMismatch = (fieldKey) => discrepancies?.some(diff => diff.field === fieldKey);
 
   const calculateScale = () => {
     if (imgRef.current) {
@@ -41,13 +70,13 @@ const DocumentPane = ({
 
   useEffect(() => {
     window.addEventListener('resize', calculateScale);
+    calculateScale(); // Initial calculation
     return () => window.removeEventListener('resize', calculateScale);
   }, []);
 
   useEffect(() => {
     if (selectedField && fileData?.data?.[selectedField]) {
       const { bbox } = parseFieldData(fileData.data[selectedField]);
-      // หาก bbox เป็น Array ให้ใช้กล่องแรกเป็นจุดอ้างอิงในการเลื่อนจอ
       const firstBbox = Array.isArray(bbox) ? bbox[0] : bbox;
       if (firstBbox && containerRef.current) {
         containerRef.current.scrollTo({
@@ -61,54 +90,42 @@ const DocumentPane = ({
   const renderBoxes = () => {
     if (!fileData || !fileData.data) return null;
 
-    // ใช้ flatMap เพื่อให้สามารถ render หลายกล่องจาก field เดียวได้
     return Object.entries(fileData.data).flatMap(([key, item]) => {
       const { bbox: rawBbox } = parseFieldData(item);
-      // แปลง bbox ให้เป็น Array เสมอ เพื่อให้จัดการง่าย
       const bboxes = Array.isArray(rawBbox) ? rawBbox : (rawBbox ? [rawBbox] : []);
 
-      if (bboxes.length === 0) {
-        return []; // ถ้าไม่มี bbox ก็ไม่ต้องวาดอะไร
-      }
+      if (bboxes.length === 0) return [];
 
       const mismatch = isFieldMismatch(key);
+      // Highlight only the exact field.  Grouping by the first word made
+      // `port_of_loading` and `port_of_discharge` highlight each other.
+      const isSelected = selectedField === key;
+      const isHovered = hoveredField === key;
 
-      const isSameGroup = (fieldA, fieldB) => {
-        if (!fieldA || !fieldB) return false;
-        const baseA = fieldA.split('_')[0];
-        const baseB = fieldB.split('_')[0];
-        return baseA === baseB;
-      };
-
-      const isSelected = isSameGroup(selectedField, key);
-      const isHovered = isSameGroup(hoveredField, key);
-
-      // 🎯 เปลี่ยนตรงนี้! ใส่สีพื้นหลังเริ่มต้นให้เป็นไฮไลต์สีเขียวจางๆ แทน transparent
-      let bgColor = 'rgba(76, 175, 80, 0.15)'; // ไฮไลต์สีเขียว (Matched)
-      let borderColor = '#4caf50'; // กรอบสีเขียว (Matched)
+      let bgColor = 'rgba(76, 175, 80, 0.15)';
+      let borderColor = '#4caf50';
       let zIndex = 1;
 
       if (isSelected) {
         bgColor = 'rgba(255, 235, 59, 0.4)'; 
-        borderColor = '#fbc02d'; // สีเหลือง (Selected)
+        borderColor = '#fbc02d';
         zIndex = 10;
       } else if (isHovered) {
         bgColor = 'rgba(0, 123, 255, 0.3)'; 
-        borderColor = '#007BFF'; // สีฟ้า (Hover)
+        borderColor = '#007BFF';
         zIndex = 5;
       } else if (mismatch) {
-        bgColor = 'rgba(244, 67, 54, 0.2)'; // ไฮไลต์สีแดงจางๆ (Mismatch)
-        borderColor = '#f44336'; // สีแดง (Mismatch)
+        bgColor = 'rgba(244, 67, 54, 0.2)';
+        borderColor = '#f44336';
         zIndex = 2;
       }
 
-      // วนลูปวาดทุกกล่องที่อยู่ใน bboxes array
       return bboxes.map((box, index) => {
         if (!box || box.x === undefined) return null;
 
         return (
           <div
-            key={`box-${key}-${index}`} // สร้าง key ที่ไม่ซ้ำกัน
+            key={`box-${key}-${index}`}
             onClick={() => setSelectedField(key)}
             onMouseEnter={() => setHoveredField(key)}
             onMouseLeave={() => setHoveredField(null)}
@@ -123,56 +140,27 @@ const DocumentPane = ({
               cursor: 'pointer',
               pointerEvents: 'auto',
               zIndex: zIndex,
-              transition: 'all 0.2s ease-in-out'
+              transition: 'all 0.2s ease-in-out',
             }}
-          >
-            {/* แสดงชื่อฟิลด์ที่กล่องแรกของกลุ่มเท่านั้น เพื่อไม่ให้รก */}
-            {(isHovered || mismatch) && index === 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-18px',
-                left: '-2px',
-                backgroundColor: borderColor,
-                color: '#fff',
-                fontSize: '10px',
-                padding: '2px 4px',
-                borderRadius: '2px',
-                whiteSpace: 'nowrap',
-                pointerEvents: 'none'
-              }}>
-                {key.replace(/_/g, ' ')}
-              </span>
-            )}
-          </div>
+          />
         );
       });
     });
   };
 
   return (
-    <div style={{ flex: 1, padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fafafa' }}>
-      <h2 style={{ textAlign: 'center', color: '#333', borderBottom: '2px solid #ccc', paddingBottom: '10px' }}>
-        {title}
-      </h2>
-      
+    <div style={paneStyle}>
+      <h2 style={titleStyle}>{title}</h2>
+
       {fileData.image && (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <div 
-            ref={containerRef}
-            style={{ 
-              height: '500px', 
-              overflowY: 'auto', 
-              position: 'relative',
-              border: '1px solid #ccc',
-              backgroundColor: '#fff'
-            }}
-          >
+          <div ref={containerRef} style={imageContainerStyle}>
             <img 
               ref={imgRef}
               src={`data:image/png;base64,${fileData.image}`} 
               alt={title} 
               onLoad={calculateScale} 
-              style={{ width: '100%', display: 'block' }} 
+              style={imageStyle} 
             />
             {renderBoxes()}
           </div>
