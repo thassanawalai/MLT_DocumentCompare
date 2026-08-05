@@ -12,4 +12,4 @@ try:
     print("✅ ปังมากแก! Poppler ใช้งานได้สมบูรณ์ แปลงไฟล์เป็นภาพ test_output.jpg สำเร็จแล้ว")
     
 except Exception as e:
-    print(f"❌ อ้าว ยังมี error อยู่เลย ลองเช็คดูนะ: {e}")
+    print(f"อ้าว ยังมี error อยู่เลย ลองเช็คดูนะ: {e}")

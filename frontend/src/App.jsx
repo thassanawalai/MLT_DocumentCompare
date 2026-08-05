@@ -136,7 +136,7 @@ function App() {
   // State สำหรับ Dropdown ของแต่ละฝั่ง
   const [templates, setTemplates] = useState([]);
   const [companyOrig, setCompanyOrig] = useState('OOCL');
-  const [companyProg, setCompanyProg] = useState('PROGRAM');
+  const [companyProg, setCompanyProg] = useState('MCKEY');
 
   // ศูนย์กลางควบคุม State
   const [selectedField, setSelectedField] = useState(null); 

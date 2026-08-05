@@ -15,7 +15,7 @@ def compare_pdfs(
     # selectors were added.  Current clients still send these values and take
     # precedence over the defaults.
     company_original: str = Form("OOCL"),
-    company_program: str = Form("PROGRAM"),
+    company_program: str = Form("MCKEY"),
     file_original: UploadFile = File(...),
     file_program: UploadFile = File(...)
 ):

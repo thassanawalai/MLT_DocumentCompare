@@ -59,6 +59,6 @@ def verify_and_clean_with_llm(raw_data: dict) -> dict:
         return cleaned_data
         
     except Exception as e:
-        print(f"❌ เกิดข้อผิดพลาดในการเชื่อมต่อ Ollama: {e}")
+        print(f"เกิดข้อผิดพลาดในการเชื่อมต่อ Ollama: {e}")
         print("💡 เช็คให้ชัวร์ว่าเปิดโปรแกรม Ollama ทิ้งไว้ในเครื่องแล้ว!")
         return raw_data # ถ้าพังก็คืนข้อมูลดิบกลับไปก่อน ระบบจะได้ไม่แครช

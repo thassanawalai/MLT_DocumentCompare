@@ -110,7 +110,7 @@ def compare_data(original_data, program_data):
         print("  ---- After Normalization ----")
         print(f"  - Original (clean): '{clean_orig}'")
         print(f"  - Program (clean) : '{clean_prog}'")
-        print(f"  => Result: {'✅ MATCH' if is_match else '❌ MISMATCH'}")
+        print(f"  => Result: {'✅ MATCH' if is_match else 'MISMATCH'}")
             
         if not is_match:
             discrepancies.append({
