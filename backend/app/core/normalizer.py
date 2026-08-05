@@ -44,6 +44,11 @@ def normalize_text(text: str | None, *, commas_as_whitespace: bool = False) -> s
     if '++++++' in cleaned:
         cleaned = cleaned.split('++++++')[0]
     
+    # Decorative OCR noise such as "---", "...", or "***" has no data
+    # value. Replace only runs of the *same* symbol (3+) with a space, rather
+    # than deleting them, so text on either side cannot be accidentally merged.
+    # Ordinary identifiers such as "AB-123/45" are left unchanged.
+    cleaned = re.sub(r'([^\w\s])\1{2,}', ' ', cleaned)
     cleaned = re.sub(r'[*+]', '', cleaned)
     # Commas separate city and country in port fields. Keep this opt-in so
     # punctuation in reference numbers and other fields remains significant.

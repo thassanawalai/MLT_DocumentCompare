@@ -50,6 +50,8 @@ const DocumentPane = ({
   setSelectedField, 
   hoveredField, 
   setHoveredField,
+  showFieldList = true,
+  notFoundLabel = 'Not Found',
 
 }) => {
   const containerRef = useRef(null);
@@ -167,7 +169,7 @@ const DocumentPane = ({
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {showFieldList && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {Object.entries(fileData.data).map(([key, item]) => {
           const mismatch = isFieldMismatch(key);
           const { text: displayValue, bbox } = parseFieldData(item);
@@ -192,12 +194,12 @@ const DocumentPane = ({
                 {key.replace(/_/g, ' ')}
               </strong>
               <span style={{ fontSize: '1em', color: displayValue ? '#000' : '#999', whiteSpace: 'pre-wrap' }}>
-                {displayValue || 'Not Found'}
+                {displayValue || notFoundLabel}
               </span>
             </div>
           );
         })}
-      </div>
+      </div>}
     </div>
   );
 };

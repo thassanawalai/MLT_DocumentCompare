@@ -22,6 +22,14 @@ class NormalizeTextTests(unittest.TestCase):
             "LAEM CHABANG THAILAND",
         )
 
+    def test_repeated_symbol_noise_is_removed_without_merging_words(self):
+        self.assertEqual(normalize_text("LAEM---CHABANG"), "LAEM CHABANG")
+        self.assertEqual(normalize_text("PORT...THAILAND"), "PORT THAILAND")
+        self.assertEqual(normalize_text("LAEM***CHABANG"), "LAEM CHABANG")
+
+    def test_ordinary_reference_punctuation_is_preserved(self):
+        self.assertEqual(normalize_text("AB-123/45"), "AB-123/45")
+
 
 if __name__ == "__main__":
     unittest.main()

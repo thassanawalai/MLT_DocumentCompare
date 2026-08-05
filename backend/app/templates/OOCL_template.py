@@ -123,7 +123,7 @@ TEMPLATE = {
         "offset_x": -80,
         "offset_y": 20,
         "width": 200,
-        "height": 40
+        "height": 75
     },
 
     "gross_weight": {

@@ -47,43 +47,43 @@ TEMPLATE = {
     "port_of_loading": {
         "anchor_text": "PORT OF LOADING:",
         "anchor_point": "top_right",
-        "offset_x": 5,
+        "offset_x": 20,
         "offset_y": 0,
-        "width": 100,
+        "width": 120,
         "height": 20
     },
 
     "vessel": {
         "anchor_text": "FEEDER VESSEL:",
         "anchor_point": "top_right",
-        "offset_x": 5,
-        "offset_y": 0,
-        "width": 150,
+        "offset_x": 40,
+        "offset_y": -5,
+        "width": 120,
         "height": 15
     },
 
     "port_of_discharge": {
         "anchor_text": "PORT OF DISCHARGE:",
-        "anchor_point": "bottom_left",
-        "offset_x": 0,
-        "offset_y": 5,
-        "width": 200,
+        "anchor_point": "top_right",
+        "offset_x": 10,
+        "offset_y": 0,
+        "width": 120,
         "height": 20
     },
 
     "place_of_delivery": {
         "anchor_text": "FINAL DESTINATION:",
-        "anchor_point": "bottom_left",
-        "offset_x": 0,
-        "offset_y": 5,
-        "width": 200,
+        "anchor_point": "top_right",
+        "offset_x": 10,
+        "offset_y": 0,
+        "width": 120,
         "height": 20
     },
 
     "mark": {
         "anchor_text": "SHIPPING MARK & NOS:",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": 70,
         "offset_y": 5,
         "width": 150,
         "height": 80
@@ -92,19 +92,19 @@ TEMPLATE = {
     "quantity": {
         "anchor_text": "TOTAL BAGS:",
         "anchor_point": "top_right",
-        "offset_x": 5,
+        "offset_x": 15,
         "offset_y": 0,
-        "width": 80,
-        "height": 20
+        "width": 200,
+        "height": 10
     },
 
     "description_of_good": {
         "anchor_text": "DESCRIPTION OF GOODS",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -120,
         "offset_y": 10,
-        "width": 300,
-        "height": 120
+        "width": 320,
+        "height": 160
     },
 
     "gross_weight": {
@@ -112,8 +112,8 @@ TEMPLATE = {
         "anchor_point": "top_right",
         "offset_x": 5,
         "offset_y": 0,
-        "width": 100,
-        "height": 20
+        "width": 200,
+        "height": 10
     },
 
     "measurement": {
@@ -121,7 +121,7 @@ TEMPLATE = {
         "anchor_point": "top_right",
         "offset_x": 5,
         "offset_y": 0,
-        "width": 100,
-        "height": 20
+        "width": 200,
+        "height": 10
     }
 }
