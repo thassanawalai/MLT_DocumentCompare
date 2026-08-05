@@ -1,0 +1,5 @@
+fastapi==0.141.1
+fitz==0.0.1.dev2
+pdf2image==1.17.0
+pydantic==2.13.4
+Requests==2.34.2
