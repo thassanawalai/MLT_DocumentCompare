@@ -123,6 +123,14 @@ const ComparisonFields = ({ originalData, programData, discrepancies, selectedFi
   );
 };
 
+// Map between user-facing labels and backend values
+const templateOptions = [
+  { value: 'OOCL', label: 'OOCL' },
+  { value: 'MCKEY', label: 'MCKEY' },
+  { value: 'BETAGRO', label: 'B.FOODS_2' },
+  { value: 'BFOODS', label: 'B.FOODS_1' },
+];
+
 function App() {
   const [fileOriginal, setFileOriginal] = useState(null);
   const [fileProgram, setFileProgram] = useState(null);
@@ -133,19 +141,16 @@ function App() {
   const [results, setResults] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // State สำหรับ Dropdown ของแต่ละฝั่ง
-  const [templates, setTemplates] = useState(['OOCL', 'MCKEY', 'BETAGRO', 'BFOODS']);
+  // State for dropdowns. The value stored here is the backend value (e.g., 'BETAGRO')
   const [companyOrig, setCompanyOrig] = useState('OOCL');
   const [companyProg, setCompanyProg] = useState('MCKEY');
 
-  // ศูนย์กลางควบคุม State
+  // Center of state control
   const [selectedField, setSelectedField] = useState(null); 
   const [hoveredField, setHoveredField] = useState(null);
 
   useEffect(() => {
-    // The templates are now hardcoded in the useState above,
-    // so no need to fetch them from the backend.
-    // If dynamic templates are needed in the future, this fetch logic can be re-added.
+    // Templates are now hardcoded, no need to fetch.
   }, []);
 
   const handleProcessFiles = async () => {
@@ -160,7 +165,7 @@ function App() {
     setSelectedField(null);
     
     const formData = new FormData();
-    // ส่งชื่อบริษัทของแต่ละฝั่ง
+    // Send company names for each side
     formData.append('company_original', companyOrig);
     formData.append('company_program', companyProg);
     formData.append('file_original', fileOriginal);
@@ -295,8 +300,8 @@ function App() {
               onChange={(e) => setCompanyOrig(e.target.value)}
               style={{ width: '100%', padding: '11px 12px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: theme.surface, color: theme.ink, boxSizing: 'border-box', cursor: 'pointer' }}
             >
-              {templates.map((template) => (
-                <option key={template} value={template}>{template.replace(/_/g, ' ')}</option>
+              {templateOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
               ))}
             </select>
           </div>
@@ -345,8 +350,8 @@ function App() {
               onChange={(e) => setCompanyProg(e.target.value)}
               style={{ width: '100%', padding: '11px 12px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: theme.surface, color: theme.ink, boxSizing: 'border-box', cursor: 'pointer' }}
             >
-              {templates.map((template) => (
-                <option key={template} value={template}>{template.replace(/_/g, ' ')}</option>
+              {templateOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
               ))}
             </select>
           </div>
