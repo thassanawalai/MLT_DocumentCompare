@@ -101,9 +101,9 @@ TEMPLATE = {
     "description_of_good": {
         "anchor_text": "DESCRIPTION OF GOODS",
         "anchor_point": "bottom_left",
-        "offset_x": -120,
+        "offset_x": -80,
         "offset_y": 10,
-        "width": 320,
+        "width": 250,
         "height": 160
     },
 

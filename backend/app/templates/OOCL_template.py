@@ -105,7 +105,7 @@ TEMPLATE = {
         "offset_x": -35,
         "offset_y": 15,
         "width": 100,
-        "height": 60
+        "height": 50
     },
 
     "quantity": {

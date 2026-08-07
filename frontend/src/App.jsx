@@ -127,8 +127,9 @@ const ComparisonFields = ({ originalData, programData, discrepancies, selectedFi
 const templateOptions = [
   { value: 'OOCL', label: 'OOCL' },
   { value: 'MCKEY', label: 'MCKEY' },
-  { value: 'BFOODS', label: 'B.FOODS_1' },
-  { value: 'BETAGRO', label: 'B.FOODS_2' },
+  { value: 'BFOODS_1', label: 'B.FOODS_1' },
+  { value: 'BFOODS_2', label: 'B.FOODS_2' },
+  { value: 'BFOODS_3', label: 'B.FOODS_3' },
   { value: 'AJIMOMOTO', label: 'AJIMOMOTO' },
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },

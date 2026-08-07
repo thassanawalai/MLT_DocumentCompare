@@ -24,18 +24,24 @@ def normalize_text(text: str | None, *, commas_as_whitespace: bool = False) -> s
     # 2.1 ลบ comma ที่เป็น thousand separator (เช่น 18,808 -> 18808)
     cleaned = re.sub(r'(?<=\d),(?=\d)', '', cleaned)
     
-    # 2.2 ลบหน่วยวัดที่พบบ่อย (Weight/Measurement units)
+    # 2.2 ทำให้หน่วย M3 และ CBM เป็นมาตรฐานเดียวกัน (convert M3 to CBM)
+    cleaned = re.sub(r'\bM3\b', 'CBM', cleaned, flags=re.IGNORECASE)
+
+    # 2.3 ลบหน่วยวัดที่พบบ่อย (Weight/Measurement units)
     # ใช้ (?<![a-zA-Z]) (Negative Lookbehind) แทน \b เพื่อให้ลบหน่วยที่ติดกับตัวเลขได้ (เช่น 100KGS) 
     # แต่ยังคงป้องกันการลบกลางคำ (เช่น SOMECASESTUDY) ได้เหมือนเดิม
     cleaned = re.sub(r'(?<![a-zA-Z])(KGS|KGM|CBM|CASES|CASE)\b', '', cleaned, flags=re.IGNORECASE)
     
-    # --- แปลงรูปแบบตัวเลขให้เป็นมาตรฐาน (แก้ปัญหา '123.450' vs '123.45') ---
+    # --- แปลงรูปแบบตัวเลขให้เป็นมาตรฐาน (แก้ปัญหา '123.450' vs '123.45', และปัดทศนิยม) ---
     try:
         float_value = float(cleaned.strip())
-        if float_value.is_integer():
-            cleaned = str(int(float_value))
+        # ปัดทศนิยมเป็น 2 ตำแหน่งตามที่ผู้ใช้ต้องการ
+        rounded_value = round(float_value, 3)
+        # แปลงกลับเป็น string โดยถ้าเป็นจำนวนเต็มก็ไม่ต้องมี .00
+        if rounded_value == int(rounded_value):
+            cleaned = str(int(rounded_value))
         else:
-            cleaned = str(float_value)
+            cleaned = str(rounded_value)
     except (ValueError, TypeError):
         pass
     

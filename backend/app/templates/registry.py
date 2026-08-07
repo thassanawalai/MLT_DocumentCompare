@@ -5,9 +5,10 @@ logger = logging.getLogger(__name__)
 
 _template_map = {
     "OOCL": "app.templates.OOCL_template",
-    "BFOODS": "app.templates.BFOOD_template",
-    "MCKEY": "app.templates.MCKEY_template",  # Template ภายในสำหรับไฟล์ฝั่งโปรแกรม
-    "BETAGRO": "app.templates.BETAGRO_template",
+    "MCKEY": "app.templates.MCKEY_template",
+    "BFOODS_1": "app.templates.BFOODS_1_template",  # Template ภายในสำหรับไฟล์ฝั่งโปรแกรม
+    "BFOODS_2": "app.templates.BFOODS_2_template",
+    "BFOODS_3": "app.templates.BFOODS_3_template",
     "AJIMOMOTO": "app.templates.AJIMOMOTO_template",
     "SIAMCHAI": "app.templates.SIAMCHAI_template",
     "SURAPON": "app.templates.SURAPON_template",
