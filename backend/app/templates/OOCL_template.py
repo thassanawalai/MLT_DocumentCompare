@@ -9,7 +9,7 @@ TEMPLATE = {
         "height": 10
     },
 
-    "shipper_1": {
+    "shipper": {
         "anchor_text": "SHIPPER/EXPORTER (COMPLETE NAME AND ADDRESS)",
         "anchor_point": "bottom_left",
         "offset_x": 0,
@@ -18,14 +18,14 @@ TEMPLATE = {
         "height": 60
     },
 
-    "shipper_2": {
-        "anchor_text": "ALSO NOTIFY PARTY-ROUTING & INSTRUCTIONS",
-        "anchor_point": "bottom_left",
-        "offset_x": 0,
-        "offset_y": 0,
-        "width": 200,
-        "height": 50
-    },
+    # "shipper_2": {
+    #     "anchor_text": "ALSO NOTIFY PARTY-ROUTING & INSTRUCTIONS",
+    #     "anchor_point": "bottom_left",
+    #     "offset_x": 0,
+    #     "offset_y": 0,
+    #     "width": 200,
+    #     "height": 50
+    # },
 
     "consignee": {
         "anchor_text": "CONSIGNEE (COMPLETE NAME AND ADDRESS)",
@@ -102,18 +102,18 @@ TEMPLATE = {
     "mark": {
         "anchor_text": "MARK & NUMBERS",
         "anchor_point": "bottom_left",
-        "offset_x": -30,
-        "offset_y": 20,
+        "offset_x": -35,
+        "offset_y": 15,
         "width": 100,
-        "height": 25
+        "height": 60
     },
 
     "quantity": {
         "anchor_text": "QUANTITY",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -10,
         "offset_y": 25,
-        "width": 40,
+        "width": 45,
         "height": 40
     },
 

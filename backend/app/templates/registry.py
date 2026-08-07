@@ -6,9 +6,11 @@ logger = logging.getLogger(__name__)
 _template_map = {
     "OOCL": "app.templates.OOCL_template",
     "BFOODS": "app.templates.BFOOD_template",
-    "PROGRAM": "app.templates.PROGRAM_template",  # Template ภายในสำหรับไฟล์ฝั่งโปรแกรม
+    "MCKEY": "app.templates.MCKEY_template",  # Template ภายในสำหรับไฟล์ฝั่งโปรแกรม
     "BETAGRO": "app.templates.BETAGRO_template",
-    "MCKEY": "app.templates.MCKEY_template",
+    "AJIMOMOTO": "app.templates.AJIMOMOTO_template",
+    "SIAMCHAI": "app.templates.SIAMCHAI_template",
+    "SURAPON": "app.templates.SURAPON_template",
 }
 
 def get_template(company_name: str) -> dict | None:
