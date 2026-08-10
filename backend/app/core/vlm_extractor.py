@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 class VLMProcessor:
     """
-    Handles interactions with the local Vision-Language Model (LLaVA) via Ollama.
+    Handles interactions with the local Vision-Language Model (LLaVA).
     """
     
-    def __init__(self, model_name: str = "llava", host: str = "http://localhost:11434"):
+    def __init__(self, model_name: str = "llava", host: str = "http://localhost:8080"):
         self.model_name = model_name
         self.api_url = f"{host}/api/generate"
 
@@ -24,7 +24,7 @@ class VLMProcessor:
         logger.info(f"Initializing VLM extraction using model: '{self.model_name}'")
         
         try:
-            # Read and encode the image to Base64 format required by Ollama API
+            # Read and encode the image to Base64 format required by the VLM API
             with open(image_path, "rb") as image_file:
                 encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
 

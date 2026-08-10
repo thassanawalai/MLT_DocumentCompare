@@ -8,8 +8,8 @@ from the Internet.
 
 1. Create an `A` record for `mlt.company.com` pointing at the server public IP.
 2. In the cloud firewall/security group and Ubuntu UFW, allow TCP 22 (restricted
-   to administrator IPs where possible), 80 and 443. Do **not** allow 8080,
-   10000 or 11434.
+   to administrator IPs where possible), 80 and 443. Do **not** allow 8080
+   or 10000.
 3. Install Docker Engine with the Compose plugin, Nginx and Certbot:
 
    ```bash
@@ -29,16 +29,6 @@ sudo docker compose up -d --build
 sudo docker compose ps
 ```
 
-If the application uses Ollama, it must be reachable by the backend. For Ollama
-running on the same host, run the backend with Docker's host-gateway mapping:
-
-```bash
-sudo docker compose up -d --build --force-recreate
-```
-
-The compose file maps `host.docker.internal` to Docker's host gateway. If
-Ollama runs on another private server, set `OLLAMA_HOST` to that private URL
-instead. If Ollama is not used, no additional service is needed.
 
 ## 3. Enable HTTPS
 
