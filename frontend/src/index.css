@@ -111,3 +111,26 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* Styles for Diff Viewer */
+.diff-equal {
+  color: #1a5e20; /* Dark green for equal parts */
+}
+.diff-insert,
+.diff-delete {
+  background-color: #fce8e9; /* Light red */
+  color: #a50d17; /* Dark red */
+}
+.diff-delete {
+  text-decoration: line-through; /* Keep strikethrough for deletions */
+}
+@media (prefers-color-scheme: dark) {
+  .diff-equal {
+    color: #81c784; /* Light green for dark mode equal parts */
+  }
+  .diff-insert,
+  .diff-delete {
+    background-color: #3b171a;
+    color: #ef9a9a;
+  }
+}

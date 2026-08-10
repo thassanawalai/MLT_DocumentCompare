@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import DocumentPane from './DocumentPane';
 
-// ฟังก์ชันนี้ยังต้องเก็บไว้ใน App.jsx เพราะใช้ตอนวาดตาราง Error List ข้างล่าง
+// Helper component to render diffs
+const DiffText = ({ diffData }) => {
+  if (!diffData || diffData.length === 0) return null;
+  return (
+    <>
+      {diffData.map((part, index) => (
+        <span key={index} className={`diff-${part.tag}`}>
+          {part.value}
+        </span>
+      ))}
+    </>
+  );
+};
+
+// This parse function is used in both ComparisonFields and the discrepancy list
 const parseFieldData = (val) => {
   if (val === null || val === undefined || val === '') return { text: '', bbox: null };
   if (typeof val === 'object') {
     return {
-      text: val.value !== undefined ? String(val.value) : JSON.stringify(val),
+      text: val.value !== undefined ? String(val.value) : '',
       bbox: val.bbox || null 
     };
   }
@@ -57,10 +71,10 @@ const translations = {
 };
 
 const ComparisonFields = ({ originalData, programData, discrepancies, selectedField, onSelectField, copy }) => {
-  const fieldKeys = [
+  const fieldKeys = Array.from(new Set([
     ...Object.keys(originalData || {}),
-    ...Object.keys(programData || {}).filter((key) => !(key in (originalData || {}))),
-  ];
+    ...Object.keys(programData || {})
+  ]));
   const discrepancyFields = new Set((discrepancies || []).map(({ field }) => field));
 
   const cellStyle = (isMismatch, isSelected) => ({
@@ -96,6 +110,8 @@ const ComparisonFields = ({ originalData, programData, discrepancies, selectedFi
           {fieldKeys.map((key) => {
             const isMismatch = discrepancyFields.has(key);
             const isSelected = selectedField === key;
+
+            // Reverted to showing plain text only
             const originalValue = parseFieldData(originalData?.[key]).text;
             const programValue = parseFieldData(programData?.[key]).text;
 
@@ -123,6 +139,7 @@ const ComparisonFields = ({ originalData, programData, discrepancies, selectedFi
   );
 };
 
+
 // Map between user-facing labels and backend values
 const templateOptions = [
   { value: 'OOCL', label: 'OOCL' },
@@ -130,7 +147,7 @@ const templateOptions = [
   { value: 'BFOODS_1', label: 'B.FOODS_1' },
   { value: 'BFOODS_2', label: 'B.FOODS_2' },
   { value: 'BFOODS_3', label: 'B.FOODS_3' },
-  { value: 'AJIMOMOTO', label: 'AJIMOMOTO' },
+  { value: 'AJIMOMOTO', label: 'AJINOMOTO' },
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
 ];
@@ -425,15 +442,6 @@ function App() {
               />
             </div>
 
-            <ComparisonFields
-              originalData={results.original.data}
-              programData={results.program.data}
-              discrepancies={results.discrepancies}
-              selectedField={selectedField}
-              onSelectField={setSelectedField}
-              copy={copy}
-            />
-
             <div style={{
               marginTop: '32px',
               padding: '24px',
@@ -462,6 +470,8 @@ function App() {
                     <tbody>
                       {results.discrepancies.map((diff, idx) => {
                         const isSelectedRow = selectedField === diff.field;
+                        const originalDiffData = diff.original_value.diff;
+                        const programDiffData = diff.program_value.diff;
                         
                         return (
                           <tr 
@@ -478,8 +488,12 @@ function App() {
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 14px', fontWeight: 700, textTransform: 'uppercase', color: theme.ink }}>
                               {diff.field.replace(/_/g, ' ')}
                             </td>
-                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 14px', color: theme.red }}>{parseFieldData(diff.original_value).text || '(ว่าง)'}</td>
-                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 14px', color: theme.red }}>{parseFieldData(diff.program_value).text || '(ว่าง)'}</td>
+                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 14px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                              {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseFieldData(diff.original_value).text || '(ว่าง)')}
+                            </td>
+                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 14px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                              {programDiffData ? <DiffText diffData={programDiffData} /> : (parseFieldData(diff.program_value).text || '(ว่าง)')}
+                            </td>
                           </tr>
                         );
                       })}
@@ -488,6 +502,15 @@ function App() {
                 </div>
               )}
             </div>
+
+            <ComparisonFields
+              originalData={results.original.data}
+              programData={results.program.data}
+              discrepancies={results.discrepancies}
+              selectedField={selectedField}
+              onSelectField={setSelectedField}
+              copy={copy}
+            />
           </>
         )}
       </div>

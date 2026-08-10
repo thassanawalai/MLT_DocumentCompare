@@ -19,6 +19,8 @@ def normalize_text(text: str | None, *, commas_as_whitespace: bool = False) -> s
     cleaned = re.sub(r'\bfax\b', 'FAX', cleaned, flags=re.IGNORECASE)
     # ลบคำนำหน้า Voyage Number (เช่น V. , V , VOY. , VOY)
     cleaned = re.sub(r'\b(V|VOY)\.?\s*', '', cleaned, flags=re.IGNORECASE)    
+    # New rule: Remove "TOTAL:" from mark fields
+    cleaned = re.sub(r'\bTOTAL:\s*', '', cleaned, flags=re.IGNORECASE)
     
     # 2. จัดการตัวเลขและหน่วยวัด
     # 2.1 ลบ comma ที่เป็น thousand separator (เช่น 18,808 -> 18808)
@@ -59,7 +61,9 @@ def normalize_text(text: str | None, *, commas_as_whitespace: bool = False) -> s
     # Commas separate city and country in port fields. Keep this opt-in so
     # punctuation in reference numbers and other fields remains significant.
     if commas_as_whitespace:
-        cleaned = re.sub(r'\s*,\s*', ' ', cleaned)
+        # Standardize spacing around commas: no space before, one space after.
+        # This makes "A,B", "A, B", "A ,B" all become "A, B".
+        cleaned = re.sub(r'\s*,\s*', ', ', cleaned)
     # 4. จัดการ Whitespace ให้เคาะบรรทัดหรือช่องว่างหลายๆ ตัวเหลือเพียง Space เดียว
     cleaned = re.sub(r'\s+', ' ', cleaned)
     # 5. ลบช่องว่างส่วนเกินที่หัวและท้ายข้อความ
