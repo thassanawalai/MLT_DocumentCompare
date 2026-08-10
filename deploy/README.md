@@ -1,61 +1,75 @@
-# Production deployment (Ubuntu + Nginx + Docker)
+# Deploy MLT แบบง่าย (Ubuntu + Docker + Nginx + HTTPS)
 
-This deployment exposes only Nginx on ports 80 and 443. Docker publishes the
-frontend and backend only on `127.0.0.1`, so they cannot be reached directly
-from the Internet.
+> ถ้าต้องการ deploy แบบไม่ดูแล server เอง ใช้ Render ได้ ดู
+> `deploy/RENDER.md`
+>
+> ถ้าต้องการเปิด demo จากคอมบริษัทผ่าน Cloudflare Tunnel ดู
+> `deploy/CLOUDFLARE_TUNNEL.md`
+>
+> ถ้าต้องการ URL สวยแบบ `https://mlt-demo.company.com` ผ่าน Cloudflare Tunnel ดู
+> `deploy/CLOUDFLARE_NAMED_TUNNEL.md`
 
-## 1. Prepare DNS and the server
+เป้าหมายคือให้ลูกค้าเปิดผ่าน `https://your-domain.com` ได้ โดยเปิด public แค่
+Nginx ports `80/443` ส่วน frontend `8080` และ backend `10000` จะ bind เฉพาะ
+`127.0.0.1` บน server เท่านั้น
 
-1. Create an `A` record for `mlt.company.com` pointing at the server public IP.
-2. In the cloud firewall/security group and Ubuntu UFW, allow TCP 22 (restricted
-   to administrator IPs where possible), 80 and 443. Do **not** allow 8080
-   or 10000.
-3. Install Docker Engine with the Compose plugin, Nginx and Certbot:
+## 1. สิ่งที่ต้องเตรียม
 
-   ```bash
-   sudo apt update
-   sudo apt install -y nginx certbot python3-certbot-nginx
-   # Install Docker Engine using Docker's official Ubuntu instructions.
-   ```
+1. Ubuntu VPS/server 1 เครื่อง
+2. Domain เช่น `mlt.company.com`
+3. DNS `A record` ชี้ domain ไปที่ public IP ของ server
+4. Firewall หรือ Cloud Security Group เปิดเฉพาะ `22`, `80`, `443`
+5. ห้ามเปิด public ports `8080`, `10000`
 
-## 2. Deploy the application
+## 2. ติดตั้ง Docker บน server
+
+ติดตั้ง Docker Engine พร้อม Compose plugin ตามเอกสาร official ของ Docker สำหรับ
+Ubuntu ก่อน แล้วเช็กให้ได้ผลลัพธ์:
+
+```bash
+docker --version
+docker compose version
+```
+
+## 3. เอาโปรเจกต์ขึ้น server
 
 ```bash
 git clone <YOUR-REPOSITORY-URL> /opt/mlt
 cd /opt/mlt
-cp .env.example .env
-nano .env
 sudo docker compose up -d --build
 sudo docker compose ps
 ```
 
-
-## 3. Enable HTTPS
-
-Replace every `mlt.company.com` in `deploy/nginx/mlt.conf` with the real domain,
-then install it:
+ลองเช็กใน server:
 
 ```bash
-sudo mkdir -p /var/www/certbot
-sudo cp deploy/nginx/mlt-http.conf /etc/nginx/sites-available/mlt
-sudo ln -s /etc/nginx/sites-available/mlt /etc/nginx/sites-enabled/mlt
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
-# DNS must already point to this server and port 80 must be publicly reachable.
-sudo certbot certonly --webroot -w /var/www/certbot -d mlt.company.com
-sudo cp deploy/nginx/mlt.conf /etc/nginx/sites-available/mlt
-sudo nginx -t
-sudo systemctl reload nginx
+curl -I http://127.0.0.1:8080
+curl -I http://127.0.0.1:10000/api/v1/templates
 ```
 
-Check renewal once:
+## 4. เปิด HTTPS ให้ลูกค้าเข้าได้
+
+รันสคริปต์นี้โดยเปลี่ยน domain/email เป็นของจริง:
 
 ```bash
-sudo certbot renew --dry-run
+sudo bash deploy/scripts/setup-nginx-ssl.sh mlt.company.com admin@company.com
 ```
 
-## Verification
+เสร็จแล้วลูกค้าเข้าได้ที่:
+
+```bash
+https://mlt.company.com
+```
+
+## 5. เวลาอัปเดตโปรแกรมรอบถัดไป
+
+บน server รัน:
+
+```bash
+sudo bash /opt/mlt/deploy/scripts/update-app.sh
+```
+
+## ตรวจสอบหลัง deploy
 
 ```bash
 curl -I https://mlt.company.com
@@ -63,5 +77,8 @@ curl -I https://mlt.company.com/api/v1/templates
 sudo ss -ltnp | grep -E ':(80|443|8080|10000)'
 ```
 
-The first two commands should succeed. The socket check should show 80/443
-listening publicly and 8080/10000 bound to `127.0.0.1` only.
+ผลที่ควรเห็น:
+
+- `https://mlt.company.com` เปิดหน้าเว็บได้
+- `/api/v1/templates` ตอบกลับได้
+- ports `8080` และ `10000` ต้องอยู่ที่ `127.0.0.1` เท่านั้น

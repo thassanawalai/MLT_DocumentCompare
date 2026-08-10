@@ -150,12 +150,13 @@ const templateOptions = [
   { value: 'AJIMOMOTO', label: 'AJINOMOTO' },
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
+  { value: 'POLYPLEX', label: 'POLYPLEX' },
 ];
 
 function App() {
   const [fileOriginal, setFileOriginal] = useState(null);
   const [fileProgram, setFileProgram] = useState(null);
-  const [language, setLanguage] = useState('th');
+  const [language, setLanguage] = useState('en');
   const copy = translations[language];
   
   const [loading, setLoading] = useState(false);
