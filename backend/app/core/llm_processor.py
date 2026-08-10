@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 
 def build_bl_cleaning_prompt(raw_data: dict) -> str:
@@ -33,10 +34,11 @@ def verify_and_clean_with_llm(raw_data: dict) -> dict:
     prompt = build_bl_cleaning_prompt(raw_data)
     
     # URL ของ Ollama ที่รันอยู่บนเครื่องเราเอง (พอร์ตมาตรฐานคือ 11434)
-    url = "http://localhost:11434/api/generate"
+    ollama_host = os.getenv("OLLAMA_HOST", "http://host.docker.internal:11434").rstrip("/")
+    url = f"{ollama_host}/api/generate"
     
     payload = {
-        "model": "qwen2.5:7b",  
+        "model": os.getenv("OLLAMA_MODEL", "qwen2.5:7b"),
         "prompt": prompt,         
         "stream": False,
         "format": "json",         

@@ -193,7 +193,8 @@ function App() {
     formData.append('file_program', fileProgram);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/process-pdf', {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/v1/process-pdf`, {
         method: 'POST',
         body: formData,
       });
