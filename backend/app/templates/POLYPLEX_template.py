@@ -2,7 +2,7 @@ TEMPLATE = {
 
     "booking_no": {
         "anchor_text": "BOOKING NO.",
-        "anchor_point": "bottom_left",
+        "anchor_point": "top_right",
         "offset_x": 0,
         "offset_y": 0,
         "width": 140,
@@ -13,7 +13,7 @@ TEMPLATE = {
         "anchor_text": "SHIPPER",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 10,
+        "offset_y": 5,
         "width": 280,
         "height": 75
     },
@@ -22,18 +22,18 @@ TEMPLATE = {
         "anchor_text": "CONSIGNEE",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 10,
+        "offset_y": 5,
         "width": 280,
-        "height": 85
+        "height": 100
     },
 
     "notify_party": {
         "anchor_text": "NOTIFY",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 10,
+        "offset_y": 5,
         "width": 250,
-        "height": 30
+        "height": 10
     },
 
     "pre_carriage_by": {
@@ -42,7 +42,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 0,
         "width": 150,
-        "height": 25
+        "height": 20
     },
 
     "place_of_receipt": {
@@ -69,7 +69,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 0,
         "width": 180,
-        "height": 25
+        "height": 20
     },
 
     "port_of_discharge": {
@@ -95,25 +95,25 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": -5,
         "offset_y": 15,
-        "width": 120,
+        "width": 80,
         "height": 55
     },
 
     "quantity": {
         "anchor_text": "Q’TY KIND",
         "anchor_point": "bottom_left",
-        "offset_x": -5,
+        "offset_x": -15,
         "offset_y": 15,
-        "width": 80,
+        "width": 50,
         "height": 45
     },
 
     "description_of_good": {
         "anchor_text": "DESCRIPTION OF GOODS",
         "anchor_point": "bottom_left",
-        "offset_x": -10,
+        "offset_x": -15,
         "offset_y": 15,
-        "width": 240,
+        "width": 220,
         "height": 80
     },
 
@@ -121,16 +121,16 @@ TEMPLATE = {
         "anchor_text": "GROSS WEIGHT",
         "anchor_point": "bottom_left",
         "offset_x": -5,
-        "offset_y": 10,
+        "offset_y": 0,
         "width": 100,
-        "height": 30
+        "height": 20
     },
 
     "measurement": {
         "anchor_text": "MEASUREMENT",
         "anchor_point": "bottom_left",
-        "offset_x": -5,
-        "offset_y": 10,
+        "offset_x": 10,
+        "offset_y": 20,
         "width": 70,
         "height": 30
     }

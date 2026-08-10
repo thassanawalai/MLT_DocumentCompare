@@ -121,12 +121,9 @@ code {
   background-color: #fce8e9; /* Light red */
   color: #a50d17; /* Dark red */
 }
-.diff-delete {
-  text-decoration: line-through; /* Keep strikethrough for deletions */
-}
 @media (prefers-color-scheme: dark) {
   .diff-equal {
-    color: #81c784; /* Light green for dark mode equal parts */
+    color: #1a5e20; /* Light green for dark mode equal parts */
   }
   .diff-insert,
   .diff-delete {
