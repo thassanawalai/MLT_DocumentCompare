@@ -99,12 +99,12 @@ TEMPLATE = {
     },
 
     "quantity": {
-        "anchor_text": "CARTONS",
+        "anchor_text": "No.of Containers",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": -50,
-        "width": 45,
-        "height": 60
+        "offset_y": 25,
+        "width": 55,
+        "height": 100
     },
 
     "description_of_good": {

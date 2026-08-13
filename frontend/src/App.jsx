@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import DocumentPane from './DocumentPane';
 import logo from './assets/LOGO2.png';
 
@@ -344,6 +344,8 @@ const templateOptions = [
 function App() {
   const [fileOriginal, setFileOriginal] = useState(null);
   const [fileProgram, setFileProgram] = useState(null);
+  const originalFileInputRef = useRef(null);
+  const programFileInputRef = useRef(null);
 
   const [language, setLanguage] = useState('en');
   const copy = translations[language];
@@ -676,6 +678,7 @@ function App() {
 
               {/* File upload */}
               <input
+                ref={originalFileInputRef}
                 type="file"
                 accept="application/pdf"
                 onChange={(e) =>
@@ -695,6 +698,50 @@ function App() {
                   boxSizing: 'border-box',
                 }}
               />
+
+              {fileOriginal && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    marginTop: '-8px',
+                    marginBottom: '18px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: theme.blueSoft,
+                    color: theme.ink,
+                    fontSize: '0.9em',
+                  }}
+                >
+                  <span
+                    title={fileOriginal.name}
+                    style={{ overflowWrap: 'anywhere' }}
+                  >
+                    Selected: {fileOriginal.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFileOriginal(null);
+                      originalFileInputRef.current.value = '';
+                    }}
+                    style={{
+                      flexShrink: 0,
+                      padding: '5px 9px',
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: '6px',
+                      backgroundColor: theme.surface,
+                      color: theme.red,
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
 
               {/* Template */}
               <label
@@ -798,6 +845,7 @@ function App() {
 
               {/* File upload */}
               <input
+                ref={programFileInputRef}
                 type="file"
                 accept="application/pdf"
                 onChange={(e) =>
@@ -817,6 +865,50 @@ function App() {
                   boxSizing: 'border-box',
                 }}
               />
+
+              {fileProgram && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    marginTop: '-8px',
+                    marginBottom: '18px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: theme.greenSoft,
+                    color: theme.ink,
+                    fontSize: '0.9em',
+                  }}
+                >
+                  <span
+                    title={fileProgram.name}
+                    style={{ overflowWrap: 'anywhere' }}
+                  >
+                    Selected: {fileProgram.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFileProgram(null);
+                      programFileInputRef.current.value = '';
+                    }}
+                    style={{
+                      flexShrink: 0,
+                      padding: '5px 9px',
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: '6px',
+                      backgroundColor: theme.surface,
+                      color: theme.red,
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
 
               {/* Template */}
               <label
