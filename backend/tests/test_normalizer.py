@@ -23,7 +23,8 @@ class NormalizeTextTests(unittest.TestCase):
         )
 
     def test_repeated_symbol_noise_is_removed_without_merging_words(self):
-        self.assertEqual(normalize_text("LAEM---CHABANG"), "LAEM CHABANG")
+        self.assertEqual(normalize_text("LAEM---CHABANG"), "LAEMCHABANG")
+        self.assertEqual(normalize_text("LAEM-CHABANG---PORT"), "LAEMCHABANGPORT")
         self.assertEqual(normalize_text("PORT...THAILAND"), "PORT THAILAND")
         self.assertEqual(normalize_text("LAEM***CHABANG"), "LAEM CHABANG")
 

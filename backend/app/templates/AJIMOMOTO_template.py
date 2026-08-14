@@ -41,7 +41,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 0,
         "width": 150,
-        "height": 10
+        "height": 15
     },
 
     "place_of_receipt": {
@@ -50,7 +50,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 0,
         "width": 120,
-        "height": 10
+        "height": 15
     },
 
     "port_of_loading": {
