@@ -55,46 +55,60 @@ const DocumentPane = ({
 
 }) => {
   const containerRef = useRef(null);
-  const imgRef = useRef(null);
-  const [scale, setScale] = useState(1);
+  const pageRefs = useRef({});
+  const [scales, setScales] = useState({});
+
+  const images = fileData?.images?.length
+    ? fileData.images
+    : (fileData?.image ? [fileData.image] : []);
 
   const isFieldMismatch = (fieldKey) => discrepancies?.some(diff => diff.field === fieldKey);
 
-  const calculateScale = () => {
-    if (imgRef.current) {
-      const { clientWidth, naturalWidth } = imgRef.current;
+  const calculateScale = (pageIndex, image) => {
+    if (image) {
+      const { clientWidth, naturalWidth } = image;
       if (naturalWidth > 0) {
-        const dpiScale = 150 / 72; 
-        setScale(dpiScale * (clientWidth / naturalWidth));
+        const dpiScale = 150 / 72;
+        setScales((current) => ({
+          ...current,
+          [pageIndex]: dpiScale * (clientWidth / naturalWidth),
+        }));
       }
     }
   };
 
   useEffect(() => {
-    window.addEventListener('resize', calculateScale);
-    calculateScale(); // Initial calculation
-    return () => window.removeEventListener('resize', calculateScale);
-  }, []);
+    const recalculate = () => {
+      Object.entries(pageRefs.current).forEach(([pageIndex, pageElement]) => {
+        const image = pageElement?.querySelector('img');
+        calculateScale(Number(pageIndex), image);
+      });
+    };
+    window.addEventListener('resize', recalculate);
+    return () => window.removeEventListener('resize', recalculate);
+  }, [images.length]);
 
   useEffect(() => {
     if (selectedField && fileData?.data?.[selectedField]) {
       const { bbox } = parseFieldData(fileData.data[selectedField]);
       const firstBbox = Array.isArray(bbox) ? bbox[0] : bbox;
-      if (firstBbox && containerRef.current) {
+      const pageIndex = firstBbox?.page ?? 0;
+      if (firstBbox && containerRef.current && pageRefs.current[pageIndex]) {
         containerRef.current.scrollTo({
-          top: (firstBbox.y * scale) - 50,
+          top: pageRefs.current[pageIndex].offsetTop + (firstBbox.y * (scales[pageIndex] || 1)) - 50,
           behavior: 'smooth'
         });
       }
     }
-  }, [selectedField, scale, fileData]);
+  }, [selectedField, scales, fileData]);
 
-  const renderBoxes = () => {
+  const renderBoxes = (pageIndex) => {
     if (!fileData || !fileData.data) return null;
 
     return Object.entries(fileData.data).flatMap(([key, item]) => {
       const { bbox: rawBbox } = parseFieldData(item);
-      const bboxes = Array.isArray(rawBbox) ? rawBbox : (rawBbox ? [rawBbox] : []);
+      const bboxes = (Array.isArray(rawBbox) ? rawBbox : (rawBbox ? [rawBbox] : []))
+        .filter((box) => (box?.page ?? 0) === pageIndex);
 
       if (bboxes.length === 0) return [];
 
@@ -133,10 +147,10 @@ const DocumentPane = ({
             onMouseLeave={() => setHoveredField(null)}
             style={{
               position: 'absolute',
-              left: `${box.x * scale}px`,
-              top: `${box.y * scale}px`,
-              width: `${box.width * scale}px`,
-              height: `${box.height * scale}px`,
+              left: `${box.x * (scales[pageIndex] || 1)}px`,
+              top: `${box.y * (scales[pageIndex] || 1)}px`,
+              width: `${box.width * (scales[pageIndex] || 1)}px`,
+              height: `${box.height * (scales[pageIndex] || 1)}px`,
               backgroundColor: bgColor,
               border: `2px solid ${borderColor}`,
               cursor: 'pointer',
@@ -154,17 +168,24 @@ const DocumentPane = ({
     <div style={paneStyle}>
       <h2 style={titleStyle}>{title}</h2>
 
-      {fileData.image && (
+      {images.length > 0 && (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
           <div ref={containerRef} style={imageContainerStyle}>
-            <img 
-              ref={imgRef}
-              src={`data:image/png;base64,${fileData.image}`} 
-              alt={title} 
-              onLoad={calculateScale} 
-              style={imageStyle} 
-            />
-            {renderBoxes()}
+            {images.map((image, pageIndex) => (
+              <div
+                key={pageIndex}
+                ref={(element) => { pageRefs.current[pageIndex] = element; }}
+                style={{ position: 'relative', marginBottom: pageIndex === images.length - 1 ? 0 : '16px' }}
+              >
+                <img
+                  src={`data:image/png;base64,${image}`}
+                  alt={`${title} — page ${pageIndex + 1}`}
+                  onLoad={(event) => calculateScale(pageIndex, event.currentTarget)}
+                  style={imageStyle}
+                />
+                {renderBoxes(pageIndex)}
+              </div>
+            ))}
           </div>
         </div>
       )}

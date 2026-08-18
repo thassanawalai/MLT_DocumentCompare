@@ -174,6 +174,7 @@ const templateOptions = [
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
+  { value: 'YANGMING', label: 'YANG MING' },
 ];
 
 // ============================================================

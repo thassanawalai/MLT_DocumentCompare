@@ -66,10 +66,14 @@ def process_pdf(company_original: str, company_program: str, file_original, file
             "original": {
                 "data": orig_data,
                 "image": orig_result["image"],
+                "images": orig_result["images"],
+                "page_count": orig_result["page_count"],
             },
             "program": {
                 "data": prog_data,
                 "image": prog_result["image"],
+                "images": prog_result["images"],
+                "page_count": prog_result["page_count"],
             },
             "discrepancies": discrepancies,
         }

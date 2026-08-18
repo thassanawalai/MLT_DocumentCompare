@@ -23,10 +23,10 @@ def extract_bl_with_hybrid_bbox(
             logger.error(f"ไม่พบหน้าเอกสารในไฟล์: {pdf_path}")
             return {
                 "data": {},
-                "image": None
+                "image": None,
+                "images": [],
+                "page_count": 0,
             }
-
-        page = doc[0]
 
         for field, config in template.items():
 
@@ -34,9 +34,21 @@ def extract_bl_with_hybrid_bbox(
 
                 anchor_text = config["anchor_text"]
 
-                text_instances = page.search_for(anchor_text)
+                # Templates describe a field once, but it may appear on any
+                # page of a multi-page PDF.  Search pages in document order so
+                # the first matching field is used consistently.
+                page = None
+                anchor_rect = None
+                page_index = None
+                for index, candidate_page in enumerate(doc):
+                    text_instances = candidate_page.search_for(anchor_text)
+                    if text_instances:
+                        page = candidate_page
+                        anchor_rect = text_instances[0]
+                        page_index = index
+                        break
 
-                if not text_instances:
+                if page is None or anchor_rect is None:
 
                     logger.warning(
                         f"ไม่พบ Anchor '{anchor_text}'"
@@ -48,8 +60,6 @@ def extract_bl_with_hybrid_bbox(
                     }
 
                     continue
-
-                anchor_rect = text_instances[0]
 
                 start_x, start_y = get_anchor_position(
                     anchor_rect,
@@ -77,7 +87,8 @@ def extract_bl_with_hybrid_bbox(
                         "x": target_rect.x0,
                         "y": target_rect.y0,
                         "width": target_rect.width,
-                        "height": target_rect.height
+                        "height": target_rect.height,
+                        "page": page_index,
                     }
                 }
 
@@ -90,11 +101,14 @@ def extract_bl_with_hybrid_bbox(
                     "bbox": None
                 }
 
-        pix = page.get_pixmap(dpi=150)
+        # Return every page so a field found beyond page 1 can be inspected in
+        # the UI.  Keep `image` as the first page for API compatibility.
+        images_base64 = []
+        for page in doc:
+            pix = page.get_pixmap(dpi=150)
+            images_base64.append(base64.b64encode(pix.tobytes("png")).decode("utf-8"))
 
-        img_base64 = base64.b64encode(
-            pix.tobytes("png")
-        ).decode("utf-8")
+        img_base64 = images_base64[0] if images_base64 else ""
 
         doc.close()
 
@@ -107,10 +121,14 @@ def extract_bl_with_hybrid_bbox(
 
         return {
             "data": {},
-            "image": None
+            "image": None,
+            "images": [],
+            "page_count": 0,
         }
 
     return {
         "data": extracted_data,
-        "image": img_base64
+        "image": img_base64,
+        "images": images_base64,
+        "page_count": len(images_base64),
     }

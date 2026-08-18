@@ -13,6 +13,7 @@ _template_map = {
     "SIAMCHAI": "app.templates.SIAMCHAI_template",
     "SURAPON": "app.templates.SURAPON_template",
     "POLYPLEX": "app.templates.POLYPLEX_template",
+    "YANGMING": "app.templates.YANGMING_template",
 }
 
 def get_template(company_name: str) -> dict | None:
