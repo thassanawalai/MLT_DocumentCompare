@@ -78,7 +78,7 @@ const translations = {
   th: {
     language: 'ภาษา',
     verification: 'MLT Verification',
-    heading: 'ระบบเปรียบเทียบเอกสาร',
+    heading: 'ระบบเปรียบเทียบเอกสาร (Demo)',
     subheading: 'เครื่องมือสำหรับตรวจสอบเอกสาร MARITIME ALLIANCES.',
     originalDocument: 'Bill of Lading (B/L)',
     originalDescription: 'นำเข้าเอกสารที่นี่',
@@ -120,7 +120,7 @@ const translations = {
   en: {
     language: 'Language',
     verification: 'MLT Verification',
-    heading: 'Document Comparison System',
+    heading: 'Document Comparison System (Demo)',
     subheading: 'A document verification tool for MARITIME ALLIANCES.',
     originalDocument: 'Bill of Lading (B/L)',
     originalDescription: 'Upload your file here',
@@ -504,8 +504,8 @@ function App() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
-        .diff-equal { color: inherit; }
-        .diff-insert { background-color: #dcfce7; color: #15803d; border-radius: 2px; padding: 0 2px; }
+        .diff-equal { color: #15803d; font-weight: 500; }
+        .diff-insert { background-color: #fee2e2; color: #b91c1c; border-radius: 2px; padding: 0 2px; }
         .diff-delete { background-color: #fee2e2; color: #b91c1c; border-radius: 2px; padding: 0 2px; text-decoration: line-through; }
         select:focus, button:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
       `}</style>

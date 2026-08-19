@@ -114,16 +114,23 @@ code {
 
 /* Styles for Diff Viewer */
 .diff-equal {
-  color: #1a5e20; /* Dark green for equal parts */
+  color: #15803d; /* Green for equal/matching parts */
+  font-weight: 500;
 }
 .diff-insert,
 .diff-delete {
-  background-color: #fce8e9; /* Light red */
-  color: #a50d17; /* Dark red */
+  background-color: #fee2e2; /* Light red */
+  color: #b91c1c; /* Dark red */
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.diff-delete {
+  text-decoration: line-through;
 }
 @media (prefers-color-scheme: dark) {
   .diff-equal {
-    color: #1a5e20; /* Light green for dark mode equal parts */
+    color: #22c55e; /* Light green for dark mode equal parts */
+    font-weight: 500;
   }
   .diff-insert,
   .diff-delete {

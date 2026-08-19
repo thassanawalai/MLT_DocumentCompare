@@ -8,6 +8,39 @@ from app.core.geometry import get_anchor_position
 logger = logging.getLogger(__name__)
 
 
+def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect | None:
+    """
+    ค้นหา anchor_text ด้วยการตรวจจับพิมเล็กพิมใหญ่อย่างถูกต้อง
+    Returns the bounding rectangle of the first exact match, or None if not found.
+    """
+    try:
+        # First, try to find all text instances (case-insensitive)
+        # This returns rectangles, then we'll verify the actual text matches case-sensitively
+        all_instances = page.search_for(anchor_text)
+        
+        if not all_instances:
+            logger.debug(f"No instances of '{anchor_text}' found (case-insensitive)")
+            return None
+        
+        # For each instance found, verify it matches case-sensitively
+        for rect in all_instances:
+            # Expand the rect slightly to capture the text accurately
+            expanded_rect = rect + fitz.Rect(-2, -2, 2, 2)
+            extracted_text = page.get_text("text", clip=expanded_rect).strip()
+            
+            # Check if our anchor text appears with exact case
+            if anchor_text in extracted_text:
+                logger.debug(f"Found case-sensitive match for '{anchor_text}' at {rect}")
+                return rect
+        
+        logger.debug(f"No case-sensitive match found for '{anchor_text}' among {len(all_instances)} instances")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error in case-sensitive anchor search: {e}")
+        return None
+
+
 def extract_bl_with_hybrid_bbox(
     pdf_path: str,
     template: dict
@@ -41,10 +74,10 @@ def extract_bl_with_hybrid_bbox(
                 anchor_rect = None
                 page_index = None
                 for index, candidate_page in enumerate(doc):
-                    text_instances = candidate_page.search_for(anchor_text)
-                    if text_instances:
+                    # Use case-sensitive search
+                    anchor_rect = find_anchor_case_sensitive(candidate_page, anchor_text)
+                    if anchor_rect is not None:
                         page = candidate_page
-                        anchor_rect = text_instances[0]
                         page_index = index
                         break
 
