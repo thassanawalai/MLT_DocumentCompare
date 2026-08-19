@@ -8,6 +8,15 @@ TEMPLATE = {
         "height": 10
     },
 
+    "bl_no": {
+        "anchor_text": "B/L No.",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 0,
+        "width": 100,
+        "height": 10
+    },
+
     "shipper": {
         "anchor_text": "Shipper",
         "anchor_point": "top_right",

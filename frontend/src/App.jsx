@@ -166,6 +166,7 @@ const translations = {
 // ============================================================
 const templateOptions = [
   { value: 'OOCL', label: 'OOCL' },
+  { value: 'YANGMING', label: 'YANG MING' },
   { value: 'MCKEY', label: 'MCKEY' },
   { value: 'BFOODS_1', label: 'B.FOODS_1' },
   { value: 'BFOODS_2', label: 'B.FOODS_2' },
@@ -174,7 +175,7 @@ const templateOptions = [
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
-  { value: 'YANGMING', label: 'YANG MING' },
+
 ];
 
 // ============================================================
