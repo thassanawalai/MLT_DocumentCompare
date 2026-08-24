@@ -14,6 +14,7 @@ _template_map = {
     "SURAPON": "app.templates.SURAPON_template",
     "POLYPLEX": "app.templates.POLYPLEX_template",
     "YANGMING": "app.templates.YANGMING_template",
+    "ONE": "app.templates.ONE_template",
 }
 
 def get_template(company_name: str) -> dict | None:

@@ -50,7 +50,7 @@ def normalize_text(
 
     # Handle zero-width spaces explicitly
     cleaned = cleaned.replace('\u200b', ' ')
-
+    cleaned = cleaned.replace('\x04', ' ')
     cleaned = re.sub(r'\s+', ' ', cleaned)
 
     return cleaned.strip()

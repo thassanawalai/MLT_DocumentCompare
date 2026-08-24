@@ -171,6 +171,7 @@ const translations = {
 const billOfLadingTemplateOptions = [
   { value: 'OOCL', label: 'OOCL' },
   { value: 'YANGMING', label: 'YANG MING' },
+  { value: 'ONE', label: 'ONE' },
 ];
 
 const shippingInstructionTemplateOptions = [

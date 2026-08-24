@@ -2,10 +2,55 @@ from typing import Dict, Any
 import fitz
 import logging
 import base64
+import re
 
 from app.core.geometry import get_anchor_position
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_anchor_text(text: str) -> str:
+    """Normalize whitespace and PDF control separators for anchor matching."""
+    # Some PDFs encode visual spaces as control characters (for example \x04).
+    # `search_for()` treats those characters literally, so use this only as a
+    # fallback when its exact coordinate search cannot find an anchor.
+    return re.sub(r"\s+", " ", "".join(
+        " " if ord(char) < 32 else char
+        for char in text
+    )).strip()
+
+
+def _find_anchor_from_words(page: fitz.Page, anchor_text: str) -> fitz.Rect | None:
+    """Find an exact-case anchor after normalizing control-character separators."""
+    normalized_anchor = _normalize_anchor_text(anchor_text)
+    if not normalized_anchor:
+        return None
+
+    # Word coordinates retain the tight bounds needed to calculate the target
+    # extraction rectangle, unlike searching the full page text.
+    words_by_line: dict[tuple[int, int], list[tuple]] = {}
+    for word in page.get_text("words", sort=True):
+        words_by_line.setdefault((word[5], word[6]), []).append(word)
+
+    for words in words_by_line.values():
+        for start in range(len(words)):
+            candidate = ""
+            for end in range(start, len(words)):
+                candidate = _normalize_anchor_text(
+                    f"{candidate} {words[end][4]}" if candidate else words[end][4]
+                )
+
+                if candidate == normalized_anchor:
+                    rect = fitz.Rect(words[start][:4])
+                    for word in words[start + 1:end + 1]:
+                        rect |= fitz.Rect(word[:4])
+                    return rect
+
+                # Adding more words cannot restore an exact match.
+                if len(candidate) >= len(normalized_anchor):
+                    break
+
+    return None
 
 
 def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect | None:
@@ -18,10 +63,6 @@ def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect |
         # This returns rectangles, then we'll verify the actual text matches case-sensitively
         all_instances = page.search_for(anchor_text)
         
-        if not all_instances:
-            logger.debug(f"No instances of '{anchor_text}' found (case-insensitive)")
-            return None
-        
         # For each instance found, verify it matches case-sensitively
         for rect in all_instances:
             # Expand the rect slightly to capture the text accurately
@@ -32,7 +73,20 @@ def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect |
             if anchor_text in extracted_text:
                 logger.debug(f"Found case-sensitive match for '{anchor_text}' at {rect}")
                 return rect
-        
+
+        fallback_rect = _find_anchor_from_words(page, anchor_text)
+        if fallback_rect is not None:
+            logger.debug(
+                "Found normalized case-sensitive match for '%s' at %s",
+                anchor_text,
+                fallback_rect,
+            )
+            return fallback_rect
+
+        if not all_instances:
+            logger.debug(f"No instances of '{anchor_text}' found")
+            return None
+
         logger.debug(f"No case-sensitive match found for '{anchor_text}' among {len(all_instances)} instances")
         return None
         
