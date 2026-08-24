@@ -95,24 +95,24 @@ const translations = {
     templateLoadError: 'ไม่สามารถโหลดรายการรูปแบบเอกสารได้',
     unknownError: 'ไม่ทราบข้อผิดพลาด',
     dataFetchError: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-    originalPane: 'Bill of Lading (B/L) (ซ้าย)',
-    programPane: 'Shipping Instruction (ขวา)',
+    originalPane: 'Bill of Lading (B/L) (ขวา)',
+    programPane: 'Shipping Instruction (ซ้าย)',
     comparisonTitle: 'ตารางเปรียบเทียบข้อมูล',
     comparisonHint: 'ข้อมูลแต่ละ field อยู่ในแถวเดียวกันเพื่อเทียบซ้าย–ขวาได้ทันที · คลิกแถวเพื่อดูตำแหน่งบน PDF',
     field: 'ฟิลด์',
-    originalColumn: 'ต้นฉบับ (ซ้าย)',
-    programColumn: 'โปรแกรม (ขวา)',
+    originalColumn: 'Shipping Instruction (ซ้าย)',
+    programColumn: 'Bill of Lading (B/L) (ขวา)',
     noData: '(ไม่พบข้อมูล)',
     errorList: 'รายการข้อมูลที่ไม่ตรงกัน',
     discrepanciesFound: 'พบข้อมูลไม่ตรงกัน',
     points: 'จุด',
     fieldName: 'ชื่อฟิลด์',
-    originalData: 'Bill of Lading (B/L) (ซ้าย)',
-    programData: 'Shipping Instruction (ขวา)',
+    originalData: 'Shipping Instruction (ซ้าย)',
+    programData: 'Bill of Lading (B/L) (ขวา)',
     allMatch: 'ยอดเยี่ยม! ข้อมูลตรงกันทุกจุด',
     howToUse: 'วิธีใช้: อัปโหลดเอกสารสองฉบับ เลือกเทมเพลตที่ถูกต้อง แล้วคลิก "เปรียบเทียบ" เพื่อดูความแตกต่าง',
-    stepUpload1: 'อัปโหลด B/L',
-    stepUpload2: 'อัปโหลด SI',
+    stepUpload1: 'อัปโหลด SI',
+    stepUpload2: 'อัปโหลด B/L',
     stepTemplate: 'เลือกเทมเพลต',
     stepCompare: 'เปรียบเทียบ',
     stepReview: 'ตรวจสอบผล',
@@ -137,24 +137,24 @@ const translations = {
     templateLoadError: 'Unable to load the template list',
     unknownError: 'Unknown Error',
     dataFetchError: 'An error occurred while retrieving data.',
-    originalPane: 'Bill of Lading (B/L) (Left)',
-    programPane: 'Shipping Instruction (Right)',
+    originalPane: 'Bill of Lading (B/L) (Right)',
+    programPane: 'Shipping Instruction (Left)',
     comparisonTitle: 'Field Comparison',
     comparisonHint: 'Each field is aligned in one row for easy side-by-side comparison · Click a row to view its location in the PDF.',
     field: 'Field',
-    originalColumn: 'Bill of Lading (B/L) (Left)',
-    programColumn: 'Shipping Instruction (Right)',
+    originalColumn: 'Shipping Instruction (Left)',
+    programColumn: 'Bill of Lading (B/L) (Right)',
     noData: '(Not found)',
     errorList: 'Discrepancy List',
     discrepanciesFound: 'discrepancies found',
     points: '',
     fieldName: 'Field Name',
-    originalData: 'Bill of Lading (B/L) (Left)',
-    programData: 'Shipping Instruction (Right)',
+    originalData: 'Shipping Instruction (Left)',
+    programData: 'Bill of Lading (B/L) (Right)',
     allMatch: 'All fields match.',
     howToUse: 'How to use: Upload two documents, select the appropriate template, and click "Compare" to see the differences.',
-    stepUpload1: 'Upload B/L',
-    stepUpload2: 'Upload SI',
+    stepUpload1: 'Upload SI',
+    stepUpload2: 'Upload B/L',
     stepTemplate: 'Select Templates',
     stepCompare: 'Compare',
     stepReview: 'Review',
@@ -166,11 +166,16 @@ const translations = {
 };
 
 // ============================================================
-// Template options (unchanged)
+// Templates for each document type
 // ============================================================
-const templateOptions = [
+const billOfLadingTemplateOptions = [
   { value: 'OOCL', label: 'OOCL' },
   { value: 'YANGMING', label: 'YANG MING' },
+];
+
+const shippingInstructionTemplateOptions = [
+  // { value: 'OOCL', label: 'OOCL' },
+  // { value: 'YANGMING', label: 'YANG MING' },
   { value: 'MCKEY', label: 'MCKEY' },
   { value: 'BFOODS_1', label: 'B.FOODS_1' },
   { value: 'BFOODS_2', label: 'B.FOODS_2' },
@@ -591,53 +596,7 @@ function App() {
           {/* ======== UPLOAD CARDS ======== */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px,1fr))', gap: 24, marginBottom: 24 }}>
 
-            {/* ---- Card 1: B/L ---- */}
-            <div style={{
-              backgroundColor: theme.surface, borderRadius: 14,
-              border: `1px solid ${theme.border}`,
-              boxShadow: theme.shadow,
-              overflow: 'hidden',
-            }}>
-              <div style={{ height: 4, backgroundColor: theme.blue }} />
-              <div style={{ padding: '22px 24px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: theme.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '0.75em', fontWeight: 800, color: theme.blue }}>01</span>
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 800, color: theme.ink, fontSize: '1em' }}>{copy.originalDocument}</div>
-                    <div style={{ fontSize: '0.8em', color: theme.inkSoft, marginTop: 1 }}>{copy.originalDescription}</div>
-                  </div>
-                  {fileOriginal && (
-                    <div style={{ marginLeft: 'auto', width: 22, height: 22, borderRadius: '50%', backgroundColor: theme.greenSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.green, flexShrink: 0 }}>
-                      <IconCheck size={13} />
-                    </div>
-                  )}
-                </div>
-
-                <UploadZone
-                  fileRef={originalFileInputRef}
-                  file={fileOriginal}
-                  onFileChange={setFileOriginal}
-                  onClear={() => { setFileOriginal(null); originalFileInputRef.current.value = ''; }}
-                  accentColor={theme.blue}
-                  accentSoft={theme.blueSoft}
-                  copy={copy}
-                  label={copy.originalDocument}
-                />
-
-                <div style={{ marginTop: 18 }}>
-                  <label style={labelStyle}>{copy.template}</label>
-                  <select value={companyOrig} onChange={(e) => setCompanyOrig(e.target.value)} style={selectStyle}>
-                    {templateOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* ---- Card 2: SI ---- */}
+            {/* ---- Card 1: Shipping Instruction ---- */}
             <div style={{
               backgroundColor: theme.surface, borderRadius: 14,
               border: `1px solid ${theme.border}`,
@@ -648,7 +607,7 @@ function App() {
               <div style={{ padding: '22px 24px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: theme.greenSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '0.75em', fontWeight: 800, color: theme.green }}>02</span>
+                    <span style={{ fontSize: '0.75em', fontWeight: 800, color: theme.green }}>01</span>
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, color: theme.ink, fontSize: '1em' }}>{copy.programDocument}</div>
@@ -675,7 +634,53 @@ function App() {
                 <div style={{ marginTop: 18 }}>
                   <label style={labelStyle}>{copy.template}</label>
                   <select value={companyProg} onChange={(e) => setCompanyProg(e.target.value)} style={selectStyle}>
-                    {templateOptions.map((opt) => (
+                    {shippingInstructionTemplateOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* ---- Card 2: B/L ---- */}
+            <div style={{
+              backgroundColor: theme.surface, borderRadius: 14,
+              border: `1px solid ${theme.border}`,
+              boxShadow: theme.shadow,
+              overflow: 'hidden',
+            }}>
+              <div style={{ height: 4, backgroundColor: theme.blue }} />
+              <div style={{ padding: '22px 24px 24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: theme.blueSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '0.75em', fontWeight: 800, color: theme.blue }}>02</span>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, color: theme.ink, fontSize: '1em' }}>{copy.originalDocument}</div>
+                    <div style={{ fontSize: '0.8em', color: theme.inkSoft, marginTop: 1 }}>{copy.originalDescription}</div>
+                  </div>
+                  {fileOriginal && (
+                    <div style={{ marginLeft: 'auto', width: 22, height: 22, borderRadius: '50%', backgroundColor: theme.greenSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.green, flexShrink: 0 }}>
+                      <IconCheck size={13} />
+                    </div>
+                  )}
+                </div>
+
+                <UploadZone
+                  fileRef={originalFileInputRef}
+                  file={fileOriginal}
+                  onFileChange={setFileOriginal}
+                  onClear={() => { setFileOriginal(null); originalFileInputRef.current.value = ''; }}
+                  accentColor={theme.blue}
+                  accentSoft={theme.blueSoft}
+                  copy={copy}
+                  label={copy.originalDocument}
+                />
+
+                <div style={{ marginTop: 18 }}>
+                  <label style={labelStyle}>{copy.template}</label>
+                  <select value={companyOrig} onChange={(e) => setCompanyOrig(e.target.value)} style={selectStyle}>
+                    {billOfLadingTemplateOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
                     ))}
                   </select>
@@ -747,12 +752,12 @@ function App() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px,1fr))', gap: 24, alignItems: 'flex-start' }}>
                 <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
                   <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.blueAccent }} />
-                    <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{copy.originalPane}</span>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.greenAccent }} />
+                    <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{copy.programPane}</span>
                   </div>
                   <DocumentPane
-                    title={copy.originalPane}
-                    fileData={results.original}
+                    title={copy.programPane}
+                    fileData={results.program}
                     discrepancies={results.discrepancies}
                     selectedField={selectedField}
                     setSelectedField={setSelectedField}
@@ -765,12 +770,12 @@ function App() {
 
                 <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
                   <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.greenAccent }} />
-                    <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{copy.programPane}</span>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.blueAccent }} />
+                    <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{copy.originalPane}</span>
                   </div>
                   <DocumentPane
-                    title={copy.programPane}
-                    fileData={results.program}
+                    title={copy.originalPane}
+                    fileData={results.original}
                     discrepancies={results.discrepancies}
                     selectedField={selectedField}
                     setSelectedField={setSelectedField}
@@ -827,8 +832,8 @@ function App() {
                       <tbody>
                         {results.discrepancies.map((diff, idx) => {
                           const isSelectedRow = selectedField === diff.field;
-                          const originalDiffData = diff.original_value.diff;
-                          const programDiffData = diff.program_value.diff;
+                          const originalDiffData = diff.program_value.diff;
+                          const programDiffData = diff.original_value.diff;
                           return (
                             <tr
                               key={idx}
@@ -841,10 +846,10 @@ function App() {
                                 {diff.field.replace(/_/g, ' ')}
                               </td>
                               <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                                {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseFieldData(diff.original_value).text || '(ว่าง)')}
+                                {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseFieldData(diff.program_value).text || '(ว่าง)')}
                               </td>
                               <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                                {programDiffData ? <DiffText diffData={programDiffData} /> : (parseFieldData(diff.program_value).text || '(ว่าง)')}
+                                {programDiffData ? <DiffText diffData={programDiffData} /> : (parseFieldData(diff.original_value).text || '(ว่าง)')}
                               </td>
                             </tr>
                           );
@@ -857,8 +862,8 @@ function App() {
 
               {/* ---- Full comparison table ---- */}
               <ComparisonFields
-                originalData={results.original.data}
-                programData={results.program.data}
+                originalData={results.program.data}
+                programData={results.original.data}
                 discrepancies={results.discrepancies}
                 selectedField={selectedField}
                 onSelectField={setSelectedField}
