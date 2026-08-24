@@ -8,6 +8,16 @@ TEMPLATE = {
         "height": 20
     },
 
+    "invoice_no": {
+        "anchor_text": "INVOICE:",
+        "anchor_point": "top_left",
+        "offset_x": 70,
+        "offset_y": 5,
+        "width": 70,
+        "height": 15
+    },
+
+
     "shipper": {
         "anchor_text": "SHIPPER:",
         "anchor_point": "bottom_left",

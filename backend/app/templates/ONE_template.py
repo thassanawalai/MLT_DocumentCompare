@@ -7,6 +7,16 @@ TEMPLATE = {
         "width": 90,
         "height": 15
     },
+
+    "invoice_no": {
+        "anchor_text": "INVOICE NO.",
+        "anchor_point": "top_right",
+        "offset_x": -5,
+        "offset_y": 3,
+        "width": 70,
+        "height": 15
+    },
+
     "bill_of_lading_no": {
         "anchor_text": "BILL OF LADING NO.",
         "anchor_point": "bottom_left",
