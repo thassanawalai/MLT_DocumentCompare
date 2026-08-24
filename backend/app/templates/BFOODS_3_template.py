@@ -117,7 +117,7 @@ TEMPLATE = {
     },
 
     "gross_weight": {
-        "anchor_text": "Gross weight",
+        "anchor_text": "GROSS WEIGHT",
         "anchor_point": "bottom_left",
         "offset_x": -5,
         "offset_y": 15,

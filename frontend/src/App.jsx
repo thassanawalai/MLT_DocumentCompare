@@ -5,12 +5,16 @@ import logo from './assets/LOGO2.png';
 // ============================================================
 // Helper component to render diffs
 // ============================================================
-const DiffText = ({ diffData }) => {
+const DiffText = ({ diffData, hideDeleteStrike = false }) => {
   if (!diffData || diffData.length === 0) return null;
   return (
     <>
       {diffData.map((part, index) => (
-        <span key={index} className={`diff-${part.tag}`}>
+        <span
+          key={index}
+          className={`diff-${part.tag}`}
+          style={hideDeleteStrike && part.tag === 'delete' ? { textDecoration: 'none' } : undefined}
+        >
           {part.value}
         </span>
       ))}
@@ -507,7 +511,7 @@ function App() {
         * { box-sizing: border-box; }
         .diff-equal { color: #15803d; font-weight: 500; }
         .diff-insert { background-color: #fee2e2; color: #b91c1c; border-radius: 2px; padding: 0 2px; }
-        .diff-delete { background-color: #fee2e2; color: #b91c1c; border-radius: 2px; padding: 0 2px; text-decoration: line-through; }
+        .diff-delete { background-color: #fee2e2; color: #b91c1c; border-radius: 2px; padding: 0 2px; }
         select:focus, button:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
       `}</style>
 

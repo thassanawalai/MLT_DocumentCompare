@@ -3,16 +3,16 @@ TEMPLATE = {
     "booking_no": {
         "anchor_text": "BOOKING NO.",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
-        "offset_y": 0,
+        "offset_x": -5,
+        "offset_y": -5,
         "width": 80,
-        "height": 10
+        "height": 15
     },
 
     "shipper": {
         "anchor_text": "SHIPPER/EXPORTER (COMPLETE NAME AND ADDRESS)",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 280,
         "height": 60
@@ -30,7 +30,7 @@ TEMPLATE = {
     "consignee": {
         "anchor_text": "CONSIGNEE (COMPLETE NAME AND ADDRESS)",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 280,
         "height": 55
@@ -39,7 +39,7 @@ TEMPLATE = {
     "notify_party": {
         "anchor_text": "NOTIFY PARTY (COMPLETE NAME AND ADDRESS)",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 12,
         "width": 250,
         "height": 50
@@ -48,7 +48,7 @@ TEMPLATE = {
     "pre_carriage_by": {
         "anchor_text": "PRE-CARRIAGE BY",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 120,
         "height": 12
@@ -57,7 +57,7 @@ TEMPLATE = {
     "place_of_receipt": {
         "anchor_text": "PLACE OF RECEIPT",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 130,
         "height": 12
@@ -66,7 +66,7 @@ TEMPLATE = {
     "port_of_loading": {
         "anchor_text": "PORT OF LOADING",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 130,
         "height": 12
@@ -75,16 +75,16 @@ TEMPLATE = {
     "vessel": {
         "anchor_text": "VESSEL/VOYAGE/FLAG",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
-        "width": 150,
-        "height": 10
+        "width": 130,
+        "height": 12
     },
 
     "port_of_discharge": {
         "anchor_text": "PORT OF DISCHARGE",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 130,
         "height": 12
@@ -93,7 +93,7 @@ TEMPLATE = {
     "place_of_delivery": {
         "anchor_text": "PLACE OF DELIVERY",
         "anchor_point": "bottom_left",
-        "offset_x": 0,
+        "offset_x": -5,
         "offset_y": 0,
         "width": 130,
         "height": 12
@@ -111,16 +111,16 @@ TEMPLATE = {
     "quantity": {
         "anchor_text": "QUANTITY",
         "anchor_point": "bottom_left",
-        "offset_x": -10,
+        "offset_x": -20,
         "offset_y": 25,
-        "width": 45,
+        "width": 60,
         "height": 40
     },
 
     "description_of_good": {
         "anchor_text": "DESCRIPTION OF GOODS",
         "anchor_point": "bottom_left",
-        "offset_x": -80,
+        "offset_x": -75,
         "offset_y": 20,
         "width": 200,
         "height": 75
@@ -129,9 +129,9 @@ TEMPLATE = {
     "gross_weight": {
         "anchor_text": "GROSS WEIGHT",
         "anchor_point": "bottom_left",
-        "offset_x": -15,
-        "offset_y": 20,
-        "width": 70,
+        "offset_x": -20,
+        "offset_y": 18,
+        "width": 80,
         "height": 20
     },
 
@@ -139,9 +139,17 @@ TEMPLATE = {
         "anchor_text": "MEASUREMENT",
         "anchor_point": "bottom_left",
         "offset_x": -10,
-        "offset_y": 20,
-        "width": 60,
+        "offset_y": 18,
+        "width": 63,
         "height": 20
-    }
+    },
+    "transhipment": {
+        "anchor_text": "TRANSHIPMENT",
+        "anchor_point": "top_right",
+        "offset_x": -5,
+        "offset_y": 0,
+        "width": 300,
+        "height": 15
+    },
 
 }
