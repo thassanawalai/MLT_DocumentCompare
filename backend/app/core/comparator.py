@@ -71,13 +71,39 @@ def _combine_shipper_fields(data: dict) -> dict:
         
     return data
 
-def compare_data(original_data: dict, program_data: dict) -> tuple[dict, list]:
+def _clean_field_values(data: dict) -> dict:
+    """Normalize field values while preserving metadata such as PDF bounding boxes."""
+    cleaned_data = {}
+
+    for key, field_data in data.items():
+        value = field_data.get("value", "") if isinstance(field_data, dict) else field_data
+        is_address_like_field = key in {
+            "port_of_loading", "port_of_discharge", "consignee", "shipper",
+            "notify_party", "place_of_receipt", "place_of_delivery"
+        }
+        cleaned_value = normalize_text(
+            value,
+            commas_as_whitespace=is_address_like_field,
+        )
+
+        cleaned_data[key] = (
+            {**field_data, "value": cleaned_value}
+            if isinstance(field_data, dict)
+            else cleaned_value
+        )
+
+    return cleaned_data
+
+
+def compare_data(original_data: dict, program_data: dict) -> tuple[dict, dict, list]:
     """
     Compares original and program data, identifies discrepancies,
     and generates structured diffs for any mismatched fields.
     """
     original_data = _combine_shipper_fields(original_data)
     program_data = _combine_shipper_fields(program_data)
+    original_data = _clean_field_values(original_data)
+    program_data = _clean_field_values(program_data)
 
     discrepancies = []
     
@@ -93,12 +119,8 @@ def compare_data(original_data: dict, program_data: dict) -> tuple[dict, list]:
         orig_val = orig_obj.get("value", "") if isinstance(orig_obj, dict) else str(orig_obj)
         prog_val = prog_obj.get("value", "") if isinstance(prog_obj, dict) else str(prog_obj)
         
-        is_address_like_field = key in {
-            "port_of_loading", "port_of_discharge", "consignee", "shipper", 
-            "notify_party", "place_of_receipt", "place_of_delivery"
-        }
-        clean_orig = normalize_text(orig_val, commas_as_whitespace=is_address_like_field)
-        clean_prog = normalize_text(prog_val, commas_as_whitespace=is_address_like_field)
+        clean_orig = orig_val
+        clean_prog = prog_val
         
         is_match = False
         if clean_orig == clean_prog:
@@ -118,4 +140,4 @@ def compare_data(original_data: dict, program_data: dict) -> tuple[dict, list]:
                 "program_value": {**prog_obj, "clean_value": clean_prog, "diff": diff_prog}
             })
             
-    return original_data, discrepancies
+    return original_data, program_data, discrepancies

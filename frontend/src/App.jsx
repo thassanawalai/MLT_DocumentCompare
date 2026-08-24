@@ -2,19 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import DocumentPane from './DocumentPane';
 import logo from './assets/LOGO2.png';
 
-// ============================================================
-// Helper component to render diffs
-// ============================================================
-const DiffText = ({ diffData, hideDeleteStrike = false }) => {
+const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
   return (
     <>
       {diffData.map((part, index) => (
-        <span
-          key={index}
-          className={`diff-${part.tag}`}
-          style={hideDeleteStrike && part.tag === 'delete' ? { textDecoration: 'none' } : undefined}
-        >
+        <span key={index} className={`diff-${part.tag}`}>
           {part.value}
         </span>
       ))}
@@ -36,6 +29,14 @@ const parseFieldData = (val) => {
     };
   }
   return { text: String(val), bbox: null };
+};
+
+// Prefer the normalized value returned by the comparison API for UI tables.
+const parseDisplayFieldData = (val) => {
+  if (val && typeof val === 'object' && val.clean_value !== undefined) {
+    return { text: String(val.clean_value ?? ''), bbox: val.bbox || null };
+  }
+  return parseFieldData(val);
 };
 
 // ============================================================
@@ -178,13 +179,16 @@ const shippingInstructionTemplateOptions = [
   // { value: 'OOCL', label: 'OOCL' },
   // { value: 'YANGMING', label: 'YANG MING' },
   { value: 'MCKEY', label: 'MCKEY' },
-  { value: 'BFOODS_1', label: 'B.FOODS_1' },
-  { value: 'BFOODS_2', label: 'B.FOODS_2' },
-  { value: 'BFOODS_3', label: 'B.FOODS_3' },
+  //{ value: 'BFOODS_1', label: 'B.FOODS_1' },
+  { value: 'BFOODS_3', label: 'B.FOODS/OOCL/OAKFIELD1' },
+  { value: 'BFOODS_2', label: 'B.FOODS/OOCL/OAKFIELD2' },
+  { value: 'PPI', label: 'B.FOOD/ONE/PPI' },
+  { value: 'SUPER_SIERRA', label: 'B.FOOD/ONE/SUPER SIERRA' },
   { value: 'AJIMOMOTO', label: 'AJINOMOTO' },
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
+
 
 ];
 
@@ -378,8 +382,8 @@ const ComparisonFields = ({ originalData, programData, discrepancies, selectedFi
           {fieldKeys.map((key) => {
             const isMismatch = discrepancyFields.has(key);
             const isSelected = selectedField === key;
-            const originalValue = parseFieldData(originalData?.[key]).text;
-            const programValue = parseFieldData(programData?.[key]).text;
+            const originalValue = parseDisplayFieldData(originalData?.[key]).text;
+            const programValue = parseDisplayFieldData(programData?.[key]).text;
 
             const rowBg = isSelected ? '#fefce8' : isMismatch ? '#fff5f5' : theme.surface;
 
@@ -847,10 +851,10 @@ function App() {
                                 {diff.field.replace(/_/g, ' ')}
                               </td>
                               <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                                {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseFieldData(diff.program_value).text || '(ว่าง)')}
+                                {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)')}
                               </td>
                               <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                                {programDiffData ? <DiffText diffData={programDiffData} /> : (parseFieldData(diff.original_value).text || '(ว่าง)')}
+                                {programDiffData ? <DiffText diffData={programDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
                               </td>
                             </tr>
                           );

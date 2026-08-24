@@ -55,7 +55,7 @@ def process_pdf(company_original: str, company_program: str, file_original, file
         prog_data = prog_result["data"]
 
         # 7. เปรียบเทียบข้อมูล
-        orig_data, discrepancies = compare_data(
+        orig_data, prog_data, discrepancies = compare_data(
             orig_data,
             prog_data
         )

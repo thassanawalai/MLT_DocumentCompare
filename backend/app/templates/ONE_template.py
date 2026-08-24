@@ -12,7 +12,7 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 2,
         "offset_y": 0,
-        "width": 150,
+        "width": 110,
         "height": 15
     },
 
@@ -80,7 +80,7 @@ TEMPLATE = {
     },
 
     "port_of_discharge": {
-        "anchor_text": "PLACE OF DISCHARGE",
+        "anchor_text": "PORT OF DISCHARGE",
         "anchor_point": "bottom_left",
         "offset_x": -5,
         "offset_y": 0,
@@ -100,28 +100,28 @@ TEMPLATE = {
     "mark": {
         "anchor_text": "MARKS & NUMBERS",
         "anchor_point": "bottom_left",
-        "offset_x": -30,
+        "offset_x": -35,
         "offset_y": 20,
-        "width": 100,
+        "width": 110,
         "height": 60
     },
 
     "quantity": {
         "anchor_text": "QUANTITY",
         "anchor_point": "bottom_left",
-        "offset_x": -5,
-        "offset_y": 40,
-        "width": 45,
+        "offset_x": -10,
+        "offset_y": 20,
+        "width": 50,
         "height": 60
     },
 
     "description_of_good": {
         "anchor_text": "DESCRIPTION OF GOODS",
         "anchor_point": "bottom_left",
-        "offset_x": -70,
+        "offset_x": -80,
         "offset_y": 20,
-        "width": 200,
-        "height": 160
+        "width": 210,
+        "height": 130
     },
 
     "gross_weight": {
@@ -136,9 +136,9 @@ TEMPLATE = {
     "measurement": {
         "anchor_text": "GROSS MEASUREMENT",
         "anchor_point": "bottom_left",
-        "offset_x": -20,
+        "offset_x": -5,
         "offset_y": 20,
-        "width": 50,
+        "width": 70,
         "height": 150
     }
 }

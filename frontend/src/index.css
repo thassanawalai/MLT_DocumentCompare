@@ -124,9 +124,6 @@ code {
   border-radius: 2px;
   padding: 0 2px;
 }
-.diff-delete {
-  text-decoration: line-through;
-}
 @media (prefers-color-scheme: dark) {
   .diff-equal {
     color: #22c55e; /* Light green for dark mode equal parts */
