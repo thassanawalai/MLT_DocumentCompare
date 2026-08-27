@@ -17,6 +17,7 @@ _template_map = {
     "ONE": "app.templates.ONE_template",
     "PPI": "app.templates.PPI_template",
     "SUPER_SIERRA": "app.templates.SUPER_SIERRA_template",
+    "BETAGRO": "app.templates.BETAGRO_template",
 }
 
 def get_template(company_name: str) -> dict | None:

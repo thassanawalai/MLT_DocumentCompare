@@ -188,8 +188,6 @@ const shippingInstructionTemplateOptions = [
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
-
-
 ];
 
 // ============================================================
