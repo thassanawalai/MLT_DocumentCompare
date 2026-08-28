@@ -172,7 +172,6 @@ const shippingInstructionTemplateOptions = [
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
-  { value: 'BETAGRO', label: 'BETAGRO' },
 ];
 
 // ============================================================
@@ -197,7 +196,7 @@ const IconSpinner = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" style={{ animation: 'spin 0.8s linear infinite', transformOrigin: '50% 50%' }}/></svg>
 );
 const IconMenu = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
 );
 
 // ============================================================
@@ -600,7 +599,8 @@ const ComparisonPage = ({
               <div style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px,1fr))', gap: 24, alignItems: 'flex-start' }}>
+            {/* 🔥 แก้ตรงนี้: บังคับให้เป็นกริดแบบ 1fr 1fr เพื่อให้อยู่ซ้ายขวาเสมอ */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'flex-start' }}>
               {/* ซ้าย */}
               <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
                 <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -727,16 +727,17 @@ const ComparisonPage = ({
 };
 
 // ============================================================
-// Main App (มี Sidebar ควบคุมการเปลี่ยนหน้า)
+// Main App
 // ============================================================
 function App() {
   const [language, setLanguage] = useState('en');
   const copy = translations[language];
   
-  // State สำหรับจัดการหน้าปัจจุบัน ('MAIN', 'HBL', 'MBL')
   const [activeTab, setActiveTab] = useState('MAIN');
+  
+  // 🔥 เพิ่ม State สำหรับจัดการเปิด/ปิด Sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // ข้อมูล Props สำหรับแต่ละหน้า
   const getPageProps = () => {
     switch(activeTab) {
       case 'HBL':
@@ -747,7 +748,7 @@ function App() {
           leftDesc: copy.programDescription,
           rightTitle: 'HBL MARITIME',
           rightDesc: copy.originalDescription,
-          leftTemplates: shippingInstructionTemplateOptions, // สามารถแยก Template ของหน้านี้ได้ในอนาคต
+          leftTemplates: shippingInstructionTemplateOptions,
           rightTemplates: billOfLadingTemplateOptions,
         };
       case 'MBL':
@@ -758,7 +759,7 @@ function App() {
           leftDesc: copy.programDescription,
           rightTitle: 'MBL/ONE',
           rightDesc: copy.originalDescription,
-          leftTemplates: shippingInstructionTemplateOptions, // สามารถแยก Template ของหน้านี้ได้ในอนาคต
+          leftTemplates: shippingInstructionTemplateOptions,
           rightTemplates: billOfLadingTemplateOptions,
         };
       case 'MAIN':
@@ -766,9 +767,9 @@ function App() {
         return {
           pageTitle: copy.heading,
           pageSubheading: copy.subheading,
-          leftTitle: copy.programDocument, // Shipping Instruction
+          leftTitle: copy.programDocument,
           leftDesc: copy.programDescription,
-          rightTitle: copy.originalDocument, // Bill of Lading (B/L)
+          rightTitle: copy.originalDocument,
           rightDesc: copy.originalDescription,
           leftTemplates: shippingInstructionTemplateOptions,
           rightTemplates: billOfLadingTemplateOptions,
@@ -778,7 +779,6 @@ function App() {
 
   const currentProps = getPageProps();
 
-  // เมนู Sidebar
   const menuItems = [
     { id: 'MAIN', label: 'หน้าหลักเดิม', desc: 'SI vs B/L' },
     { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
@@ -795,21 +795,33 @@ function App() {
         .diff-delete { background-color: #fee2e2; color: #b91c1c; border-radius: 2px; padding: 0 2px; }
         select:focus, button:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
         
-        /* Sidebar Scrollbar Styling */
         .sidebar::-webkit-scrollbar { width: 6px; }
         .sidebar::-webkit-scrollbar-track { background: transparent; }
         .sidebar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         
-        /* Content Scrollbar Styling */
         .main-content::-webkit-scrollbar { width: 8px; }
         .main-content::-webkit-scrollbar-track { background: transparent; }
         .main-content::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 10px; }
       `}</style>
 
-      {/* ======== TOP NAV (กว้างเต็มจอ) ======== */}
+      {/* ======== TOP NAV ======== */}
       <nav style={{ backgroundColor: theme.navy, borderBottom: `1px solid ${theme.navyMid}`, zIndex: 100 }}>
         <div style={{ padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* 🔥 ปุ่ม Hamburger สำหรับเปิด/ปิด Sidebar */}
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              style={{
+                background: 'transparent', border: 'none', color: '#94a3b8',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4,
+                borderRadius: 4
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e293b'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <IconMenu size={24} />
+            </button>
+
             <img src={logo} alt="Maritime Alliance" style={{ height: 34, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.92 }} />
             <div style={{ width: 1, height: 20, backgroundColor: '#334155', flexShrink: 0 }} />
             <span style={{ color: '#94a3b8', fontSize: '0.8em', fontWeight: 600, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
@@ -834,20 +846,24 @@ function App() {
         </div>
       </nav>
 
-      {/* ======== LAYOUT: Sidebar + Main Content ======== */}
+      {/* ======== LAYOUT ======== */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        {/* ---- Sidebar ---- */}
+        {/* ---- Sidebar (🔥 พับเก็บได้) ---- */}
         <aside className="sidebar" style={{
-          width: 260,
+          width: isSidebarOpen ? 260 : 0,           // หดความกว้างเหลือ 0 ถ้าถูกปิด
+          opacity: isSidebarOpen ? 1 : 0,           // ซ่อนเนื้อหา
+          visibility: isSidebarOpen ? 'visible' : 'hidden', 
           backgroundColor: theme.surface,
-          borderRight: `1px solid ${theme.border}`,
+          borderRight: isSidebarOpen ? `1px solid ${theme.border}` : 'none',
           display: 'flex',
           flexDirection: 'column',
           overflowY: 'auto',
           flexShrink: 0,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // แอนิเมชันตอนเลื่อนพับ
         }}>
-          <div style={{ padding: '24px 16px 12px' }}>
+          {/* ห่อเนื้อหา Sidebar ไว้ เพื่อไม่ให้มันบีบตัวตอนที่กำลังพับเก็บ */}
+          <div style={{ padding: '24px 16px 12px', width: 260 }}>
             <p style={{ margin: '0 0 12px 8px', fontSize: '0.75em', fontWeight: 700, color: theme.inkSoft, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Menu / โหมดการตรวจสอบ
             </p>
@@ -885,10 +901,6 @@ function App() {
 
         {/* ---- Main Content ---- */}
         <div className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
-          {/* 
-            ใช้ key={activeTab} เป็นเทคนิคบังคับให้ React "ล้างกระดาน" Component นี้ทิ้ง
-            และสร้างใหม่ทุกครั้งที่สลับหน้า ทำให้ไฟล์และตารางเก่าไม่ค้างอยู่
-          */}
           <ComparisonPage
             key={activeTab} 
             {...currentProps}

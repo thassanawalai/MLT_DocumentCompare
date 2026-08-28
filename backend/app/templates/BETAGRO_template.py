@@ -4,7 +4,7 @@ TEMPLATE = {
         "anchor_text": "BOOKING NUMBER",
         "anchor_point": "bottom_left",
         "offset_x": -10,
-        "offset_y": 10,
+        "offset_y": 5,
         "width": 140,
         "height": 20
     },
