@@ -172,6 +172,8 @@ const shippingInstructionTemplateOptions = [
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
+  { value: 'BETAGRO', label: 'BETAGRO/ONE/GERALD' },
+
 ];
 
 // ============================================================
@@ -447,23 +449,6 @@ const ComparisonPage = ({
               {pageSubheading}
             </p>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            {[
-              [1, copy.stepUpload1],
-              [2, copy.stepUpload2],
-              [3, copy.stepTemplate],
-              [4, copy.stepCompare],
-              [5, copy.stepReview],
-            ].map(([n, label], i, arr) => (
-              <React.Fragment key={n}>
-                <StepBadge n={n} label={label} active={step >= n} />
-                {i < arr.length - 1 && (
-                  <div style={{ width: 20, height: 1, backgroundColor: step > n ? theme.blue : theme.borderStrong, transition: 'all 0.3s' }} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -734,10 +719,7 @@ function App() {
   const copy = translations[language];
   
   const [activeTab, setActiveTab] = useState('MAIN');
-  
-  // 🔥 เพิ่ม State สำหรับจัดการเปิด/ปิด Sidebar
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const getPageProps = () => {
     switch(activeTab) {
       case 'HBL':
