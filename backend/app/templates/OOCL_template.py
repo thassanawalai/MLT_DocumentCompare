@@ -4,9 +4,9 @@ TEMPLATE = {
         "anchor_text": "BOOKING NO.",
         "anchor_point": "bottom_left",
         "offset_x": -5,
-        "offset_y": -5,
+        "offset_y": 5,
         "width": 80,
-        "height": 15
+        "height": 5
     },
 
     "shipper": {
@@ -40,9 +40,9 @@ TEMPLATE = {
         "anchor_text": "NOTIFY PARTY (COMPLETE NAME AND ADDRESS)",
         "anchor_point": "bottom_left",
         "offset_x": -5,
-        "offset_y": 12,
+        "offset_y": 5,
         "width": 250,
-        "height": 50
+        "height": 60
     },
 
     "pre_carriage_by": {
@@ -112,7 +112,7 @@ TEMPLATE = {
         "anchor_text": "QUANTITY",
         "anchor_point": "bottom_left",
         "offset_x": -20,
-        "offset_y": 25,
+        "offset_y": 20,
         "width": 60,
         "height": 40
     },
@@ -120,8 +120,8 @@ TEMPLATE = {
     "description_of_good": {
         "anchor_text": "DESCRIPTION OF GOODS",
         "anchor_point": "bottom_left",
-        "offset_x": -75,
-        "offset_y": 20,
+        "offset_x": -80,
+        "offset_y": 15,
         "width": 200,
         "height": 75
     },

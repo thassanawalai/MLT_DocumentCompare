@@ -172,7 +172,7 @@ const shippingInstructionTemplateOptions = [
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
-  { value: 'BETAGRO', label: 'BETAGRO/ONE/GERALD' },
+  { value: 'BETAGRO', label: 'BETAGRO' },
 
 ];
 
@@ -584,45 +584,46 @@ const ComparisonPage = ({
               <div style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
             </div>
 
-            {/* 🔥 แก้ตรงนี้: บังคับให้เป็นกริดแบบ 1fr 1fr เพื่อให้อยู่ซ้ายขวาเสมอ */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'flex-start' }}>
-              {/* ซ้าย */}
-              <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
-                <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.greenAccent }} />
-                  <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{leftTitle}</span>
-                </div>
-                <DocumentPane
-                  title={leftTitle}
-                  fileData={results.program}
-                  discrepancies={results.discrepancies}
-                  selectedField={selectedField}
-                  setSelectedField={setSelectedField}
-                  hoveredField={hoveredField}
-                  setHoveredField={setHoveredField}
-                  showFieldList={false}
-                  notFoundLabel={copy.noData}
-                />
+              {/* ซ้าย (Shipping Instruction) */}
+            <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
+              <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.greenAccent }} />
+                <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{leftTitle}</span>
               </div>
+              <DocumentPane
+                title={leftTitle}
+                fileData={results.program}
+                discrepancies={results.discrepancies}
+                selectedField={selectedField}
+                setSelectedField={setSelectedField}
+                hoveredField={hoveredField}
+                setHoveredField={setHoveredField}
+                showFieldList={false}
+                notFoundLabel={copy.noData}
+                drawHighlights={false} // 🔥 เพิ่มบรรทัดนี้: ปิดการวาดไฮไลต์ฝั่งซ้ายทั้งหมด
+              />
+            </div>
 
-              {/* ขวา */}
-              <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
-                <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.blueAccent }} />
-                  <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{rightTitle}</span>
-                </div>
-                <DocumentPane
-                  title={rightTitle}
-                  fileData={results.original}
-                  discrepancies={results.discrepancies}
-                  selectedField={selectedField}
-                  setSelectedField={setSelectedField}
-                  hoveredField={hoveredField}
-                  setHoveredField={setHoveredField}
-                  showFieldList={false}
-                  notFoundLabel={copy.noData}
-                />
+            {/* ขวา (Bill of Lading) */}
+            <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
+              <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.blueAccent }} />
+                <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{rightTitle}</span>
               </div>
+              <DocumentPane
+                title={rightTitle}
+                fileData={results.original}
+                discrepancies={results.discrepancies}
+                selectedField={selectedField}
+                setSelectedField={setSelectedField}
+                hoveredField={hoveredField}
+                setHoveredField={setHoveredField}
+                showFieldList={false}
+                notFoundLabel={copy.noData}
+                drawHighlights={true} // 🔥 เพิ่มบรรทัดนี้: เปิดการวาดไฮไลต์ฝั่งขวา
+              />
+            </div>
             </div>
 
             <div style={{
@@ -662,8 +663,8 @@ const ComparisonPage = ({
                     <tbody>
                       {results.discrepancies.map((diff, idx) => {
                         const isSelectedRow = selectedField === diff.field;
-                        const originalDiffData = diff.program_value.diff;
-                        const programDiffData = diff.original_value.diff;
+                        const leftDiffData = diff.program_value.diff;
+                        const rightDiffData = diff.original_value.diff;
                         return (
                           <tr
                             key={idx}
@@ -676,10 +677,10 @@ const ComparisonPage = ({
                               {diff.field.replace(/_/g, ' ')}
                             </td>
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                              {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)')}
+                              {leftDiffData ? <DiffText diffData={leftDiffData} /> : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)')}
                             </td>
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                              {programDiffData ? <DiffText diffData={programDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
+                              {rightDiffData ? <DiffText diffData={rightDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
                             </td>
                           </tr>
                         );

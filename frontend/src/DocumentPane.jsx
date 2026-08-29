@@ -2,14 +2,41 @@ import React, { useState, useRef, useEffect } from 'react';
 
 // Helper function to parse field data
 const parseFieldData = (val) => {
-  if (val === null || val === undefined || val === '') return { text: '', bbox: null };
+  if (val === null || val === undefined || val === '') return { text: '', bbox: null, char_bboxes: [] };
   if (typeof val === 'object') {
     return {
       text: val.value !== undefined ? String(val.value) : JSON.stringify(val),
-      bbox: val.bbox || null 
+      bbox: val.bbox || null,
+      char_bboxes: val.char_bboxes || []
     };
   }
-  return { text: String(val), bbox: null };
+  return { text: String(val), bbox: null, char_bboxes: [] };
+};
+
+// Helper แปลงพิกัดไม่ว่ามาแบบไหนให้เป็น { x, y, width, height }
+const normalizeBoxCoords = (box) => {
+  if (!box) return null;
+  // กรณีมาเป็น Array [x1, y1, x2, y2]
+  if (Array.isArray(box) && box.length >= 4) {
+    return {
+      x: box[0],
+      y: box[1],
+      width: box[2] - box[0],
+      height: box[3] - box[1],
+      page: box[4] ?? 0
+    };
+  }
+  // กรณีมาเป็น Object { x, y, width, height }
+  if (box.x !== undefined && box.y !== undefined) {
+    return {
+      x: box.x,
+      y: box.y,
+      width: box.width ?? (box.x2 ? box.x2 - box.x : 0),
+      height: box.height ?? (box.y2 ? box.y2 - box.y : 0),
+      page: box.page ?? 0
+    };
+  }
+  return null;
 };
 
 // --- Style Objects ---
@@ -52,7 +79,7 @@ const DocumentPane = ({
   setHoveredField,
   showFieldList = true,
   notFoundLabel = 'Not Found',
-
+  drawHighlights = true, // ควบคุมการแสดงสีไฮไลต์ตอน Error
 }) => {
   const containerRef = useRef(null);
   const pageRefs = useRef({});
@@ -92,10 +119,11 @@ const DocumentPane = ({
     if (selectedField && fileData?.data?.[selectedField]) {
       const { bbox } = parseFieldData(fileData.data[selectedField]);
       const firstBbox = Array.isArray(bbox) ? bbox[0] : bbox;
-      const pageIndex = firstBbox?.page ?? 0;
-      if (firstBbox && containerRef.current && pageRefs.current[pageIndex]) {
+      const normalized = normalizeBoxCoords(firstBbox);
+      const pageIndex = normalized?.page ?? 0;
+      if (normalized && containerRef.current && pageRefs.current[pageIndex]) {
         containerRef.current.scrollTo({
-          top: pageRefs.current[pageIndex].offsetTop + (firstBbox.y * (scales[pageIndex] || 1)) - 50,
+          top: pageRefs.current[pageIndex].offsetTop + (normalized.y * (scales[pageIndex] || 1)) - 50,
           behavior: 'smooth'
         });
       }
@@ -106,61 +134,67 @@ const DocumentPane = ({
     if (!fileData || !fileData.data) return null;
 
     return Object.entries(fileData.data).flatMap(([key, item]) => {
-      const { bbox: rawBbox } = parseFieldData(item);
-      const bboxes = (Array.isArray(rawBbox) ? rawBbox : (rawBbox ? [rawBbox] : []))
-        .filter((box) => (box?.page ?? 0) === pageIndex);
-
-      if (bboxes.length === 0) return [];
-
+      const { bbox: rawBbox, char_bboxes } = parseFieldData(item);
       const mismatch = isFieldMismatch(key);
-      // Highlight only the exact field.  Grouping by the first word made
-      // `port_of_loading` and `port_of_discharge` highlight each other.
-      const isSelected = selectedField === key;
-      const isHovered = hoveredField === key;
 
-      let bgColor = 'rgba(76, 175, 80, 0.15)';
-      let borderColor = '#4caf50';
-      let zIndex = 1;
+      let boxesToDraw = [];
 
-      if (isSelected) {
-        bgColor = 'rgba(255, 235, 59, 0.4)'; 
-        borderColor = '#fbc02d';
-        zIndex = 10;
-      } else if (isHovered) {
-        bgColor = 'rgba(0, 123, 255, 0.3)'; 
-        borderColor = '#007BFF';
-        zIndex = 5;
-      } else if (mismatch) {
-        bgColor = 'rgba(244, 67, 54, 0.2)';
-        borderColor = '#f44336';
-        zIndex = 2;
+      // 1. ถ้าผิด: ให้ใช้ char_bboxes ก่อน (พิกัดเฉพาะตัวอักษร) ถ้าไม่มีให้ใช้ rawBbox กันพัง
+      if (mismatch && Array.isArray(char_bboxes) && char_bboxes.length > 0) {
+        boxesToDraw = char_bboxes;
+      } else {
+        boxesToDraw = Array.isArray(rawBbox) ? rawBbox : (rawBbox ? [rawBbox] : []);
       }
 
-      return bboxes.map((box, index) => {
-        if (!box || box.x === undefined) return null;
+      return boxesToDraw
+        .map(normalizeBoxCoords)
+        .filter((box) => box && (box.page ?? 0) === pageIndex)
+        .map((box, index) => {
+          const scale = scales[pageIndex] || 1;
+          const isSelected = selectedField === key;
+          const isHovered = hoveredField === key;
 
-        return (
-          <div
-            key={`box-${key}-${index}`}
-            onClick={() => setSelectedField(key)}
-            onMouseEnter={() => setHoveredField(key)}
-            onMouseLeave={() => setHoveredField(null)}
-            style={{
-              position: 'absolute',
-              left: `${box.x * (scales[pageIndex] || 1)}px`,
-              top: `${box.y * (scales[pageIndex] || 1)}px`,
-              width: `${box.width * (scales[pageIndex] || 1)}px`,
-              height: `${box.height * (scales[pageIndex] || 1)}px`,
-              backgroundColor: bgColor,
-              border: `2px solid ${borderColor}`,
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              zIndex: zIndex,
-              transition: 'all 0.2s ease-in-out',
-            }}
-          />
-        );
-      });
+          // 🔥 ค่าเริ่มต้น: โปร่งใส (ไม่มีสีเขียว, ไม่มีสีแดงสำหรับฝั่งซ้าย)
+          let bgColor = 'transparent';
+          let zIndex = 1;
+
+          // 🔥 ถ้าผิด + เป็นเอกสารฝั่งขวา (drawHighlights=true) ให้ใส่สีแดง
+          if (mismatch && drawHighlights) {
+            bgColor = 'rgba(239, 68, 68, 0.4)';
+            zIndex = 2;
+          }
+
+          // 🔥 ถ้าเอาเมาส์ชี้ หรือคลิกเลือก (ทำงานทั้งสองฝั่ง เพื่อให้รู้ว่ากดโดนอะไร)
+          if (isSelected) {
+            bgColor = 'rgba(254, 240, 138, 0.5)'; // สีเหลือง
+            zIndex = 10;
+          } else if (isHovered) {
+            bgColor = 'rgba(59, 130, 246, 0.35)'; // สีฟ้า
+            zIndex = 5;
+          }
+
+          return (
+            <div
+              key={`box-${key}-${index}`}
+              onClick={() => setSelectedField(key)}
+              onMouseEnter={() => setHoveredField(key)}
+              onMouseLeave={() => setHoveredField(null)}
+              style={{
+                position: 'absolute',
+                left: `${box.x * scale}px`,
+                top: `${box.y * scale}px`,
+                width: `${Math.max(box.width * scale, 2)}px`,
+                height: `${Math.max(box.height * scale, 2)}px`,
+                backgroundColor: bgColor,
+                border: 'none', // 🔥 ปิดการตีกรอบทั้งหมด
+                cursor: 'pointer',
+                pointerEvents: 'auto', // ทำให้ยังรับ Event คลิก/Hover ได้แม้โปร่งใส
+                zIndex: zIndex,
+                transition: 'background-color 0.15s ease',
+              }}
+            />
+          );
+        });
     });
   };
 
@@ -190,37 +224,39 @@ const DocumentPane = ({
         </div>
       )}
 
-      {showFieldList && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {Object.entries(fileData.data).map(([key, item]) => {
-          const mismatch = isFieldMismatch(key);
-          const { text: displayValue, bbox } = parseFieldData(item);
-          const isSelected = selectedField === key;
+      {showFieldList && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {Object.entries(fileData.data).map(([key, item]) => {
+            const mismatch = isFieldMismatch(key);
+            const { text: displayValue, bbox } = parseFieldData(item);
+            const isSelected = selectedField === key;
 
-          return (
-            <div 
-              key={key}
-              onClick={() => setSelectedField(key)}
-              onMouseEnter={() => setHoveredField(key)}
-              onMouseLeave={() => setHoveredField(null)}
-              style={{ 
-                padding: '10px', 
-                backgroundColor: isSelected ? '#fff9c4' : (mismatch ? '#ffe6e6' : '#fff'), 
-                border: isSelected ? '2px solid #fbc02d' : (mismatch ? '2px solid #ff4d4f' : '1px solid #ddd'), 
-                borderRadius: '4px',
-                cursor: bbox ? 'pointer' : 'default',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              <strong style={{ display: 'block', color: mismatch ? '#d9363e' : '#555', fontSize: '0.85em', textTransform: 'uppercase' }}>
-                {key.replace(/_/g, ' ')}
-              </strong>
-              <span style={{ fontSize: '1em', color: displayValue ? '#000' : '#999', whiteSpace: 'pre-wrap' }}>
-                {displayValue || notFoundLabel}
-              </span>
-            </div>
-          );
-        })}
-      </div>}
+            return (
+              <div 
+                key={key}
+                onClick={() => setSelectedField(key)}
+                onMouseEnter={() => setHoveredField(key)}
+                onMouseLeave={() => setHoveredField(null)}
+                style={{ 
+                  padding: '10px', 
+                  backgroundColor: isSelected ? '#fff9c4' : (mismatch ? '#ffe6e6' : '#fff'), 
+                  border: isSelected ? '2px solid #fbc02d' : (mismatch ? '2px solid #ff4d4f' : '1px solid #ddd'), 
+                  borderRadius: '4px',
+                  cursor: bbox ? 'pointer' : 'default',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <strong style={{ display: 'block', color: mismatch ? '#d9363e' : '#555', fontSize: '0.85em', textTransform: 'uppercase' }}>
+                  {key.replace(/_/g, ' ')}
+                </strong>
+                <span style={{ fontSize: '1em', color: displayValue ? '#000' : '#999', whiteSpace: 'pre-wrap' }}>
+                  {displayValue || notFoundLabel}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
