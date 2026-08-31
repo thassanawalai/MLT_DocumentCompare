@@ -14,7 +14,7 @@ TEMPLATE = {
         "offset_x": -5,
         "offset_y": 5,
         "width": 250,
-        "height": 47
+        "height": 70
     },
 
     "consignee": {
@@ -23,7 +23,7 @@ TEMPLATE = {
         "offset_x": -5,
         "offset_y": 5,
         "width": 250,
-        "height": 40
+        "height": 60
     },
 
     "notify_party": {
@@ -112,7 +112,7 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": -3,
         "offset_y": 4,
-        "width": 70,
+        "width": 65,
         "height": 100
     },
 

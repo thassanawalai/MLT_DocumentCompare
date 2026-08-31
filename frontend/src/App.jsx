@@ -166,10 +166,11 @@ const billOfLadingTemplateOptions = [
 
 const shippingInstructionTemplateOptions = [
   { value: 'MCKEY', label: 'MCKEY' },
-  { value: 'BFOODS_3', label: 'B.FOODS/OOCL/OAKFIELD1' },
-  { value: 'BFOODS_2', label: 'B.FOODS/OOCL/OAKFIELD2' },
+  { value: 'SUPER_SIERRA', label: 'B.FOODS/NO LOGO' },
+  { value: 'BFOODS_1', label: 'B.FOODS/LOGO BETAGRO UPSTAIRS ' },
+  // { value: 'BFOODS_2', label: 'B.FOODS/LOGO BETAGRO UPSTAIRS' },
+  { value: 'BFOODS_3', label: 'B.FOODS/LOGO BETAGRO RIGHT SIDE' },
   { value: 'PPI', label: 'B.FOOD/ONE/PPI' },
-  { value: 'SUPER_SIERRA', label: 'B.FOOD/ONE/SUPER SIERRA' },
   { value: 'AJIMOMOTO', label: 'AJINOMOTO' },
   { value: 'SIAMCHAI', label: 'SIAMCHAI' },
   { value: 'SURAPON', label: 'SURAPON' },
