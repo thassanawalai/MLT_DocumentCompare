@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import DocumentPane from './DocumentPane';
 import logo from './assets/LOGO2.png';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 
 const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
@@ -433,7 +434,13 @@ const ComparisonPage = ({
     try {
       const existingPdfBytes = await fileOriginal.arrayBuffer();
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      
+      pdfDoc.registerFontkit(fontkit);
+
+      const fontRes = await fetch('/fonts/THSarabunNew.ttf');
+      const fontBytes = await fontRes.arrayBuffer();
+      const customFont = await pdfDoc.embedFont(fontBytes);
+
       const pages = pdfDoc.getPages();
 
       pdfComments.forEach(comment => {
@@ -441,7 +448,7 @@ const ComparisonPage = ({
         if (!page) return;
 
         const { width, height } = page.getSize();
-        const fontSize = 12;
+        const fontSize = 16; // ฟอนต์ไทยปรับไซต์ใหญ่ขึ้นหน่อยให้พอดี
         
         const pdfX = comment.xRatio * width;
         const pdfY = height - (comment.yRatio * height) - fontSize; 
@@ -450,13 +457,14 @@ const ComparisonPage = ({
           x: pdfX,
           y: pdfY,
           size: fontSize,
-          font: timesRomanFont,
+          font: customFont, // <--- ใช้ฟอนต์สารบรรณที่เราฝังไว้
           color: rgb(1, 0, 0),
         });
       });
       return await pdfDoc.save();
     } catch (error) {
       console.error("PDF Generation Error:", error);
+      alert("ไม่สามารถฝังฟอนต์ภาษาไทยได้ กรุณาตรวจสอบไฟล์ฟอนต์");
       throw error;
     }
   };
@@ -902,7 +910,7 @@ function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif" }}>
       <style>{`
-        * { font-family: 'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif !important; }
+        * { font-family: 'Sarabun', sans-serif !important; }
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         .diff-equal { color: #15803d; font-weight: 500; }
