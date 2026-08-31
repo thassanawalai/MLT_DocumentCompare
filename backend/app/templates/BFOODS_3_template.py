@@ -50,8 +50,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 150,
-        "height": 20
+        "width": 200,
+        "height": 40
     },
 
     "place_of_receipt": {
@@ -77,8 +77,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 170,
-        "height": 20
+        "width": 200,
+        "height": 40
     },
 
     "port_of_discharge": {

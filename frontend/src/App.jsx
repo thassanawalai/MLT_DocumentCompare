@@ -435,9 +435,15 @@ const ComparisonPage = ({
       const existingPdfBytes = await fileOriginal.arrayBuffer();
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
+      // 1. ลงทะเบียนตัวช่วยอ่านฟอนต์ Custom
       pdfDoc.registerFontkit(fontkit);
 
+      // 2. ดึงไฟล์ฟอนต์มา และเช็กด้วยว่าดึงสำเร็จไหม!
       const fontRes = await fetch('/fonts/THSarabunNew.ttf');
+      if (!fontRes.ok) {
+        throw new Error(`โหลดไฟล์ฟอนต์ไม่สำเร็จ (HTTP Status: ${fontRes.status}) โปรดเช็กว่าไฟล์อยู่ใน public/fonts/`);
+      }
+
       const fontBytes = await fontRes.arrayBuffer();
       const customFont = await pdfDoc.embedFont(fontBytes);
 
@@ -448,23 +454,40 @@ const ComparisonPage = ({
         if (!page) return;
 
         const { width, height } = page.getSize();
-        const fontSize = 16; // ฟอนต์ไทยปรับไซต์ใหญ่ขึ้นหน่อยให้พอดี
+        const fontSize = 16;
         
-        const pdfX = comment.xRatio * width;
-        const pdfY = height - (comment.yRatio * height) - fontSize; 
+        let pdfX = comment.xRatio * width;
+        let pdfY = height - (comment.yRatio * height) - fontSize; 
 
-        page.drawText(comment.text, {
-          x: pdfX,
-          y: pdfY,
-          size: fontSize,
-          font: customFont, // <--- ใช้ฟอนต์สารบรรณที่เราฝังไว้
-          color: rgb(1, 0, 0),
-        });
+        // วาดเส้นขีดฆ่า
+        if (comment.showStrikethrough) {
+           const lineY = pdfY + (fontSize / 2.5);
+           page.drawLine({
+              start: { x: pdfX, y: lineY },
+              end: { x: pdfX + (comment.strikeWidth || 60), y: lineY },
+              thickness: 2,
+              color: rgb(1, 0, 0)
+           });
+           pdfX = pdfX + (comment.strikeWidth || 60) + 8;
+        }
+
+        // พิมพ์ข้อความคอมเมนต์
+        if (comment.text && comment.text.trim() !== '') {
+            page.drawText(comment.text, {
+              x: pdfX,
+              y: pdfY,
+              size: fontSize,
+              font: customFont,
+              color: rgb(1, 0, 0),
+            });
+        }
       });
+      
       return await pdfDoc.save();
+      
     } catch (error) {
       console.error("PDF Generation Error:", error);
-      alert("ไม่สามารถฝังฟอนต์ภาษาไทยได้ กรุณาตรวจสอบไฟล์ฟอนต์");
+      alert(`ไม่สามารถสร้าง PDF ได้เนื่องจาก:\n\n${error.message}`);
       throw error;
     }
   };
