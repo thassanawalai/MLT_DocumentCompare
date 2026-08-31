@@ -56,38 +56,35 @@ def _find_anchor_from_words(page: fitz.Page, anchor_text: str) -> fitz.Rect | No
 def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect | None:
     """
     ค้นหา anchor_text ด้วยการตรวจจับพิมเล็กพิมใหญ่อย่างถูกต้อง
-    Returns the bounding rectangle of the first exact match, or None if not found.
+    และใช้ Regex เพื่อเช็กไม่ให้จับคำที่เป็นส่วนหนึ่งของประโยคอื่น (เช่น "SAME AS CONSIGNEE")
     """
     try:
-        # First, try to find all text instances (case-insensitive)
-        # This returns rectangles, then we'll verify the actual text matches case-sensitively
+        # หาคำทั้งหมดที่ตรงกับ anchor_text
         all_instances = page.search_for(anchor_text)
         
-        # For each instance found, verify it matches case-sensitively
         for rect in all_instances:
-            # Expand the rect slightly to capture the text accurately
-            expanded_rect = rect + fitz.Rect(-2, -2, 2, 2)
-            extracted_text = page.get_text("text", clip=expanded_rect).strip()
+            # 🔥 อัปเกรด: ขยายกล่องไปทางซ้าย 40 พิกเซล เพื่อกวาดดูว่ามีคำอื่นนำหน้าหรือไม่
+            check_rect = rect + fitz.Rect(-40, -2, 2, 2)
+            extracted_text = page.get_text("text", clip=check_rect).strip()
             
-            # Check if our anchor text appears with exact case
             if anchor_text in extracted_text:
-                logger.debug(f"Found case-sensitive match for '{anchor_text}' at {rect}")
-                return rect
+                # แยกข้อความส่วนที่อยู่ "หน้า" คำที่เราค้นหาออกมา
+                prefix = extracted_text.split(anchor_text)[0].strip()
+                
+                # 🔥 Regex: เช็กว่าส่วนนำหน้าต้อง 'ไม่มี' ตัวอักษรหรือตัวเลข (ป้องกันคำว่า SAME AS นำหน้า)
+                # ถ้าเป็นหัวข้อจริงๆ ข้างหน้ามันควรจะว่างเปล่า หรือมีแค่สัญลักษณ์
+                if not re.search(r'[a-zA-Z0-9]', prefix):
+                    logger.debug(f"Found strict case-sensitive match for '{anchor_text}' at {rect}")
+                    return rect
+                else:
+                    logger.debug(f"Ignored '{anchor_text}' because it has prefix: '{prefix}'")
 
+        # Fallback ก๊อกสอง (กรณีที่หาแบบเป๊ะๆ ไม่เจอ)
         fallback_rect = _find_anchor_from_words(page, anchor_text)
         if fallback_rect is not None:
-            logger.debug(
-                "Found normalized case-sensitive match for '%s' at %s",
-                anchor_text,
-                fallback_rect,
-            )
+            logger.debug(f"Found normalized match for '{anchor_text}' at {fallback_rect}")
             return fallback_rect
 
-        if not all_instances:
-            logger.debug(f"No instances of '{anchor_text}' found")
-            return None
-
-        logger.debug(f"No case-sensitive match found for '{anchor_text}' among {len(all_instances)} instances")
         return None
         
     except Exception as e:
