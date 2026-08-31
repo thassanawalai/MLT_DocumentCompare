@@ -149,6 +149,14 @@ const DocumentPane = ({
   const pageRefs = useRef({});
   const [scales, setScales] = useState({});
 
+  const [commentModal, setCommentModal] = useState({
+    isOpen: false,
+    pageIndex: null,
+    xRatio: null,
+    yRatio: null,
+    text: ''
+  });
+
   const images = fileData?.images?.length ? fileData.images : (fileData?.image ? [fileData.image] : []);
   const isFieldMismatch = (fieldKey) => discrepancies?.some(diff => diff.field === fieldKey);
 
@@ -194,16 +202,29 @@ const DocumentPane = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    const text = prompt("Enter your comment:");
-    if (text && text.trim() !== "") {
+    // แทนที่จะใช้ prompt() เราจะเปิดกล่อง Modal แทน พร้อมเก็บพิกัดที่คลิกไว้
+    setCommentModal({
+      isOpen: true,
+      pageIndex,
+      xRatio: x / rect.width,
+      yRatio: y / rect.height,
+      text: ''
+    });
+  };
+
+  // ฟังก์ชันสำหรับเซฟคอมเมนต์
+  const handleSaveComment = () => {
+    if (commentModal.text && commentModal.text.trim() !== "") {
       onAddComment({
         id: Date.now().toString(),
-        text,
-        pageIndex,
-        xRatio: x / rect.width,
-        yRatio: y / rect.height
+        text: commentModal.text,
+        pageIndex: commentModal.pageIndex,
+        xRatio: commentModal.xRatio,
+        yRatio: commentModal.yRatio
       });
     }
+    // ปิดกล่อง
+    setCommentModal({ ...commentModal, isOpen: false, text: '' });
   };
 
   const renderBoxes = (pageIndex) => {
@@ -309,6 +330,66 @@ const DocumentPane = ({
               </div>
             );
           })}
+        </div>
+      )}
+      {commentModal.isOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+          zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(3px)' 
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px',
+            width: '90%', maxWidth: '450px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '1.25em', fontWeight: 'bold' }}>
+              📝 Comment
+            </h3>
+            
+            <textarea
+              autoFocus
+              value={commentModal.text}
+              onChange={(e) => setCommentModal({ ...commentModal, text: e.target.value })}
+              placeholder="Type the text you want to comment here..."
+              style={{
+                width: '100%', height: '120px', padding: '14px', borderRadius: '10px',
+                border: '1px solid #cbd5e1', fontFamily: 'inherit', fontSize: '1.05em',
+                resize: 'none', boxSizing: 'border-box', outline: 'none',
+                backgroundColor: '#f8fafc', color: '#334155'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+              <button
+                onClick={() => setCommentModal({ ...commentModal, isOpen: false })}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1',
+                  backgroundColor: '#fff', color: '#64748b', cursor: 'pointer',
+                  fontWeight: '600', transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#fff'}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSaveComment}
+                style={{
+                  padding: '10px 24px', borderRadius: '8px', border: 'none',
+                  backgroundColor: '#1d4ed8', color: '#fff', cursor: 'pointer',
+                  fontWeight: 'bold', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(29, 78, 216, 0.2)'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#1e40af'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+              >
+                บันทึก
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
