@@ -77,7 +77,7 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 150,
+        "width": 170,
         "height": 20
     },
 

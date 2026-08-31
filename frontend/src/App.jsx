@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import DocumentPane from './DocumentPane';
 import logo from './assets/LOGO2.png';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
@@ -173,7 +174,6 @@ const shippingInstructionTemplateOptions = [
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
   { value: 'BETAGRO', label: 'BETAGRO' },
-
 ];
 
 // ============================================================
@@ -200,6 +200,15 @@ const IconSpinner = ({ size = 18 }) => (
 const IconMenu = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
 );
+const IconDownload = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+);
+const IconPrint = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+);
+const IconMessageSquare = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+);
 
 // ============================================================
 // UploadZone
@@ -216,7 +225,7 @@ const UploadZone = ({ fileRef, file, onFileChange, onClear, accentColor, accentS
     if (dropped) {
       const dt = new DataTransfer();
       dt.items.add(dropped);
-      fileRef.current.files = dt.files;
+      if (fileRef.current) fileRef.current.files = dt.files;
       onFileChange(dropped);
     }
   };
@@ -346,20 +355,6 @@ const ComparisonFields = ({ originalData, programData, discrepancies, selectedFi
 };
 
 // ============================================================
-// StepBadge
-// ============================================================
-const StepBadge = ({ n, label, active }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-    <div style={{
-      width: 24, height: 24, borderRadius: '50%', backgroundColor: active ? theme.blue : theme.borderStrong,
-      color: active ? '#fff' : theme.inkSoft, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '0.72em', fontWeight: 800, flexShrink: 0, transition: 'all 0.2s',
-    }}>{n}</div>
-    <span style={{ fontSize: '0.78em', fontWeight: 600, color: active ? theme.ink : theme.inkSoft }}>{label}</span>
-  </div>
-);
-
-// ============================================================
 // ComparisonPage (Component กลาง)
 // ============================================================
 const ComparisonPage = ({
@@ -373,8 +368,8 @@ const ComparisonPage = ({
   rightTemplates,
   copy
 }) => {
-  const [fileOriginal, setFileOriginal] = useState(null); // ฝั่งขวา
-  const [fileProgram, setFileProgram] = useState(null);   // ฝั่งซ้าย
+  const [fileOriginal, setFileOriginal] = useState(null); // ฝั่งขวา (B/L)
+  const [fileProgram, setFileProgram] = useState(null);   // ฝั่งซ้าย (SI)
   const originalFileInputRef = useRef(null);
   const programFileInputRef = useRef(null);
 
@@ -388,14 +383,23 @@ const ComparisonPage = ({
   const [selectedField, setSelectedField] = useState(null);
   const [hoveredField, setHoveredField] = useState(null);
 
-  const step = results ? 5 : loading ? 4 : (fileOriginal && fileProgram) ? 3 : fileOriginal || fileProgram ? 2 : 1;
+  // โหมดการเขียนคอมเมนต์
+  const [isCommenting, setIsCommenting] = useState(false);
+  // State สำหรับเก็บข้อมูล Comment ที่พิมพ์บน PDF Preview
+  const [pdfComments, setPdfComments] = useState([]);
 
   const handleProcessFiles = async () => {
     if (!fileOriginal || !fileProgram) { setErrorMessage(copy.uploadRequired); return; }
     setLoading(true);
+    setIsCommenting(false);
     setErrorMessage('');
     setResults(null);
     setSelectedField(null);
+    // แนะนำ: หากต้องการเก็บคอมเมนต์เก่าไว้ ให้ลบการล้าง State นี้ออก 
+    // แต่ในเคสอัปโหลดไฟล์ใหม่ การล้างทิ้งจะปลอดภัยกว่าเพื่อป้องกันพิกัดเพี้ยน
+    if (pdfComments.length > 0) {
+       if(confirm("การเปรียบเทียบใหม่จะล้าง Marks เดิมทิ้ง ต้องการดำเนินการต่อหรือไม่?")) { setPdfComments([]); } else { setLoading(false); return; }
+    }
 
     const formData = new FormData();
     formData.append('company_original', companyOrig);
@@ -421,6 +425,68 @@ const ComparisonPage = ({
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateMarkedPDF = async () => {
+    if (!fileOriginal) return null;
+    try {
+      const existingPdfBytes = await fileOriginal.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      const pages = pdfDoc.getPages();
+
+      pdfComments.forEach(comment => {
+        const page = pages[comment.pageIndex];
+        if (!page) return;
+
+        const { width, height } = page.getSize();
+        const fontSize = 12;
+        
+        const pdfX = comment.xRatio * width;
+        const pdfY = height - (comment.yRatio * height) - fontSize; 
+
+        page.drawText(comment.text, {
+          x: pdfX,
+          y: pdfY,
+          size: fontSize,
+          font: timesRomanFont,
+          color: rgb(1, 0, 0),
+        });
+      });
+      return await pdfDoc.save();
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      throw error;
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const pdfBytes = await generateMarkedPDF();
+      if (!pdfBytes) return;
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Marked_${fileOriginal.name}`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดในการ Export PDF");
+    }
+  };
+
+  const handlePrintPDF = async () => {
+    try {
+      const pdfBytes = await generateMarkedPDF();
+      if (!pdfBytes) return;
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (win) win.focus();
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดในการสั่งพิมพ์");
     }
   };
 
@@ -479,7 +545,7 @@ const ComparisonPage = ({
                 fileRef={programFileInputRef}
                 file={fileProgram}
                 onFileChange={setFileProgram}
-                onClear={() => { setFileProgram(null); programFileInputRef.current.value = ''; }}
+                onClear={() => { setFileProgram(null); if (programFileInputRef.current) programFileInputRef.current.value = ''; }}
                 accentColor={theme.green}
                 accentSoft={theme.greenSoft}
                 copy={copy}
@@ -520,7 +586,7 @@ const ComparisonPage = ({
                 fileRef={originalFileInputRef}
                 file={fileOriginal}
                 onFileChange={setFileOriginal}
-                onClear={() => { setFileOriginal(null); originalFileInputRef.current.value = ''; }}
+                onClear={() => { setFileOriginal(null); if (originalFileInputRef.current) originalFileInputRef.current.value = ''; }}
                 accentColor={theme.blue}
                 accentSoft={theme.blueSoft}
                 copy={copy}
@@ -539,8 +605,8 @@ const ComparisonPage = ({
           </div>
         </div>
 
-        {/* ======== COMPARE BUTTON ======== */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+        {/* ======== ACTIONS (Compare / Export) ======== */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 28 }}>
           <button
             onClick={handleProcessFiles}
             disabled={loading}
@@ -558,6 +624,57 @@ const ComparisonPage = ({
             {loading && <IconSpinner size={16} />}
             {loading ? copy.comparing : copy.compare}
           </button>
+
+          {results && (
+            <>
+              <button
+                onClick={() => setIsCommenting(!isCommenting)}
+                style={{
+                  padding: '13px 32px', fontSize: '0.95em', fontWeight: 700,
+                  backgroundColor: isCommenting ? theme.amber : theme.inkMid, color: '#fff',
+                  border: 'none', borderRadius: 10, cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: `0 4px 15px rgba(0,0,0,0.15)`,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}
+              >
+                <IconMessageSquare />
+                {isCommenting ? "Finish Commenting" : "Add Comment"}
+              </button>
+
+              <button
+                onClick={handleExportPDF}
+                style={{
+                  padding: '13px 32px', fontSize: '0.95em', fontWeight: 700,
+                  backgroundColor: '#111827', color: '#fff',
+                  border: 'none', borderRadius: 10, cursor: 'pointer',
+                  transition: 'background-color 0.2s, transform 0.1s',
+                  boxShadow: `0 4px 20px rgba(15,23,42,0.35)`,
+                  display: 'flex', alignItems: 'center', gap: 10, letterSpacing: '0.01em',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = theme.navyMid; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = theme.navy; }}
+              >
+                <IconDownload size={18} />
+                Export PDF
+              </button>
+
+              <button
+                onClick={handlePrintPDF}
+                style={{
+                  padding: '13px 32px', fontSize: '0.95em', fontWeight: 700,
+                  backgroundColor: theme.surface, color: theme.ink,
+                  border: `1px solid ${theme.borderStrong}`, borderRadius: 10, cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: `0 4px 15px rgba(0,0,0,0.05)`,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}
+              >
+                <IconPrint size={18} />
+                Print
+              </button>
+            </>
+          )}
         </div>
 
         {/* ======== ERROR MESSAGE ======== */}
@@ -584,48 +701,56 @@ const ComparisonPage = ({
               <div style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
             </div>
 
+            {/* ส่วนแสดงผล PDF ซ้าย-ขวา */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'flex-start' }}>
               {/* ซ้าย (Shipping Instruction) */}
-            <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
-              <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.greenAccent }} />
-                <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{leftTitle}</span>
+              <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
+                <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.greenAccent }} />
+                  <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{leftTitle}</span>
+                </div>
+                <DocumentPane
+                  title={leftTitle}
+                  fileData={results.program}
+                  discrepancies={results.discrepancies}
+                  selectedField={selectedField}
+                  setSelectedField={setSelectedField}
+                  hoveredField={hoveredField}
+                  setHoveredField={setHoveredField}
+                  showFieldList={false}
+                  notFoundLabel={copy.noData}
+                  drawHighlights={false} 
+                  enableComments={false}
+                />
               </div>
-              <DocumentPane
-                title={leftTitle}
-                fileData={results.program}
-                discrepancies={results.discrepancies}
-                selectedField={selectedField}
-                setSelectedField={setSelectedField}
-                hoveredField={hoveredField}
-                setHoveredField={setHoveredField}
-                showFieldList={false}
-                notFoundLabel={copy.noData}
-                drawHighlights={false} // 🔥 เพิ่มบรรทัดนี้: ปิดการวาดไฮไลต์ฝั่งซ้ายทั้งหมด
-              />
+
+              {/* ขวา (Bill of Lading) */}
+              <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
+                <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.blueAccent }} />
+                  <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{rightTitle}</span>
+                </div>
+                <DocumentPane
+                  title={rightTitle}
+                  fileData={results.original}
+                  discrepancies={results.discrepancies}
+                  selectedField={selectedField}
+                  setSelectedField={setSelectedField}
+                  hoveredField={hoveredField}
+                  setHoveredField={setHoveredField}
+                  showFieldList={false}
+                  notFoundLabel={copy.noData}
+                  drawHighlights={true} 
+                  enableComments={isCommenting}
+                  comments={pdfComments}
+                  onAddComment={(cmt) => setPdfComments(prev => [...prev, cmt])}
+                  onUpdateComment={(id, updated) => setPdfComments(prev => prev.map(c => c.id === id ? updated : c))}
+                  onDeleteComment={(id) => setPdfComments(prev => prev.filter(c => c.id !== id))}
+                />
+              </div>
             </div>
 
-            {/* ขวา (Bill of Lading) */}
-            <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: 'hidden', boxShadow: theme.shadow }}>
-              <div style={{ backgroundColor: theme.navy, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: theme.blueAccent }} />
-                <span style={{ color: '#e2e8f0', fontSize: '0.8em', fontWeight: 700 }}>{rightTitle}</span>
-              </div>
-              <DocumentPane
-                title={rightTitle}
-                fileData={results.original}
-                discrepancies={results.discrepancies}
-                selectedField={selectedField}
-                setSelectedField={setSelectedField}
-                hoveredField={hoveredField}
-                setHoveredField={setHoveredField}
-                showFieldList={false}
-                notFoundLabel={copy.noData}
-                drawHighlights={true} // 🔥 เพิ่มบรรทัดนี้: เปิดการวาดไฮไลต์ฝั่งขวา
-              />
-            </div>
-            </div>
-
+            {/* ตาราง Discrepancies */}
             <div style={{
               marginTop: 28, border: `1px solid ${results.discrepancies.length > 0 ? '#fca5a5' : '#86efac'}`,
               borderLeft: `4px solid ${results.discrepancies.length > 0 ? theme.redAccent : theme.greenAccent}`,
@@ -663,8 +788,12 @@ const ComparisonPage = ({
                     <tbody>
                       {results.discrepancies.map((diff, idx) => {
                         const isSelectedRow = selectedField === diff.field;
-                        const leftDiffData = diff.program_value.diff;
-                        const rightDiffData = diff.original_value.diff;
+                        const programDiffData = diff.program_value.diff;
+                        const originalDiffData = diff.original_value.diff;
+                        const programRawText = programDiffData 
+                          ? programDiffData.map(p => p.value).join('') 
+                          : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)');
+
                         return (
                           <tr
                             key={idx}
@@ -677,10 +806,10 @@ const ComparisonPage = ({
                               {diff.field.replace(/_/g, ' ')}
                             </td>
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                              {leftDiffData ? <DiffText diffData={leftDiffData} /> : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)')}
+                              {programRawText || '(ว่าง)'}
                             </td>
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
-                              {rightDiffData ? <DiffText diffData={rightDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
+                              {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
                             </td>
                           </tr>
                         );
@@ -691,6 +820,7 @@ const ComparisonPage = ({
               )}
             </div>
 
+            {/* ตาราง ComparisonFields */}
             <ComparisonFields
               originalData={results.program.data}
               programData={results.original.data}
@@ -721,6 +851,7 @@ function App() {
   
   const [activeTab, setActiveTab] = useState('MAIN');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const getPageProps = () => {
     switch(activeTab) {
       case 'HBL':
@@ -769,8 +900,9 @@ function App() {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'IBM Plex Sans Thai', 'IBM Plex Sans', 'Inter', 'Segoe UI', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif" }}>
       <style>{`
+        * { font-family: 'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif !important; }
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         .diff-equal { color: #15803d; font-weight: 500; }
@@ -791,7 +923,6 @@ function App() {
       <nav style={{ backgroundColor: theme.navy, borderBottom: `1px solid ${theme.navyMid}`, zIndex: 100 }}>
         <div style={{ padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {/* 🔥 ปุ่ม Hamburger สำหรับเปิด/ปิด Sidebar */}
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               style={{
@@ -832,10 +963,10 @@ function App() {
       {/* ======== LAYOUT ======== */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        {/* ---- Sidebar (🔥 พับเก็บได้) ---- */}
+        {/* ---- Sidebar ---- */}
         <aside className="sidebar" style={{
-          width: isSidebarOpen ? 260 : 0,           // หดความกว้างเหลือ 0 ถ้าถูกปิด
-          opacity: isSidebarOpen ? 1 : 0,           // ซ่อนเนื้อหา
+          width: isSidebarOpen ? 260 : 0,           
+          opacity: isSidebarOpen ? 1 : 0,           
           visibility: isSidebarOpen ? 'visible' : 'hidden', 
           backgroundColor: theme.surface,
           borderRight: isSidebarOpen ? `1px solid ${theme.border}` : 'none',
@@ -843,9 +974,8 @@ function App() {
           flexDirection: 'column',
           overflowY: 'auto',
           flexShrink: 0,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // แอนิเมชันตอนเลื่อนพับ
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
         }}>
-          {/* ห่อเนื้อหา Sidebar ไว้ เพื่อไม่ให้มันบีบตัวตอนที่กำลังพับเก็บ */}
           <div style={{ padding: '24px 16px 12px', width: 260 }}>
             <p style={{ margin: '0 0 12px 8px', fontSize: '0.75em', fontWeight: 700, color: theme.inkSoft, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Menu / โหมดการตรวจสอบ

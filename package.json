@@ -1,4 +1,11 @@
 {
+  "name": "mlt-document-compare-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "preview": "npm run preview --prefix frontend"
+  },
   "dependencies": {
     "pdfjs-dist": "^6.2.108",
     "react-pdf": "^10.4.1"
