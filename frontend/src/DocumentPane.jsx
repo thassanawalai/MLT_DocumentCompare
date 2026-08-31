@@ -70,16 +70,19 @@ const DraggableComment = ({ comment, containerWidth, containerHeight, onUpdate, 
     >
       {/* เส้นขีดฆ่า */}
       {comment.showStrikethrough && (
-        <div style={{ width: `${comment.strikeWidth}px`, height: '3px', backgroundColor: '#ef4444', borderRadius: '2px' }} />
+        <div style={{ width: `${comment.strikeWidth}px`, height: '1.5px', backgroundColor: '#ef4444', borderRadius: '2px' }} />
       )}
       
       {/* ข้อความคอมเมนต์ (เอาเงาขาวออกเหลือแดงล้วน) */}
       {comment.text && (
         <div style={{
-          color: '#ef4444', fontFamily: '"Sarabun", "Times New Roman", serif',
-          fontSize: '18px', fontWeight: 'bold', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          backgroundColor: 'rgba(255,255,255,0.75)', // รองพื้นขาวจางๆ ให้นิดนึง จะได้อ่านง่ายเวลาทับตัวหนังสือสีดำ
-          padding: '0 4px', borderRadius: '4px'
+          color: '#ef4444', 
+          fontFamily: '"Sarabun", "Times New Roman", serif',
+          fontSize: '10px',
+          fontWeight: 'normal',
+          backgroundColor: 'transparent',
+          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+          padding: '0 2px'
         }}>
           {comment.text}
         </div>
