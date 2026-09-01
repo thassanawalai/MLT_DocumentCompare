@@ -21,10 +21,10 @@ const normalizeBoxCoords = (box) => {
 const paneStyle = { flex: 1, padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fafafa' };
 const titleStyle = { textAlign: 'center', color: '#333', borderBottom: '2px solid #ccc', paddingBottom: '10px' };
 const imageContainerStyle = { height: '500px', overflowY: 'auto', position: 'relative', border: '1px solid #ccc', backgroundColor: '#fff' };
-const imageStyle = { width: '100%', display: 'block' };
+const imageStyle = { width: '100%', display: 'block', userSelect: 'none', WebkitUserDrag: 'none' }; // 🔥 ป้องกันการเผลอลากรูปภาพ
 
 // ============================================================
-// Draggable Comment Component (อัปเกรด: ขีดฆ่า + Edit + ลบขอบขาว)
+// Draggable Comment Component
 // ============================================================
 const DraggableComment = ({ comment, containerWidth, containerHeight, onUpdate, onDelete, onEdit }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -64,39 +64,31 @@ const DraggableComment = ({ comment, containerWidth, containerHeight, onUpdate, 
       onMouseDown={handleMouseDown}
       style={{
         position: 'absolute', left: `${pos.x}px`, top: `${pos.y}px`, zIndex: 50,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        display: 'flex', alignItems: 'center', gap: '8px', userSelect: 'none'
+        cursor: isDragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', userSelect: 'none'
       }}
     >
-      {/* เส้นขีดฆ่า */}
-      {comment.showStrikethrough && (
-        <div style={{ width: `${comment.strikeWidth}px`, height: '1.5px', backgroundColor: '#ef4444', borderRadius: '2px' }} />
+      {comment.type === 'line' && (
+        <div style={{ width: `${comment.lineWidth}px`, height: '2px', backgroundColor: '#ef4444', borderRadius: '2px' }} />
       )}
       
-      {/* ข้อความคอมเมนต์ (เอาเงาขาวออกเหลือแดงล้วน) */}
-      {comment.text && (
+      {(comment.type === 'text' || !comment.type) && comment.text && (
         <div style={{
-          color: '#ef4444', 
-          fontFamily: '"Sarabun", "Times New Roman", serif',
-          fontSize: '10px',
-          fontWeight: 'normal',
-          backgroundColor: 'transparent',
-          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          padding: '0 2px'
+          color: '#ef4444', fontFamily: '"Sarabun", "Times New Roman", serif', fontSize: '13px', 
+          fontWeight: 'normal', backgroundColor: 'transparent', whiteSpace: 'pre-wrap', wordBreak: 'break-word', padding: '0 2px'
         }}>
           {comment.text}
         </div>
       )}
 
-      {/* เมนูจัดการ: แก้ไข / ลบ */}
       {(isHovered || isDragging) && (
         <div style={{
           position: 'absolute', top: '-30px', left: 0, display: 'flex', gap: '4px',
-          backgroundColor: '#fff', padding: '4px', borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0'
+          backgroundColor: '#fff', padding: '4px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0'
         }}>
-          <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onEdit(comment); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="แก้ไข">✏️</button>
-          <div style={{ width: '1px', backgroundColor: '#e2e8f0' }} />
+          {comment.type === 'text' && (
+             <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onEdit(comment); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="แก้ไข">✏️</button>
+          )}
+          {comment.type === 'text' && <div style={{ width: '1px', backgroundColor: '#e2e8f0' }} />}
           <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onDelete(comment.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="ลบ">❌</button>
         </div>
       )}
@@ -115,9 +107,11 @@ const DocumentPane = ({
   const containerRef = useRef(null);
   const pageRefs = useRef({});
   const [scales, setScales] = useState({});
+  const [activeTool, setActiveTool] = useState('text');
+  const [commentModal, setCommentModal] = useState({ isOpen: false, id: null, text: '' });
   
-  // State คุมกล่องใส่คอมเมนต์
-  const [commentModal, setCommentModal] = useState({ isOpen: false, mode: 'add', id: null, pageIndex: null, xRatio: null, yRatio: null, text: '', showStrikethrough: false, strikeWidth: 60 });
+  // 🔥 State สำหรับเก็บข้อมูลระหว่างการ "ลากวาดเส้น"
+  const [drawingLine, setDrawingLine] = useState(null);
 
   const images = fileData?.images?.length ? fileData.images : (fileData?.image ? [fileData.image] : []);
   const isFieldMismatch = (fieldKey) => discrepancies?.some(diff => diff.field === fieldKey);
@@ -133,21 +127,75 @@ const DocumentPane = ({
     window.addEventListener('resize', recalculate); return () => window.removeEventListener('resize', recalculate);
   }, [images.length]);
 
-  const handleImageClick = (e, pageIndex) => {
+  const handleImageMouseDown = (e, pageIndex) => {
     if (!enableComments || !onAddComment) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    setCommentModal({
-      isOpen: true, mode: 'add', id: Date.now().toString(), pageIndex,
-      xRatio: (e.clientX - rect.left) / rect.width, yRatio: (e.clientY - rect.top) / rect.height,
-      text: '', showStrikethrough: false, strikeWidth: 60
-    });
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (activeTool === 'line') {
+      setDrawingLine({ pageIndex, startX: x, startY: y, currentX: x });
+    } else {
+      setCommentModal({
+        isOpen: true, type: 'text', id: Date.now().toString(), pageIndex,
+        xRatio: x / rect.width, yRatio: y / rect.height, text: ''
+      });
+    }
   };
 
-  const handleSaveComment = () => {
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (!drawingLine) return;
+      const pageElement = pageRefs.current[drawingLine.pageIndex];
+      if (!pageElement) return;
+      const rect = pageElement.getBoundingClientRect();
+      
+      // ดักไม่ให้ลากทะลุขอบกระดาษ
+      let x = e.clientX - rect.left;
+      x = Math.max(0, Math.min(x, rect.width));
+      setDrawingLine(prev => ({ ...prev, currentX: x }));
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (!drawingLine) return;
+      const pageElement = pageRefs.current[drawingLine.pageIndex];
+      if (!pageElement) { setDrawingLine(null); return; }
+
+      const widthPx = pageElement.clientWidth;
+      const heightPx = pageElement.clientHeight;
+
+      const startX = Math.min(drawingLine.startX, drawingLine.currentX);
+      const endX = Math.max(drawingLine.startX, drawingLine.currentX);
+      const lineWidth = endX - startX;
+
+      if (lineWidth > 5) {
+         onAddComment({
+            id: Date.now().toString(),
+            type: 'line',
+            pageIndex: drawingLine.pageIndex,
+            xRatio: startX / widthPx,
+            yRatio: drawingLine.startY / heightPx,
+            lineWidth: lineWidth
+         });
+      }
+      setDrawingLine(null);
+    };
+
+    if (drawingLine) {
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [drawingLine, onAddComment]);
+
+  const handleSaveTextComment = () => {
     const payload = { ...commentModal };
-    if (commentModal.mode === 'add') onAddComment(payload);
-    else onUpdateComment(payload.id, payload);
-    setCommentModal({ ...commentModal, isOpen: false });
+    if (commentModal.mode === 'edit') onUpdateComment(payload.id, payload);
+    else onAddComment(payload);
+    setCommentModal({ isOpen: false, id: null, text: '' });
   };
 
   const renderBoxes = (pageIndex) => {
@@ -172,20 +220,38 @@ const DocumentPane = ({
   return (
     <div style={paneStyle}>
       <h2 style={titleStyle}>{title}</h2>
+      
+      {enableComments && images.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
+          <button onClick={() => setActiveTool('text')} style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', border: activeTool === 'text' ? '2px solid #3b82f6' : '1px solid #cbd5e1', backgroundColor: activeTool === 'text' ? '#eff6ff' : '#fff', color: activeTool === 'text' ? '#1d4ed8' : '#64748b' }}>
+            📝 พิมพ์ข้อความ
+          </button>
+          <button onClick={() => setActiveTool('line')} style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', border: activeTool === 'line' ? '2px solid #ef4444' : '1px solid #cbd5e1', backgroundColor: activeTool === 'line' ? '#fef2f2' : '#fff', color: activeTool === 'line' ? '#b91c1c' : '#64748b' }}>
+            ➖ ลากเส้นขีดฆ่า
+          </button>
+        </div>
+      )}
+
       {images.length > 0 && (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
           <div ref={containerRef} style={imageContainerStyle}>
             {images.map((image, pageIndex) => (
-              <div key={pageIndex} ref={(element) => { pageRefs.current[pageIndex] = element; }} style={{ position: 'relative', marginBottom: pageIndex === images.length - 1 ? 0 : '16px', cursor: enableComments ? 'crosshair' : 'default' }} onClick={(e) => handleImageClick(e, pageIndex)}>
-                <img src={`data:image/png;base64,${image}`} alt={`${title} page ${pageIndex + 1}`} onLoad={(event) => calculateScale(pageIndex, event.currentTarget)} style={imageStyle} />
+              <div key={pageIndex} ref={(element) => { pageRefs.current[pageIndex] = element; }} style={{ position: 'relative', marginBottom: pageIndex === images.length - 1 ? 0 : '16px', cursor: enableComments ? (activeTool === 'line' ? 'ew-resize' : 'text') : 'default' }} onMouseDown={(e) => handleImageMouseDown(e, pageIndex)}>
+                <img src={`data:image/png;base64,${image}`} alt={`${title} page ${pageIndex + 1}`} onLoad={(event) => calculateScale(pageIndex, event.currentTarget)} style={imageStyle} draggable="false" />
                 {renderBoxes(pageIndex)}
+                
+                {drawingLine && drawingLine.pageIndex === pageIndex && (
+                  <div style={{
+                    position: 'absolute',
+                    left: `${Math.min(drawingLine.startX, drawingLine.currentX)}px`,
+                    top: `${drawingLine.startY}px`,
+                    width: `${Math.abs(drawingLine.currentX - drawingLine.startX)}px`,
+                    height: '2px', backgroundColor: '#ef4444', zIndex: 100, pointerEvents: 'none'
+                  }} />
+                )}
+
                 {comments.filter(c => c.pageIndex === pageIndex).map(comment => (
-                  <DraggableComment 
-                    key={comment.id} comment={comment}
-                    containerWidth={pageRefs.current[pageIndex]?.clientWidth || 0} containerHeight={pageRefs.current[pageIndex]?.clientHeight || 0}
-                    onUpdate={onUpdateComment} onDelete={onDeleteComment}
-                    onEdit={(cmt) => setCommentModal({ isOpen: true, mode: 'edit', ...cmt })}
-                  />
+                  <DraggableComment key={comment.id} comment={comment} containerWidth={pageRefs.current[pageIndex]?.clientWidth || 0} containerHeight={pageRefs.current[pageIndex]?.clientHeight || 0} onUpdate={onUpdateComment} onDelete={onDeleteComment} onEdit={(cmt) => setCommentModal({ isOpen: true, mode: 'edit', ...cmt })} />
                 ))}
               </div>
             ))}
@@ -193,44 +259,14 @@ const DocumentPane = ({
         </div>
       )}
 
-      {/* Modal กล่องคอมเมนต์ (อัปเกรด) */}
       {commentModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px', width: '90%', maxWidth: '450px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '1.25em', fontWeight: 'bold' }}>
-              {commentModal.mode === 'add' ? '📝 เพิ่มคอมเมนต์' : '✏️ แก้ไขคอมเมนต์'}
-            </h3>
-            
-            {/* กล่องข้อความ */}
-            <textarea
-              autoFocus
-              value={commentModal.text}
-              onChange={(e) => setCommentModal({ ...commentModal, text: e.target.value })}
-              placeholder="พิมพ์ข้อความที่ถูกต้อง..."
-              style={{ width: '100%', height: '100px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontFamily: 'inherit', fontSize: '1.05em', resize: 'none', boxSizing: 'border-box', outline: 'none', backgroundColor: '#f8fafc', color: '#334155' }}
-            />
-
-            {/* ออปชันเสริม: ขีดฆ่า */}
-            <div style={{ marginTop: '20px', backgroundColor: '#f1f5f9', padding: '16px', borderRadius: '10px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#334155', fontWeight: 600 }}>
-                <input type="checkbox" checked={commentModal.showStrikethrough} onChange={(e) => setCommentModal({...commentModal, showStrikethrough: e.target.checked})} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
-                เพิ่มเส้นขีดฆ่าข้อความที่ผิด
-              </label>
-
-              {commentModal.showStrikethrough && (
-                <div style={{ marginTop: '12px', paddingLeft: '26px' }}>
-                  <label style={{ fontSize: '0.9em', color: '#64748b', display: 'block', marginBottom: '6px' }}>
-                    ความยาวของเส้นขีดฆ่า: {commentModal.strikeWidth}px
-                  </label>
-                  <input type="range" min="20" max="300" value={commentModal.strikeWidth} onChange={(e) => setCommentModal({...commentModal, strikeWidth: Number(e.target.value)})} style={{ width: '100%', cursor: 'pointer' }} />
-                </div>
-              )}
-            </div>
-
-            {/* ปุ่มกด */}
+            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '1.25em', fontWeight: 'bold' }}>📝 พิมพ์ข้อความที่ถูกต้อง</h3>
+            <textarea autoFocus value={commentModal.text} onChange={(e) => setCommentModal({ ...commentModal, text: e.target.value })} placeholder="พิมพ์ข้อความ..." style={{ width: '100%', height: '100px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontFamily: 'inherit', fontSize: '1.05em', resize: 'none', outline: 'none', backgroundColor: '#f8fafc' }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => setCommentModal({ ...commentModal, isOpen: false })} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#64748b', cursor: 'pointer', fontWeight: '600' }}>ยกเลิก</button>
-              <button onClick={handleSaveComment} style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#1d4ed8', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>บันทึก</button>
+              <button onClick={() => setCommentModal({ isOpen: false, text: '' })} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#64748b', cursor: 'pointer', fontWeight: '600' }}>ยกเลิก</button>
+              <button onClick={handleSaveTextComment} style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#1d4ed8', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>บันทึก</button>
             </div>
           </div>
         </div>

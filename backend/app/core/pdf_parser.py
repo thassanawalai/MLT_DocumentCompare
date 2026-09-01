@@ -59,27 +59,22 @@ def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect |
     และใช้ Regex เพื่อเช็กไม่ให้จับคำที่เป็นส่วนหนึ่งของประโยคอื่น (เช่น "SAME AS CONSIGNEE")
     """
     try:
-        # หาคำทั้งหมดที่ตรงกับ anchor_text
         all_instances = page.search_for(anchor_text)
         
         for rect in all_instances:
-            # 🔥 อัปเกรด: ขยายกล่องไปทางซ้าย 40 พิกเซล เพื่อกวาดดูว่ามีคำอื่นนำหน้าหรือไม่
             check_rect = rect + fitz.Rect(-40, -2, 2, 2)
             extracted_text = page.get_text("text", clip=check_rect).strip()
             
             if anchor_text in extracted_text:
-                # แยกข้อความส่วนที่อยู่ "หน้า" คำที่เราค้นหาออกมา
+
                 prefix = extracted_text.split(anchor_text)[0].strip()
-                
-                # 🔥 Regex: เช็กว่าส่วนนำหน้าต้อง 'ไม่มี' ตัวอักษรหรือตัวเลข (ป้องกันคำว่า SAME AS นำหน้า)
-                # ถ้าเป็นหัวข้อจริงๆ ข้างหน้ามันควรจะว่างเปล่า หรือมีแค่สัญลักษณ์
+
                 if not re.search(r'[a-zA-Z0-9]', prefix):
                     logger.debug(f"Found strict case-sensitive match for '{anchor_text}' at {rect}")
                     return rect
                 else:
                     logger.debug(f"Ignored '{anchor_text}' because it has prefix: '{prefix}'")
 
-        # Fallback ก๊อกสอง (กรณีที่หาแบบเป๊ะๆ ไม่เจอ)
         fallback_rect = _find_anchor_from_words(page, anchor_text)
         if fallback_rect is not None:
             logger.debug(f"Found normalized match for '{anchor_text}' at {fallback_rect}")

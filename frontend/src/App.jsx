@@ -435,8 +435,7 @@ const ComparisonPage = ({
     try {
       const existingPdfBytes = await fileOriginal.arrayBuffer();
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
-      // 1. ลงทะเบียนตัวช่วยอ่านฟอนต์ Custom
+
       pdfDoc.registerFontkit(fontkit);
 
       // 2. ดึงไฟล์ฟอนต์มา และเช็กด้วยว่าดึงสำเร็จไหม!
@@ -450,37 +449,37 @@ const ComparisonPage = ({
 
       const pages = pdfDoc.getPages();
 
-      pdfComments.forEach(comment => {
+     pdfComments.forEach(comment => {
         const page = pages[comment.pageIndex];
         if (!page) return;
 
         const { width, height } = page.getSize();
-        const fontSize = 16;
+        const fontSize = 12;
         
-        let pdfX = comment.xRatio * width;
-        let pdfY = height - (comment.yRatio * height) - fontSize; 
+        const pdfX = comment.xRatio * width;
+        const pdfY = height - (comment.yRatio * height) - fontSize; 
 
-        // วาดเส้นขีดฆ่า
-        if (comment.showStrikethrough) {
-           const lineY = pdfY + (fontSize / 2.5);
+        // 🔥 ถ้าคอมเมนต์นี้เป็นโหมด "เส้นแดงขีดฆ่า"
+        if (comment.type === 'line') {
+           const lineY = pdfY + (fontSize / 2.5); // ขยับเส้นให้อยู่ประมาณกึ่งกลางบรรทัด
            page.drawLine({
               start: { x: pdfX, y: lineY },
-              end: { x: pdfX + (comment.strikeWidth || 60), y: lineY },
-              thickness: 2,
+              end: { x: pdfX + (comment.lineWidth || 60), y: lineY },
+              thickness: 1.5,
               color: rgb(1, 0, 0)
            });
-           pdfX = pdfX + (comment.strikeWidth || 60) + 8;
-        }
-
-        // พิมพ์ข้อความคอมเมนต์
-        if (comment.text && comment.text.trim() !== '') {
-            page.drawText(comment.text, {
-              x: pdfX,
-              y: pdfY,
-              size: fontSize,
-              font: customFont,
-              color: rgb(1, 0, 0),
-            });
+        } 
+        // 🔥 ถ้าคอมเมนต์นี้เป็นโหมด "ข้อความ"
+        else {
+           if (comment.text && comment.text.trim() !== '') {
+              page.drawText(comment.text, {
+                x: pdfX,
+                y: pdfY,
+                size: fontSize,
+                font: customFont,
+                color: rgb(1, 0, 0),
+              });
+           }
         }
       });
       
