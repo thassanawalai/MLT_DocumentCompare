@@ -162,6 +162,8 @@ const billOfLadingTemplateOptions = [
   { value: 'OOCL', label: 'OOCL' },
   { value: 'YANGMING', label: 'YANG MING' },
   { value: 'ONE', label: 'ONE' },
+  { value: 'SHANGHAI', label: 'SHANGHAI JINJIANG' },
+  { value: 'WANHAI', label: 'WANHAI' },
 ];
 
 const shippingInstructionTemplateOptions = [
@@ -176,6 +178,9 @@ const shippingInstructionTemplateOptions = [
   { value: 'SURAPON', label: 'SURAPON' },
   { value: 'POLYPLEX', label: 'POLYPLEX' },
   { value: 'BETAGRO', label: 'BETAGRO' },
+  { value: 'FORTUNE', label: 'FORTUNE'},
+  { value: 'GC-M', label: 'GC-M' },
+  { value: 'MITSUI', label: 'MITSUI'}
 ];
 
 // ============================================================
@@ -587,7 +592,7 @@ const ComparisonPage = ({
                 <label style={labelStyle}>{copy.template}</label>
                 <select value={companyProg} onChange={(e) => setCompanyProg(e.target.value)} style={selectStyle}>
                   {leftTemplates.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
+                    <option key={opt.value} value={opt.value}>{opt.label?.replace(/_/g, ' ')}</option>
                   ))}
                 </select>
               </div>
@@ -628,7 +633,7 @@ const ComparisonPage = ({
                 <label style={labelStyle}>{copy.template}</label>
                 <select value={companyOrig} onChange={(e) => setCompanyOrig(e.target.value)} style={selectStyle}>
                   {rightTemplates.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label.replace(/_/g, ' ')}</option>
+                    <option key={opt.value} value={opt.value}>{opt.label?.replace(/_/g, ' ')}</option>
                   ))}
                 </select>
               </div>
