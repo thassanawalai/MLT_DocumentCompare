@@ -3,6 +3,7 @@ import DocumentPane from './DocumentPane';
 import logo from './assets/LOGO2.png';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
+import SIDataEntry from './SIDataEntry';
 
 const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
@@ -937,10 +938,11 @@ function App() {
   const currentProps = getPageProps();
 
   const menuItems = [
-    { id: 'MAIN', label: 'หน้าหลักเดิม', desc: 'SI vs B/L' },
-    { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
-    { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
-  ];
+      { id: 'MAIN', label: 'หน้าหลักเดิม', desc: 'SI vs B/L' },
+      { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
+      { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
+      { id: 'SI_FORM', label: 'SI Database', desc: 'สกัดข้อมูลลง Excel' }, // 👈 เพิ่มเมนูนี้เข้าไป!
+    ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif" }}>
@@ -1054,16 +1056,21 @@ function App() {
             </div>
           </div>
         </aside>
-
+        
         {/* ---- Main Content ---- */}
         <div className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
-          <ComparisonPage
-            key={activeTab} 
-            {...currentProps}
-            copy={copy}
-          />
+          {activeTab === 'SI_FORM' ? (
+            <SIDataEntry />
+          ) : (
+            <ComparisonPage
+              key={activeTab} 
+              {...currentProps}
+              copy={copy}
+            />
+          )}
         </div>
-      </div>
+
+
 
     </div>
   );
