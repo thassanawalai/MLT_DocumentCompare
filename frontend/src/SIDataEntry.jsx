@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 
-// ลิสต์ Template ของ SI (เอามาจากหน้า App เดิม)
+// ลิสต์ Template ของ SI
 const templateOptions = [
   { value: 'MCKEY', label: 'MCKEY' },
   { value: 'SUPER_SIERRA', label: 'B.FOODS/NO LOGO' },
@@ -18,53 +18,47 @@ const templateOptions = [
   { value: 'MITSUI', label: 'MITSUI'}
 ];
 
-const SIDataEntry = () => {
+// 🟢 รับ prop `copy` เข้ามาเพื่อรองรับ 2 ภาษา 🟢
+const SIDataEntry = ({ copy }) => {
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(templateOptions[0].value);
   
+  // State สำหรับเก็บไฟล์และ URL ของ PDF เพื่อแสดงฝั่งซ้าย
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+  
   // State สำหรับเก็บข้อมูลฟอร์ม
   const [formData, setFormData] = useState({
-    shipper: "",
-    booking_no: "",
-    consignee: "",
-    notify_party: "",
-    feeder: "",
-    place_of_receipt: "",
-    vessel: "",
-    port_of_loading: "",
-    port_of_discharge: "",
-    place_of_delivery: "",
-    mark: "",
-    quantity: "",
-    description: "",
-    gross_weight: "",
-    measurement: ""
+    shipper: "", booking_no: "", consignee: "", notify_party: "",
+    feeder: "", place_of_receipt: "", vessel: "", port_of_loading: "",
+    port_of_discharge: "", place_of_delivery: "", mark: "",
+    quantity: "", description: "", gross_weight: "", measurement: ""
   });
 
-  // ฟังก์ชันอัปโหลด PDF และเรียก API หลังบ้าน
   const handleUploadPDF = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // สร้าง URL จำลองเพื่อโชว์ PDF ฝั่งซ้ายทันที!
+    const fileUrl = URL.createObjectURL(file);
+    setPdfFile(file);
+    setPdfPreviewUrl(fileUrl);
+
     setLoading(true);
     const apiData = new FormData();
     apiData.append('file_program', file);
-    // 🟢 ส่งชื่อ Template ที่ User เลือกจาก Dropdown ไปให้หลังบ้าน 🟢
     apiData.append('company_program', selectedTemplate); 
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/v1/process-pdf`, { 
-        method: 'POST', 
-        body: apiData 
+        method: 'POST', body: apiData 
       });
       
       const result = await response.json();
       
       if (result.status === 'success' && result.program?.data) {
         const extracted = result.program.data;
-        
-        // เอาข้อมูลที่ API สกัดได้ มายัดลงฟอร์ม
         setFormData({
           shipper: extracted.shipper?.value || "",
           booking_no: extracted.booking_no?.value || "",
@@ -82,16 +76,14 @@ const SIDataEntry = () => {
           gross_weight: extracted.gross_weight?.value || "",
           measurement: extracted.measurement?.value || ""
         });
-        alert("✅ ดึงข้อมูลจาก PDF สำเร็จ! ตรวจสอบความถูกต้องได้เลย");
       } else {
-        alert("❌ อ่านข้อมูลไม่ได้ หรือไฟล์มีปัญหา");
+        alert(copy?.dataFetchError || "❌ ไม่สามารถอ่านข้อมูลได้ หรือไฟล์มีปัญหา");
       }
     } catch (error) {
       console.error("Error fetching API:", error);
-      alert("❌ เกิดข้อผิดพลาดในการเชื่อมต่อหลังบ้าน");
+      alert(copy?.unknownError || "❌ เกิดข้อผิดพลาดในการเชื่อมต่อหลังบ้าน");
     } finally {
       setLoading(false);
-      // เคลียร์ค่า input file เผื่อกดอัปโหลดไฟล์เดิมซ้ำ
       e.target.value = null; 
     }
   };
@@ -101,10 +93,9 @@ const SIDataEntry = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ฟังก์ชัน Export Excel
   const handleExportExcel = () => {
     const exportData = [{
-      "เวลาบันทึก (Timestamp)": new Date().toLocaleString('th-TH'),
+      "Timestamp": new Date().toLocaleString('en-GB'),
       "Template": selectedTemplate,
       "Booking No": formData.booking_no,
       "Shipper": formData.shipper,
@@ -129,147 +120,170 @@ const SIDataEntry = () => {
     XLSX.writeFile(workbook, formData.booking_no ? `SI_Data_${formData.booking_no}.xlsx` : `SI_Data_Export.xlsx`);
   };
 
+  // Styles สำหรับโครงสร้างฟอร์ม
   const styles = {
-    paper: { maxWidth: '900px', margin: '20px auto', backgroundColor: '#fff', border: '2px solid #000', fontFamily: 'Arial, sans-serif', color: '#000' },
+    paper: { minWidth: '700px', backgroundColor: '#fff', border: '1px solid #cbd5e1', fontFamily: "'Sarabun', Arial, sans-serif", color: '#000', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' },
     row: { display: 'flex', borderBottom: '1px solid #000' },
     colLeft: { flex: 1, borderRight: '1px solid #000', display: 'flex', flexDirection: 'column' },
     colRight: { flex: 1, display: 'flex', flexDirection: 'column' },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr' },
     cell: { borderRight: '1px solid #000', borderBottom: '1px solid #000', display: 'flex', flexDirection: 'column' },
-    label: { fontSize: '11px', fontWeight: 'bold', padding: '4px 6px', borderBottom: '1px solid #eee', backgroundColor: '#f9fafb' },
-    input: { border: 'none', padding: '8px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none' },
-    textarea: { border: 'none', padding: '8px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', minHeight: '80px' },
+    label: { fontSize: '11px', fontWeight: 'bold', padding: '4px 6px', borderBottom: '1px solid #eee', backgroundColor: '#f8fafc', color: '#334155' },
+    input: { border: 'none', padding: '8px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' },
+    textarea: { border: 'none', padding: '8px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', minHeight: '80px', fontFamily: 'inherit' },
     tableHeader: { fontSize: '10px', fontWeight: 'bold', textAlign: 'center', padding: '6px', borderBottom: '1px solid #000', borderRight: '1px solid #000' }
   };
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-      <h2 style={{ textAlign: 'center', color: '#1e293b' }}>ฟอร์มตรวจสอบและสกัดข้อมูลเอกสาร SI</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', backgroundColor: '#f0f2f5' }}>
       
-      {/* 🟢 ส่วนเลือก Template และอัปโหลดไฟล์ 🟢 */}
-      <div style={{ maxWidth: '600px', margin: '0 auto 20px', padding: '20px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* 🟢 ส่วน Header (อัปโหลดและเลือก Template) 🟢 */}
+      <div style={{ padding: '16px 24px', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ margin: '0 0 4px 0', fontSize: '1.2em', color: '#0f172a' }}>{copy?.programDocument || "SI Data Extraction"}</h2>
+          <span style={{ fontSize: '0.85em', color: '#64748b' }}>อัปโหลดเอกสาร SI เพื่อสกัดข้อมูลและส่งออกเป็น Excel</span>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
+          <select 
+            value={selectedTemplate} 
+            onChange={(e) => setSelectedTemplate(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+          >
+            {templateOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
           
-          {/* Step 1: Dropdown */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155' }}>
-              1. เลือกรูปแบบเอกสาร (Template):
-            </label>
-            <select 
-              value={selectedTemplate} 
-              onChange={(e) => setSelectedTemplate(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
-            >
-              {templateOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Step 2: Upload File */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155' }}>
-              2. อัปโหลดไฟล์ SI (PDF):
-            </label>
+          <div style={{ position: 'relative' }}>
             <input 
               type="file" 
               accept="application/pdf" 
               onChange={handleUploadPDF} 
               disabled={loading}
-              style={{ width: '100%', padding: '10px', border: '2px dashed #cbd5e1', borderRadius: '8px', backgroundColor: '#f8fafc', cursor: loading ? 'not-allowed' : 'pointer' }}
+              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: loading ? 'not-allowed' : 'pointer' }}
             />
+            <button style={{ padding: '8px 16px', backgroundColor: '#1d4ed8', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {loading ? "⏳ Processing..." : "📁 Upload PDF"}
+            </button>
           </div>
-
-          {loading && <div style={{ color: '#2563eb', fontWeight: 'bold', textAlign: 'center' }}>⏳ ระบบกำลังอ่านข้อมูลด้วย EasyOCR กรุณารอสักครู่...</div>}
         </div>
       </div>
-      
-      {/* โครงสร้างกระดาษ SI (ยังคงเหมือนเดิมเป๊ะ) */}
-      <div style={styles.paper}>
+
+      {/* 🟢 ส่วน Split View (ซ้าย: PDF, ขวา: Form) 🟢 */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        {/* แถวที่ 1 */}
-        <div style={styles.row}>
-          <div style={styles.colLeft}>
-            <div style={styles.label}>1. Shipper/Exporter (complete name and address)</div>
-            <textarea name="shipper" value={formData.shipper} onChange={handleChange} style={styles.textarea} />
+        {/* ฝั่งซ้าย: PDF Viewer */}
+        <div style={{ flex: 1, borderRight: '2px solid #cbd5e1', backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '8px 16px', backgroundColor: '#334155', color: '#fff', fontSize: '0.85em', fontWeight: 'bold' }}>
+            📄 Original Document (Copy text from here)
           </div>
-          <div style={styles.colRight}>
-            <div style={styles.label}>2. BOOKING NUMBER</div>
-            <input name="booking_no" value={formData.booking_no} onChange={handleChange} style={{...styles.input, fontSize: '16px', fontWeight: 'bold', textAlign: 'center', marginTop: '20px'}} />
-          </div>
-        </div>
-
-        {/* แถวที่ 2 */}
-        <div style={styles.row}>
-          <div style={styles.colLeft}>
-            <div style={styles.label}>3. Consignee (complete name and address)</div>
-            <textarea name="consignee" value={formData.consignee} onChange={handleChange} style={styles.textarea} />
-          </div>
-          <div style={{...styles.colRight, justifyContent: 'center', alignItems: 'center'}}>
-             <span style={{color: 'red', fontWeight: 'bold', fontSize: '24px'}}>SURRENDER B/L</span>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            {pdfPreviewUrl ? (
+              <iframe 
+                src={`${pdfPreviewUrl}#toolbar=0`} 
+                title="PDF Preview" 
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
+            ) : (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+                <p>No document uploaded. Please upload a PDF.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* แถวที่ 3 */}
-        <div style={styles.row}>
-          <div style={styles.colLeft}>
-            <div style={styles.label}>4. Notify Party (complete name and address)</div>
-            <textarea name="notify_party" value={formData.notify_party} onChange={handleChange} style={styles.textarea} />
+        {/* ฝั่งขวา: Data Entry Form */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
+          
+          <div style={{ overflowX: 'auto', paddingBottom: '20px' }}>
+            {/* โครงสร้างกระดาษ SI */}
+            <div style={styles.paper}>
+              {/* แถวที่ 1 */}
+              <div style={styles.row}>
+                <div style={styles.colLeft}>
+                  <div style={styles.label}>1. Shipper/Exporter (complete name and address)</div>
+                  <textarea name="shipper" value={formData.shipper} onChange={handleChange} style={styles.textarea} />
+                </div>
+                <div style={styles.colRight}>
+                  <div style={styles.label}>2. BOOKING NUMBER</div>
+                  <input name="booking_no" value={formData.booking_no} onChange={handleChange} style={{...styles.input, fontSize: '16px', fontWeight: 'bold', textAlign: 'center', marginTop: '20px'}} />
+                </div>
+              </div>
+
+              {/* แถวที่ 2 */}
+              <div style={styles.row}>
+                <div style={styles.colLeft}>
+                  <div style={styles.label}>3. Consignee (complete name and address)</div>
+                  <textarea name="consignee" value={formData.consignee} onChange={handleChange} style={styles.textarea} />
+                </div>
+                <div style={{...styles.colRight, justifyContent: 'center', alignItems: 'center'}}>
+                   <span style={{color: 'red', fontWeight: 'bold', fontSize: '24px'}}>SURRENDER B/L</span>
+                </div>
+              </div>
+
+              {/* แถวที่ 3 */}
+              <div style={styles.row}>
+                <div style={styles.colLeft}>
+                  <div style={styles.label}>4. Notify Party (complete name and address)</div>
+                  <textarea name="notify_party" value={formData.notify_party} onChange={handleChange} style={styles.textarea} />
+                </div>
+                <div style={styles.colRight}></div>
+              </div>
+
+              {/* แถวที่ 4 */}
+              <div style={styles.grid2}>
+                <div style={styles.cell}>
+                  <div style={styles.label}>5. Feeder Voy No.</div>
+                  <input name="feeder" value={formData.feeder} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{...styles.cell, borderRight: 'none'}}>
+                  <div style={styles.label}>6. Place of Receipt</div>
+                  <input name="place_of_receipt" value={formData.place_of_receipt} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={styles.cell}>
+                  <div style={styles.label}>7. Vessel Voy No.</div>
+                  <input name="vessel" value={formData.vessel} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{...styles.cell, borderRight: 'none'}}>
+                  <div style={styles.label}>8. Port of Loading</div>
+                  <input name="port_of_loading" value={formData.port_of_loading} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{...styles.cell, borderBottom: 'none'}}>
+                  <div style={styles.label}>9. Port of Discharge</div>
+                  <input name="port_of_discharge" value={formData.port_of_discharge} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{...styles.cell, borderRight: 'none', borderBottom: 'none'}}>
+                  <div style={styles.label}>10. Place of Delivery</div>
+                  <input name="place_of_delivery" value={formData.place_of_delivery} onChange={handleChange} style={styles.input} />
+                </div>
+              </div>
+
+              {/* แถวที่ 5: ตารางสินค้าด้านล่าง */}
+              <div style={{ borderTop: '2px solid #000', display: 'grid', gridTemplateColumns: '1.5fr 1fr 3fr 1fr 1fr' }}>
+                <div style={styles.tableHeader}>11. Marks and Numbers</div>
+                <div style={styles.tableHeader}>12. No. of Containers</div>
+                <div style={styles.tableHeader}>13. Kind of packages; description of goods</div>
+                <div style={styles.tableHeader}>14. G WT. (KGS)</div>
+                <div style={{...styles.tableHeader, borderRight: 'none'}}>15. M3</div>
+
+                <textarea name="mark" value={formData.mark} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000'}} />
+                <textarea name="quantity" value={formData.quantity} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000', textAlign: 'center'}} />
+                <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000'}} />
+                <textarea name="gross_weight" value={formData.gross_weight} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000', textAlign: 'center'}} />
+                <textarea name="measurement" value={formData.measurement} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', textAlign: 'center'}} />
+              </div>
+            </div>
           </div>
-          <div style={styles.colRight}></div>
+
+          <div style={{ textAlign: 'right', marginTop: '20px' }}>
+            <button onClick={handleExportExcel} style={{ padding: '12px 30px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+              💾 Export to Database (Excel)
+            </button>
+          </div>
+
         </div>
-
-        {/* แถวที่ 4 */}
-        <div style={styles.grid2}>
-          <div style={styles.cell}>
-            <div style={styles.label}>5. Feeder Voy No.</div>
-            <input name="feeder" value={formData.feeder} onChange={handleChange} style={styles.input} />
-          </div>
-          <div style={{...styles.cell, borderRight: 'none'}}>
-            <div style={styles.label}>6. Place of Receipt</div>
-            <input name="place_of_receipt" value={formData.place_of_receipt} onChange={handleChange} style={styles.input} />
-          </div>
-          <div style={styles.cell}>
-            <div style={styles.label}>7. Vessel Voy No.</div>
-            <input name="vessel" value={formData.vessel} onChange={handleChange} style={styles.input} />
-          </div>
-          <div style={{...styles.cell, borderRight: 'none'}}>
-            <div style={styles.label}>8. Port of Loading</div>
-            <input name="port_of_loading" value={formData.port_of_loading} onChange={handleChange} style={styles.input} />
-          </div>
-          <div style={{...styles.cell, borderBottom: 'none'}}>
-            <div style={styles.label}>9. Port of Discharge</div>
-            <input name="port_of_discharge" value={formData.port_of_discharge} onChange={handleChange} style={styles.input} />
-          </div>
-          <div style={{...styles.cell, borderRight: 'none', borderBottom: 'none'}}>
-            <div style={styles.label}>10. Place of Delivery</div>
-            <input name="place_of_delivery" value={formData.place_of_delivery} onChange={handleChange} style={styles.input} />
-          </div>
-        </div>
-
-        {/* แถวที่ 5: ตารางสินค้าด้านล่าง */}
-        <div style={{ borderTop: '2px solid #000', display: 'grid', gridTemplateColumns: '1.5fr 1fr 3fr 1fr 1fr' }}>
-          <div style={styles.tableHeader}>11. Marks and Numbers</div>
-          <div style={styles.tableHeader}>12. No. of Containers</div>
-          <div style={styles.tableHeader}>13. Kind of packages; description of goods</div>
-          <div style={styles.tableHeader}>14. G WT. (KGS)</div>
-          <div style={{...styles.tableHeader, borderRight: 'none'}}>15. M3</div>
-
-          <textarea name="mark" value={formData.mark} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000'}} />
-          <textarea name="quantity" value={formData.quantity} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000', textAlign: 'center'}} />
-          <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000'}} />
-          <textarea name="gross_weight" value={formData.gross_weight} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', borderRight: '1px solid #000', textAlign: 'center'}} />
-          <textarea name="measurement" value={formData.measurement} onChange={handleChange} style={{...styles.textarea, minHeight: '300px', textAlign: 'center'}} />
-        </div>
-
       </div>
-
-      <div style={{ textAlign: 'center', marginTop: '30px' }}>
-        <button onClick={handleExportExcel} style={{ padding: '12px 30px', backgroundColor: '#1d4ed8', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(29, 78, 216, 0.3)' }}>
-          💾 บันทึกข้อมูล & ส่งออก Excel
-        </button>
-      </div>
-
     </div>
   );
 };

@@ -938,10 +938,10 @@ function App() {
   const currentProps = getPageProps();
 
 const menuItems = [
-    { id: 'MAIN', label: 'หน้าหลักเดิม', desc: 'SI vs B/L' },
+    { id: 'MAIN', label: 'Document Comparison', desc: 'SI vs B/L' },
+    { id: 'SI_FORM', label: 'SI Database', desc: 'Add data to Excel' }, 
     { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
     { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
-    { id: 'SI_FORM', label: 'SI Database', desc: 'สกัดข้อมูลลง Excel' }, // 👈 เพิ่มเมนูนี้เข้าไป!
   ];
 
   return (
@@ -1060,7 +1060,7 @@ const menuItems = [
         {/* ---- Main Content ---- */}
         <div className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'SI_FORM' ? (
-            <SIDataEntry />
+            <SIDataEntry copy={copy} />
           ) : (
             <ComparisonPage
               key={activeTab} 
