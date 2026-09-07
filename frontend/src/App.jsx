@@ -937,12 +937,12 @@ function App() {
 
   const currentProps = getPageProps();
 
-  const menuItems = [
-      { id: 'MAIN', label: 'หน้าหลักเดิม', desc: 'SI vs B/L' },
-      { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
-      { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
-      { id: 'SI_FORM', label: 'SI Database', desc: 'สกัดข้อมูลลง Excel' }, // 👈 เพิ่มเมนูนี้เข้าไป!
-    ];
+const menuItems = [
+    { id: 'MAIN', label: 'หน้าหลักเดิม', desc: 'SI vs B/L' },
+    { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
+    { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
+    { id: 'SI_FORM', label: 'SI Database', desc: 'สกัดข้อมูลลง Excel' }, // 👈 เพิ่มเมนูนี้เข้าไป!
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif" }}>
@@ -1056,7 +1056,7 @@ function App() {
             </div>
           </div>
         </aside>
-        
+
         {/* ---- Main Content ---- */}
         <div className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'SI_FORM' ? (
@@ -1069,8 +1069,7 @@ function App() {
             />
           )}
         </div>
-
-
+      </div>
 
     </div>
   );
