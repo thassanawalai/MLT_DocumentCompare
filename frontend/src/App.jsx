@@ -416,8 +416,15 @@ const ComparisonPage = ({
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/v1/process-pdf`, { method: 'POST', body: formData });
 
+      const response = await fetch(
+          `${apiUrl}/api/v1/process-pdf`,
+          {
+              method: 'POST',
+              body: formData
+          }
+      );
+        
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorDetail = errorData.detail ? JSON.stringify(errorData.detail, null, 2) : copy.unknownError;
