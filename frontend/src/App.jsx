@@ -544,7 +544,7 @@ const ComparisonPage = ({
   const labelStyle = { display: 'block', marginBottom: 6, fontWeight: 600, color: theme.inkMid, fontSize: '0.82em', textTransform: 'uppercase', letterSpacing: '0.05em' };
 
   return (
-    <div style={{ maxWidth: 1500, margin: '0 auto', padding: '0 36px 64px' }}>
+    <div style={{ width: '100%', boxSizing: 'border-box', padding: '0 24px 64px' }}>
       {/* ======== PAGE HEADER ======== */}
       <div style={{ padding: '44px 0 32px', borderBottom: `1px solid ${theme.border}`, marginBottom: 36 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>

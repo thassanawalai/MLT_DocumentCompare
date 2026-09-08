@@ -192,7 +192,7 @@ const SIDataEntry = ({ copy }) => {
   const PDF_HEIGHT = 841.89;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', width: '100%', backgroundColor: '#f0f2f5', margin: 0, padding: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 'calc(100vh - 56px)', width: '100%', backgroundColor: '#f0f2f5', margin: 0, padding: 0 }}>
       
       <div style={{ padding: '16px 24px', backgroundColor: '#fff', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
         <div>
@@ -233,13 +233,13 @@ const SIDataEntry = ({ copy }) => {
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', width: '100%' }}>
         
-        <div style={{ flex: '1 1 40%', borderRight: `2px solid ${theme.border}`, backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '1 1 45%', borderRight: `2px solid ${theme.border}`, backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column', minWidth: '400px' }}>
           <div style={{ padding: '8px 16px', backgroundColor: '#374151', color: '#f8fafc', fontSize: '0.85em', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
             Document Preview (Extracted fields highlighted in green)
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', padding: '0' }}>
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', position: 'relative', padding: '16px' }}>
             {previewImage ? (
-              <div style={{ position: 'relative', width: '100%', backgroundColor: '#fff' }}>
+              <div style={{ position: 'relative', width: '100%', minWidth: '500px', backgroundColor: '#fff', margin: '0 auto', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                 <img 
                   src={previewImage} 
                   alt="Document Preview" 
@@ -270,9 +270,9 @@ const SIDataEntry = ({ copy }) => {
           </div>
         </div>
 
-        <div style={{ flex: '1 1 60%', overflowY: 'auto', overflowX: 'hidden', padding: '16px', backgroundColor: '#f8fafc', boxSizing: 'border-box' }}>
+        <div style={{ flex: '1 1 55%', overflowY: 'auto', overflowX: 'hidden', padding: '16px 24px', backgroundColor: '#f8fafc', boxSizing: 'border-box' }}>
           
-          <div style={{ paddingBottom: '20px' }}>
+          <div style={{ paddingBottom: '20px', width: '100%' }}>
             <div style={styles.paper}>
               
               <div style={styles.row}>
