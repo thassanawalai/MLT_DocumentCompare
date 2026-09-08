@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
+const fallbackTemplateOptions = [
+  { value: 'MCKEY', label: 'MCKEY' },
+  { value: 'SUPER_SIERRA', label: 'B.FOODS/NO LOGO' },
+  { value: 'BFOODS_1', label: 'B.FOODS/LOGO BETAGRO UPSTAIRS ' },
+  { value: 'BFOODS_3', label: 'B.FOODS/LOGO BETAGRO RIGHT SIDE' },
+  { value: 'PPI', label: 'B.FOOD/ONE/PPI' },
+  { value: 'AJIMOMOTO', label: 'AJINOMOTO' },
+  { value: 'SIAMCHAI', label: 'SIAMCHAI' },
+  { value: 'SURAPON', label: 'SURAPON' },
+  { value: 'POLYPLEX', label: 'POLYPLEX' },
+  { value: 'BETAGRO', label: 'BETAGRO' },
+  { value: 'FORTUNE', label: 'FORTUNE'},
+  { value: 'GC-M', label: 'GC-M' },
+  { value: 'MITSUI', label: 'MITSUI'}
+];
+
 const parseFieldValue = (fieldObj) => {
   if (!fieldObj) return "";
   if (typeof fieldObj === 'object' && fieldObj.value !== undefined && fieldObj.value !== null) {
@@ -13,8 +29,8 @@ const parseFieldValue = (fieldObj) => {
 const SIDataEntry = ({ copy }) => {
   const [loading, setLoading] = useState(false);
   
-  const [templateOptions, setTemplateOptions] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [templateOptions, setTemplateOptions] = useState(fallbackTemplateOptions);
+  const [selectedTemplate, setSelectedTemplate] = useState(fallbackTemplateOptions[0].value);
   
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
@@ -31,17 +47,25 @@ const SIDataEntry = ({ copy }) => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
         const response = await fetch(`${apiUrl}/api/v1/templates`);
-        const data = await response.json();
         
-        if (data.templates && data.templates.length > 0) {
-          const options = data.templates.map(t => ({ value: t, label: t.replace(/_/g, ' ') }));
-          setTemplateOptions(options);
-          setSelectedTemplate(options[0].value); 
+        const contentType = response.headers.get("content-type");
+        if (response.ok && contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          if (data.templates && data.templates.length > 0) {
+            const options = data.templates.map(t => ({ value: t, label: t.replace(/_/g, ' ') }));
+            setTemplateOptions(options);
+            setSelectedTemplate(options[0].value);
+            return;
+          }
         }
+        throw new Error("Invalid response format or empty data");
       } catch (error) {
-        console.error("Error fetching templates:", error);
+        console.warn("Failed to fetch templates from API. Using fallback options.");
+        setTemplateOptions(fallbackTemplateOptions);
+        setSelectedTemplate(fallbackTemplateOptions[0].value);
       }
     };
+    
     fetchTemplates();
   }, []);
 
