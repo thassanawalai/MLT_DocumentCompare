@@ -17,6 +17,13 @@ const templateOptions = [
   { value: 'MITSUI', label: 'MITSUI'}
 ];
 
+const parseFieldValue = (fieldObj) => {
+  if (!fieldObj) return "";
+  if (typeof fieldObj === 'object' && fieldObj.value) return String(fieldObj.value).trim();
+  if (typeof fieldObj === 'string') return fieldObj.trim();
+  return "";
+};
+
 const SIDataEntry = ({ copy }) => {
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(templateOptions[0].value);
@@ -54,28 +61,28 @@ const SIDataEntry = ({ copy }) => {
       if (result.status === 'success' && result.program?.data) {
         const extracted = result.program.data;
         setFormData({
-          shipper: extracted.shipper?.value || "",
-          booking_no: extracted.booking_no?.value || "",
-          consignee: extracted.consignee?.value || "",
-          notify_party: extracted.notify_party?.value || "",
-          feeder: extracted.feeder?.value || "",
-          place_of_receipt: extracted.place_of_receipt?.value || "",
-          vessel: extracted.vessel?.value || "",
-          port_of_loading: extracted.port_of_loading?.value || "",
-          port_of_discharge: extracted.port_of_discharge?.value || "",
-          place_of_delivery: extracted.place_of_delivery?.value || "",
-          mark: extracted.mark?.value || "",
-          quantity: extracted.quantity?.value || "",
-          description: extracted.description_of_good?.value || "",
-          gross_weight: extracted.gross_weight?.value || "",
-          measurement: extracted.measurement?.value || ""
+          shipper: parseFieldValue(extracted.shipper),
+          booking_no: parseFieldValue(extracted.booking_no),
+          consignee: parseFieldValue(extracted.consignee),
+          notify_party: parseFieldValue(extracted.notify_party),
+          feeder: parseFieldValue(extracted.feeder),
+          place_of_receipt: parseFieldValue(extracted.place_of_receipt),
+          vessel: parseFieldValue(extracted.vessel),
+          port_of_loading: parseFieldValue(extracted.port_of_loading),
+          port_of_discharge: parseFieldValue(extracted.port_of_discharge),
+          place_of_delivery: parseFieldValue(extracted.place_of_delivery),
+          mark: parseFieldValue(extracted.mark),
+          quantity: parseFieldValue(extracted.quantity),
+          description: parseFieldValue(extracted.description_of_good),
+          gross_weight: parseFieldValue(extracted.gross_weight),
+          measurement: parseFieldValue(extracted.measurement)
         });
       } else {
-        alert(copy?.dataFetchError || "❌ ไม่สามารถอ่านข้อมูลได้ หรือไฟล์มีปัญหา");
+        alert(copy?.dataFetchError || "Unable to read data or invalid file format.");
       }
     } catch (error) {
       console.error("Error fetching API:", error);
-      alert(copy?.unknownError || "❌ เกิดข้อผิดพลาดในการเชื่อมต่อหลังบ้าน");
+      alert(copy?.unknownError || "Connection error occurred.");
     } finally {
       setLoading(false);
       e.target.value = null; 
@@ -114,38 +121,35 @@ const SIDataEntry = ({ copy }) => {
     XLSX.writeFile(workbook, formData.booking_no ? `SI_Data_${formData.booking_no}.xlsx` : `SI_Data_Export.xlsx`);
   };
 
-  // 🎨 อัปเกรด Styles ให้เหมือนหน้า Comparison (ใช้สีกรมท่า/เทา)
-  const theme = { border: '#cbd5e1', bg: '#f8fafc', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8' };
+  const theme = { border: '#cbd5e1', bg: '#f1f5f9', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8' };
   
   const styles = {
-    // เอา minWidth ออก และใช้ width: 100% เพื่อให้พอดีจอเสมอ
-    paper: { width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '10px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' },
-    row: { display: 'flex', borderBottom: `1px solid ${theme.border}` },
+    paper: { width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '6px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', overflow: 'hidden' },
+    row: { display: 'flex', borderBottom: `1px solid ${theme.border}`, minHeight: '85px' },
     colLeft: { flex: 1, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', minWidth: 0 },
     colRight: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr' },
     cell: { borderRight: `1px solid ${theme.border}`, borderBottom: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', minWidth: 0 },
-    label: { fontSize: '11px', fontWeight: '800', padding: '6px 12px', borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase', letterSpacing: '0.02em' },
-    input: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', backgroundColor: 'transparent' },
-    textarea: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', minHeight: '85px', fontFamily: 'inherit', backgroundColor: 'transparent', lineHeight: '1.5' },
-    tableHeader: { fontSize: '10px', fontWeight: '800', textAlign: 'center', padding: '8px', borderBottom: `1px solid ${theme.border}`, borderRight: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' }
+    label: { fontSize: '10.5px', fontWeight: '700', padding: '6px 10px', borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' },
+    input: { border: 'none', padding: '8px 10px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', backgroundColor: 'transparent', flexGrow: 1 },
+    textarea: { border: 'none', padding: '8px 10px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'transparent', lineHeight: '1.4', flexGrow: 1 },
+    tableHeader: { fontSize: '10px', fontWeight: '700', textAlign: 'center', padding: '8px 4px', borderBottom: `1px solid ${theme.border}`, borderRight: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', backgroundColor: '#f0f2f5' }}>
       
-      {/* 🟢 Header 🟢 */}
-      <div style={{ padding: '20px 32px', backgroundColor: '#fff', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+      <div style={{ padding: '16px 24px', backgroundColor: '#fff', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
         <div>
-          <h2 style={{ margin: '0 0 6px 0', fontSize: '1.4em', color: theme.navy, fontWeight: '800' }}>Shipping Instruction</h2>
-          <span style={{ fontSize: '0.9em', color: '#64748b' }}>อัปโหลดเอกสาร SI เพื่อสกัดข้อมูลและส่งออกเป็น Excel</span>
+          <h2 style={{ margin: '0 0 4px 0', fontSize: '1.25em', color: theme.navy, fontWeight: '800' }}>Shipping Instruction</h2>
+          <span style={{ fontSize: '0.85em', color: '#64748b' }}>Upload SI document to extract data and export to Excel</span>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
           <select 
             value={selectedTemplate} 
             onChange={(e) => setSelectedTemplate(e.target.value)}
-            style={{ padding: '10px 16px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', cursor: 'pointer', backgroundColor: theme.bg, fontWeight: '600', color: theme.navy }}
+            style={{ padding: '8px 12px', borderRadius: '6px', border: `1px solid ${theme.border}`, fontSize: '13px', outline: 'none', cursor: 'pointer', backgroundColor: theme.bg, fontWeight: '600', color: theme.navy }}
           >
             {templateOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -160,20 +164,18 @@ const SIDataEntry = ({ copy }) => {
               disabled={loading}
               style={{ position: 'absolute', inset: 0, opacity: 0, cursor: loading ? 'not-allowed' : 'pointer' }}
             />
-            <button style={{ padding: '10px 20px', backgroundColor: theme.blue, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(29, 78, 216, 0.2)' }}>
-              {loading ? "⏳ Processing..." : "📁 Upload PDF"}
+            <button style={{ padding: '8px 16px', backgroundColor: theme.blue, color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {loading ? "Processing..." : "Upload PDF"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* 🟢 Split View 🟢 */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        {/* ฝั่งซ้าย: PDF Viewer */}
-        <div style={{ flex: 1, borderRight: `2px solid ${theme.border}`, backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '10px 16px', backgroundColor: '#374151', color: '#f8fafc', fontSize: '0.9em', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            📄 Original Document (Copy text from here)
+        <div style={{ flex: '1 1 45%', borderRight: `2px solid ${theme.border}`, backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '8px 16px', backgroundColor: '#374151', color: '#f8fafc', fontSize: '0.85em', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+            Original Document (Copy text from here)
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
             {pdfPreviewUrl ? (
@@ -184,44 +186,41 @@ const SIDataEntry = ({ copy }) => {
               />
             ) : (
               <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', flexDirection: 'column', gap: '12px' }}>
-                <span style={{ fontSize: '40px' }}>📄</span>
                 <p style={{ fontWeight: '500' }}>No document uploaded. Please upload a PDF.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* ฝั่งขวา: Data Entry Form */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', backgroundColor: theme.bg }}>
+        <div style={{ flex: '1 1 55%', overflowY: 'auto', padding: '20px', backgroundColor: '#f8fafc' }}>
           
-          {/* เอา overflowX ออก เพื่อให้กล่องพอดีกับ Layout กว้าง 100% */}
           <div style={{ paddingBottom: '20px' }}>
             <div style={styles.paper}>
               
               <div style={styles.row}>
                 <div style={styles.colLeft}>
-                  <div style={styles.label}>1. Shipper/Exporter (complete name and address)</div>
+                  <div style={styles.label}>1. Shipper/Exporter</div>
                   <textarea name="shipper" value={formData.shipper} onChange={handleChange} style={styles.textarea} />
                 </div>
                 <div style={styles.colRight}>
-                  <div style={styles.label}>2. BOOKING NUMBER</div>
-                  <input name="booking_no" value={formData.booking_no} onChange={handleChange} style={{...styles.input, fontSize: '16px', fontWeight: 'bold', textAlign: 'center', marginTop: '16px', color: theme.blue}} />
+                  <div style={styles.label}>2. Booking Number</div>
+                  <input name="booking_no" value={formData.booking_no} onChange={handleChange} style={{...styles.input, fontSize: '15px', fontWeight: 'bold', textAlign: 'center', color: theme.blue}} />
                 </div>
               </div>
 
               <div style={styles.row}>
                 <div style={styles.colLeft}>
-                  <div style={styles.label}>3. Consignee (complete name and address)</div>
+                  <div style={styles.label}>3. Consignee</div>
                   <textarea name="consignee" value={formData.consignee} onChange={handleChange} style={styles.textarea} />
                 </div>
                 <div style={{...styles.colRight, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff5f5'}}>
-                   <span style={{color: '#dc2626', fontWeight: '900', fontSize: '24px', letterSpacing: '0.05em'}}>SURRENDER B/L</span>
+                   <span style={{color: '#dc2626', fontWeight: '800', fontSize: '20px', letterSpacing: '0.02em'}}>SURRENDER B/L</span>
                 </div>
               </div>
 
               <div style={styles.row}>
                 <div style={styles.colLeft}>
-                  <div style={styles.label}>4. Notify Party (complete name and address)</div>
+                  <div style={styles.label}>4. Notify Party</div>
                   <textarea name="notify_party" value={formData.notify_party} onChange={handleChange} style={styles.textarea} />
                 </div>
                 <div style={styles.colRight}></div>
@@ -255,24 +254,34 @@ const SIDataEntry = ({ copy }) => {
               </div>
 
               <div style={{ borderTop: `1px solid ${theme.border}`, display: 'grid', gridTemplateColumns: '1.5fr 1fr 3fr 1fr 1fr' }}>
-                <div style={styles.tableHeader}>11. Marks and Numbers</div>
-                <div style={styles.tableHeader}>12. No. of Containers</div>
-                <div style={styles.tableHeader}>13. Kind of packages; description of goods</div>
+                <div style={styles.tableHeader}>11. Marks & Nos</div>
+                <div style={styles.tableHeader}>12. Containers</div>
+                <div style={styles.tableHeader}>13. Description of Goods</div>
                 <div style={styles.tableHeader}>14. G WT. (KGS)</div>
                 <div style={{...styles.tableHeader, borderRight: 'none'}}>15. M3</div>
 
-                <textarea name="mark" value={formData.mark} onChange={handleChange} style={{...styles.textarea, minHeight: '250px', borderRight: `1px solid ${theme.border}`}} />
-                <textarea name="quantity" value={formData.quantity} onChange={handleChange} style={{...styles.textarea, minHeight: '250px', borderRight: `1px solid ${theme.border}`, textAlign: 'center'}} />
-                <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.textarea, minHeight: '250px', borderRight: `1px solid ${theme.border}`}} />
-                <textarea name="gross_weight" value={formData.gross_weight} onChange={handleChange} style={{...styles.textarea, minHeight: '250px', borderRight: `1px solid ${theme.border}`, textAlign: 'center'}} />
-                <textarea name="measurement" value={formData.measurement} onChange={handleChange} style={{...styles.textarea, minHeight: '250px', textAlign: 'center'}} />
+                <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
+                  <textarea name="mark" value={formData.mark} onChange={handleChange} style={{...styles.textarea, minHeight: '200px'}} />
+                </div>
+                <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
+                  <textarea name="quantity" value={formData.quantity} onChange={handleChange} style={{...styles.textarea, minHeight: '200px', textAlign: 'center'}} />
+                </div>
+                <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
+                  <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.textarea, minHeight: '200px'}} />
+                </div>
+                <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
+                  <textarea name="gross_weight" value={formData.gross_weight} onChange={handleChange} style={{...styles.textarea, minHeight: '200px', textAlign: 'center'}} />
+                </div>
+                <div style={{display: 'flex'}}>
+                  <textarea name="measurement" value={formData.measurement} onChange={handleChange} style={{...styles.textarea, minHeight: '200px', textAlign: 'center'}} />
+                </div>
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-            <button onClick={handleExportExcel} style={{ padding: '14px 32px', backgroundColor: theme.navy, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)', transition: 'transform 0.1s' }}>
-              💾 Export to Database (Excel)
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+            <button onClick={handleExportExcel} style={{ padding: '12px 24px', backgroundColor: theme.navy, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15, 23, 42, 0.2)' }}>
+              Export to Database (Excel)
             </button>
           </div>
 
