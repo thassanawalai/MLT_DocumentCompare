@@ -20,7 +20,7 @@ const normalizeBoxCoords = (box) => {
 
 const paneStyle = { flex: 1, padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fafafa' };
 const titleStyle = { textAlign: 'center', color: '#333', borderBottom: '2px solid #ccc', paddingBottom: '10px' };
-const imageContainerStyle = { height: '500px', overflowY: 'auto', position: 'relative', border: '1px solid #ccc', backgroundColor: '#fff' };
+const imageContainerStyle = { height: '1000px', overflowY: 'auto', position: 'relative', border: '1px solid #ccc', backgroundColor: '#fff' };
 const imageStyle = { width: '100%', display: 'block', userSelect: 'none', WebkitUserDrag: 'none' }; // 🔥 ป้องกันการเผลอลากรูปภาพ
 
 // ============================================================
