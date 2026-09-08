@@ -71,11 +71,11 @@ const SIDataEntry = ({ copy }) => {
           measurement: extracted.measurement?.value || ""
         });
       } else {
-        alert(copy?.dataFetchError || "❌Unable to read the data or the file may be corrupted.");
+        alert(copy?.dataFetchError || "❌ ไม่สามารถอ่านข้อมูลได้ หรือไฟล์มีปัญหา");
       }
     } catch (error) {
       console.error("Error fetching API:", error);
-      alert(copy?.unknownError || "❌An error occurred while connecting to the backend.");
+      alert(copy?.unknownError || "❌ เกิดข้อผิดพลาดในการเชื่อมต่อหลังบ้าน");
     } finally {
       setLoading(false);
       e.target.value = null; 
@@ -114,9 +114,11 @@ const SIDataEntry = ({ copy }) => {
     XLSX.writeFile(workbook, formData.booking_no ? `SI_Data_${formData.booking_no}.xlsx` : `SI_Data_Export.xlsx`);
   };
 
+  // 🎨 อัปเกรด Styles ให้เหมือนหน้า Comparison (ใช้สีกรมท่า/เทา)
   const theme = { border: '#cbd5e1', bg: '#f8fafc', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8' };
   
   const styles = {
+    // เอา minWidth ออก และใช้ width: 100% เพื่อให้พอดีจอเสมอ
     paper: { width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '10px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' },
     row: { display: 'flex', borderBottom: `1px solid ${theme.border}` },
     colLeft: { flex: 1, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', minWidth: 0 },
@@ -136,7 +138,7 @@ const SIDataEntry = ({ copy }) => {
       <div style={{ padding: '20px 32px', backgroundColor: '#fff', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ margin: '0 0 6px 0', fontSize: '1.4em', color: theme.navy, fontWeight: '800' }}>Shipping Instruction</h2>
-          <span style={{ fontSize: '0.9em', color: '#64748b' }}>Upload an SI document to extract data and export it to Excel.</span>
+          <span style={{ fontSize: '0.9em', color: '#64748b' }}>อัปโหลดเอกสาร SI เพื่อสกัดข้อมูลและส่งออกเป็น Excel</span>
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
@@ -192,6 +194,7 @@ const SIDataEntry = ({ copy }) => {
         {/* ฝั่งขวา: Data Entry Form */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', backgroundColor: theme.bg }}>
           
+          {/* เอา overflowX ออก เพื่อให้กล่องพอดีกับ Layout กว้าง 100% */}
           <div style={{ paddingBottom: '20px' }}>
             <div style={styles.paper}>
               
