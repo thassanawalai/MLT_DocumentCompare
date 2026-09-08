@@ -33,7 +33,8 @@ const SIDataEntry = ({ copy }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(fallbackTemplateOptions[0].value);
   
   const [pdfFile, setPdfFile] = useState(null);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [bboxes, setBboxes] = useState([]);
   
   const [formData, setFormData] = useState({
     shipper: "", booking_no: "", consignee: "", notify_party: "",
@@ -73,9 +74,9 @@ const SIDataEntry = ({ copy }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const fileUrl = URL.createObjectURL(file);
     setPdfFile(file);
-    setPdfPreviewUrl(fileUrl);
+    setPreviewImage(null);
+    setBboxes([]);
 
     setLoading(true);
     const apiData = new FormData();
@@ -94,22 +95,38 @@ const SIDataEntry = ({ copy }) => {
         const d = result.program.data;
         console.log("Extracted data from API:", d); 
         
+        const base64Img = result.program.image || (result.program.images && result.program.images[0]);
+        if (base64Img) {
+          setPreviewImage(`data:image/png;base64,${base64Img}`);
+        }
+
+        const newBboxes = [];
+        Object.keys(d).forEach(key => {
+          if (d[key] && d[key].bbox) {
+            newBboxes.push({
+              key: key,
+              ...d[key].bbox
+            });
+          }
+        });
+        setBboxes(newBboxes);
+
         setFormData({
           shipper: parseFieldValue(d.shipper),
-          booking_no: parseFieldValue(d.booking_no),
+          booking_no: parseFieldValue(d.booking_no) || parseFieldValue(d.booking_number),
           consignee: parseFieldValue(d.consignee),
           notify_party: parseFieldValue(d.notify_party),
-          feeder: parseFieldValue(d.pre_carriage_by),
+          feeder: parseFieldValue(d.pre_carriage_by) || parseFieldValue(d.feeder),
           place_of_receipt: parseFieldValue(d.place_of_receipt),
-          vessel: parseFieldValue(d.vessel),
+          vessel: parseFieldValue(d.vessel) || parseFieldValue(d.ocean_vessel),
           port_of_loading: parseFieldValue(d.port_of_loading),
           port_of_discharge: parseFieldValue(d.port_of_discharge),
           place_of_delivery: parseFieldValue(d.place_of_delivery),
-          mark: parseFieldValue(d.mark),
-          quantity: parseFieldValue(d.quantity),
-          description: parseFieldValue(d.description_of_good),
+          mark: parseFieldValue(d.mark) || parseFieldValue(d.marks_and_nos),
+          quantity: parseFieldValue(d.quantity) || parseFieldValue(d.no_of_containers),
+          description: parseFieldValue(d.description_of_good) || parseFieldValue(d.description),
           gross_weight: parseFieldValue(d.gross_weight),
-          measurement: parseFieldValue(d.measurement)
+          measurement: parseFieldValue(d.measurement) || parseFieldValue(d.m3)
         });
 
       } else {
@@ -156,10 +173,10 @@ const SIDataEntry = ({ copy }) => {
     XLSX.writeFile(workbook, formData.booking_no ? `SI_Data_${formData.booking_no}.xlsx` : `SI_Data_Export.xlsx`);
   };
 
-  const theme = { border: '#cbd5e1', bg: '#f8fafc', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8' };
+  const theme = { border: '#cbd5e1', bg: '#f8fafc', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8', highlight: 'rgba(34, 197, 94, 0.35)', highlightBorder: 'rgb(21, 128, 61)' };
   
   const styles = {
-    paper: { minWidth: '900px', width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '6px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', overflow: 'hidden' },
+    paper: { width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '6px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', overflow: 'hidden' },
     row: { display: 'flex', borderBottom: `1px solid ${theme.border}`, minHeight: '85px' },
     colLeft: { flex: 1, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column' },
     colRight: { flex: 1, display: 'flex', flexDirection: 'column' },
@@ -171,10 +188,13 @@ const SIDataEntry = ({ copy }) => {
     tableHeader: { fontSize: '10px', fontWeight: '800', textAlign: 'center', padding: '10px 4px', borderBottom: `1px solid ${theme.border}`, borderRight: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' }
   };
 
+  const PDF_WIDTH = 595.28;
+  const PDF_HEIGHT = 841.89;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', backgroundColor: '#f0f2f5' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', width: '100%', backgroundColor: '#f0f2f5', margin: 0, padding: 0 }}>
       
-      <div style={{ padding: '16px 24px', backgroundColor: '#fff', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+      <div style={{ padding: '16px 24px', backgroundColor: '#fff', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
         <div>
           <h2 style={{ margin: '0 0 4px 0', fontSize: '1.25em', color: theme.navy, fontWeight: '800' }}>Shipping Instruction</h2>
           <span style={{ fontSize: '0.85em', color: '#64748b' }}>Upload SI document to extract data and export to Excel</span>
@@ -211,19 +231,37 @@ const SIDataEntry = ({ copy }) => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', width: '100%' }}>
         
-        <div style={{ flex: '1 1 45%', borderRight: `2px solid ${theme.border}`, backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '1 1 40%', borderRight: `2px solid ${theme.border}`, backgroundColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '8px 16px', backgroundColor: '#374151', color: '#f8fafc', fontSize: '0.85em', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-            Original Document (Copy text from here)
+            Document Preview (Extracted fields highlighted in green)
           </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            {pdfPreviewUrl ? (
-              <iframe 
-                src={`${pdfPreviewUrl}#toolbar=0&view=FitH`} 
-                title="PDF Preview" 
-                style={{ width: '100%', height: '100%', border: 'none' }}
-              />
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', padding: '0' }}>
+            {previewImage ? (
+              <div style={{ position: 'relative', width: '100%', backgroundColor: '#fff' }}>
+                <img 
+                  src={previewImage} 
+                  alt="Document Preview" 
+                  style={{ width: '100%', height: 'auto', display: 'block' }} 
+                />
+                
+                {bboxes.map((box, idx) => (
+                  <div 
+                    key={idx}
+                    style={{
+                      position: 'absolute',
+                      left: `${(box.x / PDF_WIDTH) * 100}%`,
+                      top: `${(box.y / PDF_HEIGHT) * 100}%`,
+                      width: `${(box.width / PDF_WIDTH) * 100}%`,
+                      height: `${(box.height / PDF_HEIGHT) * 100}%`,
+                      backgroundColor: theme.highlight,
+                      border: `1.5px solid ${theme.highlightBorder}`,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                ))}
+              </div>
             ) : (
               <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', flexDirection: 'column', gap: '12px' }}>
                 <p style={{ fontWeight: '500' }}>No document uploaded. Please upload a PDF.</p>
@@ -232,7 +270,7 @@ const SIDataEntry = ({ copy }) => {
           </div>
         </div>
 
-        <div style={{ flex: '1 1 55%', overflowY: 'auto', overflowX: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
+        <div style={{ flex: '1 1 60%', overflowY: 'auto', overflowX: 'hidden', padding: '16px', backgroundColor: '#f8fafc', boxSizing: 'border-box' }}>
           
           <div style={{ paddingBottom: '20px' }}>
             <div style={styles.paper}>
