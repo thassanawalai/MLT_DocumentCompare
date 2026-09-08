@@ -1,32 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-
-const templateOptions = [
-  { value: 'MCKEY', label: 'MCKEY' },
-  { value: 'SUPER_SIERRA', label: 'B.FOODS/NO LOGO' },
-  { value: 'BFOODS_1', label: 'B.FOODS/LOGO BETAGRO UPSTAIRS' },
-  { value: 'BFOODS_3', label: 'B.FOODS/LOGO BETAGRO RIGHT SIDE' },
-  { value: 'PPI', label: 'B.FOOD/ONE/PPI' },
-  { value: 'AJIMOMOTO', label: 'AJINOMOTO' },
-  { value: 'SIAMCHAI', label: 'SIAMCHAI' },
-  { value: 'SURAPON', label: 'SURAPON' },
-  { value: 'POLYPLEX', label: 'POLYPLEX' },
-  { value: 'BETAGRO', label: 'BETAGRO' },
-  { value: 'FORTUNE', label: 'FORTUNE'},
-  { value: 'GC-M', label: 'GC-M' },
-  { value: 'MITSUI', label: 'MITSUI'}
-];
 
 const parseFieldValue = (fieldObj) => {
   if (!fieldObj) return "";
-  if (typeof fieldObj === 'object' && fieldObj.value) return String(fieldObj.value).trim();
+  if (typeof fieldObj === 'object' && fieldObj.value !== undefined && fieldObj.value !== null) {
+    return String(fieldObj.value).trim();
+  }
   if (typeof fieldObj === 'string') return fieldObj.trim();
   return "";
 };
 
 const SIDataEntry = ({ copy }) => {
   const [loading, setLoading] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(templateOptions[0].value);
+  
+  const [templateOptions, setTemplateOptions] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
   
@@ -36,6 +25,25 @@ const SIDataEntry = ({ copy }) => {
     port_of_discharge: "", place_of_delivery: "", mark: "",
     quantity: "", description: "", gross_weight: "", measurement: ""
   });
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/v1/templates`);
+        const data = await response.json();
+        
+        if (data.templates && data.templates.length > 0) {
+          const options = data.templates.map(t => ({ value: t, label: t.replace(/_/g, ' ') }));
+          setTemplateOptions(options);
+          setSelectedTemplate(options[0].value); 
+        }
+      } catch (error) {
+        console.error("Error fetching templates:", error);
+      }
+    };
+    fetchTemplates();
+  }, []);
 
   const handleUploadPDF = async (e) => {
     const file = e.target.files[0];
@@ -59,24 +67,27 @@ const SIDataEntry = ({ copy }) => {
       const result = await response.json();
       
       if (result.status === 'success' && result.program?.data) {
-        const extracted = result.program.data;
+        const d = result.program.data;
+        console.log("Extracted data from API:", d); 
+        
         setFormData({
-          shipper: parseFieldValue(extracted.shipper),
-          booking_no: parseFieldValue(extracted.booking_no),
-          consignee: parseFieldValue(extracted.consignee),
-          notify_party: parseFieldValue(extracted.notify_party),
-          feeder: parseFieldValue(extracted.feeder),
-          place_of_receipt: parseFieldValue(extracted.place_of_receipt),
-          vessel: parseFieldValue(extracted.vessel),
-          port_of_loading: parseFieldValue(extracted.port_of_loading),
-          port_of_discharge: parseFieldValue(extracted.port_of_discharge),
-          place_of_delivery: parseFieldValue(extracted.place_of_delivery),
-          mark: parseFieldValue(extracted.mark),
-          quantity: parseFieldValue(extracted.quantity),
-          description: parseFieldValue(extracted.description_of_good),
-          gross_weight: parseFieldValue(extracted.gross_weight),
-          measurement: parseFieldValue(extracted.measurement)
+          shipper: parseFieldValue(d.shipper),
+          booking_no: parseFieldValue(d.booking_no),
+          consignee: parseFieldValue(d.consignee),
+          notify_party: parseFieldValue(d.notify_party),
+          feeder: parseFieldValue(d.pre_carriage_by),
+          place_of_receipt: parseFieldValue(d.place_of_receipt),
+          vessel: parseFieldValue(d.vessel),
+          port_of_loading: parseFieldValue(d.port_of_loading),
+          port_of_discharge: parseFieldValue(d.port_of_discharge),
+          place_of_delivery: parseFieldValue(d.place_of_delivery),
+          mark: parseFieldValue(d.mark),
+          quantity: parseFieldValue(d.quantity),
+          description: parseFieldValue(d.description_of_good),
+          gross_weight: parseFieldValue(d.gross_weight),
+          measurement: parseFieldValue(d.measurement)
         });
+
       } else {
         alert(copy?.dataFetchError || "Unable to read data or invalid file format.");
       }
@@ -121,19 +132,19 @@ const SIDataEntry = ({ copy }) => {
     XLSX.writeFile(workbook, formData.booking_no ? `SI_Data_${formData.booking_no}.xlsx` : `SI_Data_Export.xlsx`);
   };
 
-  const theme = { border: '#cbd5e1', bg: '#f1f5f9', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8' };
+  const theme = { border: '#cbd5e1', bg: '#f8fafc', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8' };
   
   const styles = {
-    paper: { width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '6px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', overflow: 'hidden' },
+    paper: { minWidth: '900px', width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '6px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', overflow: 'hidden' },
     row: { display: 'flex', borderBottom: `1px solid ${theme.border}`, minHeight: '85px' },
-    colLeft: { flex: 1, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', minWidth: 0 },
-    colRight: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 },
+    colLeft: { flex: 1, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column' },
+    colRight: { flex: 1, display: 'flex', flexDirection: 'column' },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr' },
-    cell: { borderRight: `1px solid ${theme.border}`, borderBottom: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', minWidth: 0 },
-    label: { fontSize: '10.5px', fontWeight: '700', padding: '6px 10px', borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' },
-    input: { border: 'none', padding: '8px 10px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', backgroundColor: 'transparent', flexGrow: 1 },
-    textarea: { border: 'none', padding: '8px 10px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'transparent', lineHeight: '1.4', flexGrow: 1 },
-    tableHeader: { fontSize: '10px', fontWeight: '700', textAlign: 'center', padding: '8px 4px', borderBottom: `1px solid ${theme.border}`, borderRight: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' }
+    cell: { borderRight: `1px solid ${theme.border}`, borderBottom: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column' },
+    label: { fontSize: '11px', fontWeight: '800', padding: '6px 12px', borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' },
+    input: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', backgroundColor: 'transparent', flexGrow: 1 },
+    textarea: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'transparent', lineHeight: '1.5', flexGrow: 1 },
+    tableHeader: { fontSize: '10px', fontWeight: '800', textAlign: 'center', padding: '10px 4px', borderBottom: `1px solid ${theme.border}`, borderRight: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' }
   };
 
   return (
@@ -149,11 +160,16 @@ const SIDataEntry = ({ copy }) => {
           <select 
             value={selectedTemplate} 
             onChange={(e) => setSelectedTemplate(e.target.value)}
+            disabled={templateOptions.length === 0}
             style={{ padding: '8px 12px', borderRadius: '6px', border: `1px solid ${theme.border}`, fontSize: '13px', outline: 'none', cursor: 'pointer', backgroundColor: theme.bg, fontWeight: '600', color: theme.navy }}
           >
-            {templateOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
+            {templateOptions.length === 0 ? (
+              <option>Loading templates...</option>
+            ) : (
+              templateOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))
+            )}
           </select>
           
           <div style={{ position: 'relative' }}>
@@ -161,8 +177,8 @@ const SIDataEntry = ({ copy }) => {
               type="file" 
               accept="application/pdf" 
               onChange={handleUploadPDF} 
-              disabled={loading}
-              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: loading ? 'not-allowed' : 'pointer' }}
+              disabled={loading || templateOptions.length === 0}
+              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: (loading || templateOptions.length === 0) ? 'not-allowed' : 'pointer' }}
             />
             <button style={{ padding: '8px 16px', backgroundColor: theme.blue, color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {loading ? "Processing..." : "Upload PDF"}
@@ -180,7 +196,7 @@ const SIDataEntry = ({ copy }) => {
           <div style={{ flex: 1, overflow: 'hidden' }}>
             {pdfPreviewUrl ? (
               <iframe 
-                src={`${pdfPreviewUrl}#toolbar=0`} 
+                src={`${pdfPreviewUrl}#toolbar=0&view=FitH`} 
                 title="PDF Preview" 
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
@@ -192,14 +208,14 @@ const SIDataEntry = ({ copy }) => {
           </div>
         </div>
 
-        <div style={{ flex: '1 1 55%', overflowY: 'auto', padding: '20px', backgroundColor: '#f8fafc' }}>
+        <div style={{ flex: '1 1 55%', overflowY: 'auto', overflowX: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
           
           <div style={{ paddingBottom: '20px' }}>
             <div style={styles.paper}>
               
               <div style={styles.row}>
                 <div style={styles.colLeft}>
-                  <div style={styles.label}>1. Shipper/Exporter</div>
+                  <div style={styles.label}>1. Shipper/Exporter (complete name and address)</div>
                   <textarea name="shipper" value={formData.shipper} onChange={handleChange} style={styles.textarea} />
                 </div>
                 <div style={styles.colRight}>
@@ -210,17 +226,17 @@ const SIDataEntry = ({ copy }) => {
 
               <div style={styles.row}>
                 <div style={styles.colLeft}>
-                  <div style={styles.label}>3. Consignee</div>
+                  <div style={styles.label}>3. Consignee (complete name and address)</div>
                   <textarea name="consignee" value={formData.consignee} onChange={handleChange} style={styles.textarea} />
                 </div>
-                <div style={{...styles.colRight, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff5f5'}}>
-                   <span style={{color: '#dc2626', fontWeight: '800', fontSize: '20px', letterSpacing: '0.02em'}}>SURRENDER B/L</span>
+                <div style={{...styles.colRight, justifyContent: 'center', alignItems: 'center'}}>
+                   <span style={{color: '#dc2626', fontWeight: '800', fontSize: '20px', letterSpacing: '0.02em', opacity: 0.2}}>SURRENDER B/L</span>
                 </div>
               </div>
 
               <div style={styles.row}>
                 <div style={styles.colLeft}>
-                  <div style={styles.label}>4. Notify Party</div>
+                  <div style={styles.label}>4. Notify Party (complete name and address)</div>
                   <textarea name="notify_party" value={formData.notify_party} onChange={handleChange} style={styles.textarea} />
                 </div>
                 <div style={styles.colRight}></div>
@@ -261,19 +277,19 @@ const SIDataEntry = ({ copy }) => {
                 <div style={{...styles.tableHeader, borderRight: 'none'}}>15. M3</div>
 
                 <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
-                  <textarea name="mark" value={formData.mark} onChange={handleChange} style={{...styles.textarea, minHeight: '200px'}} />
+                  <textarea name="mark" value={formData.mark} onChange={handleChange} style={{...styles.textarea, minHeight: '220px'}} />
                 </div>
                 <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
-                  <textarea name="quantity" value={formData.quantity} onChange={handleChange} style={{...styles.textarea, minHeight: '200px', textAlign: 'center'}} />
+                  <textarea name="quantity" value={formData.quantity} onChange={handleChange} style={{...styles.textarea, minHeight: '220px', textAlign: 'center'}} />
                 </div>
                 <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
-                  <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.textarea, minHeight: '200px'}} />
+                  <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.textarea, minHeight: '220px'}} />
                 </div>
                 <div style={{display: 'flex', borderRight: `1px solid ${theme.border}`}}>
-                  <textarea name="gross_weight" value={formData.gross_weight} onChange={handleChange} style={{...styles.textarea, minHeight: '200px', textAlign: 'center'}} />
+                  <textarea name="gross_weight" value={formData.gross_weight} onChange={handleChange} style={{...styles.textarea, minHeight: '220px', textAlign: 'center'}} />
                 </div>
                 <div style={{display: 'flex'}}>
-                  <textarea name="measurement" value={formData.measurement} onChange={handleChange} style={{...styles.textarea, minHeight: '200px', textAlign: 'center'}} />
+                  <textarea name="measurement" value={formData.measurement} onChange={handleChange} style={{...styles.textarea, minHeight: '220px', textAlign: 'center'}} />
                 </div>
               </div>
             </div>
