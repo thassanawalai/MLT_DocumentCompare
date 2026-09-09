@@ -53,12 +53,24 @@ const SIDataEntry = ({ copy }) => {
         if (response.ok && contentType && contentType.includes("application/json")) {
           const data = await response.json();
           if (data.templates && data.templates.length > 0) {
-            const options = data.templates.map(t => ({ value: t, label: t.replace(/_/g, ' ') }));
-            setTemplateOptions(options);
-            setSelectedTemplate(options[0].value);
+            
+            const allowedTemplates = ['MCKEY', 'BETAGRO', 'GC-M', 'OOCL', 'SUPER_SIERRA', 'BFOODS_1', 'BFOODS_3', 'PPI', 'AJIMOMOTO', 'SIAMCHAI', 'SURAPON', 'POLYPLEX', 'FORTUNE', 'MITSUI',];
+            
+            const options = data.templates
+              .filter(t => allowedTemplates.includes(t))
+              .map(t => ({ value: t, label: t.replace(/_/g, ' ') }));
+              
+            if (options.length > 0) {
+              setTemplateOptions(options);
+              setSelectedTemplate(options[0].value);
+            } else {
+              setTemplateOptions(fallbackTemplateOptions);
+              setSelectedTemplate(fallbackTemplateOptions[0].value);
+            }
             return;
           }
         }
+
         throw new Error("Invalid response format or empty data");
       } catch (error) {
         console.warn("Failed to fetch templates from API. Using fallback options.");
@@ -212,14 +224,14 @@ const SIDataEntry = ({ copy }) => {
   
   const styles = {
     paper: { width: '100%', backgroundColor: '#fff', border: `1px solid ${theme.border}`, borderRadius: '6px', fontFamily: "'Sarabun', Arial, sans-serif", color: '#1e293b', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', overflow: 'hidden' },
-    row: { display: 'flex', borderBottom: `1px solid ${theme.border}`, minHeight: '85px' },
+    row: { display: 'flex', borderBottom: `1px solid ${theme.border}`, minHeight: '150px' }, 
     colLeft: { flex: 1, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column' },
     colRight: { flex: 1, display: 'flex', flexDirection: 'column' },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr' },
     cell: { borderRight: `1px solid ${theme.border}`, borderBottom: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column' },
     label: { fontSize: '11px', fontWeight: '800', padding: '6px 12px', borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' },
     input: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', backgroundColor: 'transparent', flexGrow: 1 },
-    textarea: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'transparent', lineHeight: '1.5', flexGrow: 1 },
+    textarea: { border: 'none', padding: '10px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'transparent', lineHeight: '1.5', flexGrow: 1, minHeight: '110px' },
     tableHeader: { fontSize: '10px', fontWeight: '800', textAlign: 'center', padding: '10px 4px', borderBottom: `1px solid ${theme.border}`, borderRight: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.headerText, textTransform: 'uppercase' }
   };
 
