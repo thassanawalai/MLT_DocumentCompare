@@ -146,32 +146,67 @@ const SIDataEntry = ({ copy }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleExportExcel = () => {
-    const exportData = [{
-      "Timestamp": new Date().toLocaleString('en-GB'),
-      "Template": selectedTemplate,
-      "Booking No": formData.booking_no,
-      "Shipper": formData.shipper,
-      "Consignee": formData.consignee,
-      "Notify Party": formData.notify_party,
-      "Feeder": formData.feeder,
-      "Vessel": formData.vessel,
-      "Port of Loading": formData.port_of_loading,
-      "Port of Discharge": formData.port_of_discharge,
-      "Place of Receipt": formData.place_of_receipt,
-      "Place of Delivery": formData.place_of_delivery,
-      "Marks & Numbers": formData.mark,
-      "Quantity": formData.quantity,
-      "Description": formData.description,
-      "Gross Weight": formData.gross_weight,
-      "Measurement": formData.measurement
-    }];
+  const handleExportCSV = () => {
+    const headers = [
+      "SHIPMENT NO.", "BOOKING NO.", "SHIPPER", "CONSIGNEE", "NOTIFY PARTY", 
+      "FEEDER", "VOID NO.", "VESSEL", "VOID NO..1", "PORT OF LOADING", 
+      "PORT OF DISCHARGE", "PORT OR DELIVERY", "MARKS", "DESCRIPTION", 
+      " QTY ", "PACKAGES", " G.W. ", " N.W. ", " CBM ", "FREIGHT TERM", 
+      "TYPE B/L", "CONTAINER REFERENCE", "Email for Sent out"
+    ];
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "SIData");
-    XLSX.writeFile(workbook, formData.booking_no ? `SI_Data_${formData.booking_no}.xlsx` : `SI_Data_Export.xlsx`);
+    const rowData = [
+      "", 
+      formData.booking_no, 
+      formData.shipper, 
+      formData.consignee, 
+      formData.notify_party, 
+      formData.feeder, 
+      "", 
+      formData.vessel, 
+      "", 
+      formData.port_of_loading, 
+      formData.port_of_discharge, 
+      formData.place_of_delivery, 
+      formData.mark, 
+      formData.description, 
+      formData.quantity, 
+      "", 
+      formData.gross_weight, 
+      "", 
+      formData.measurement, 
+      "", 
+      "", 
+      "", 
+      ""  
+    ];
+
+    const escapeCSV = (val) => {
+      if (val == null) return '""';
+      const str = String(val);
+      if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvContent = [
+      headers.join(","),
+      rowData.map(escapeCSV).join(",")
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", formData.booking_no ? `SI_Data_${formData.booking_no}.csv` : `SI_Data_Export.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+
 
   const theme = { border: '#cbd5e1', bg: '#f8fafc', headerText: '#334155', navy: '#0f172a', blue: '#1d4ed8', highlight: 'rgba(34, 197, 94, 0.35)', highlightBorder: 'rgb(21, 128, 61)' };
   
@@ -358,7 +393,7 @@ const SIDataEntry = ({ copy }) => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-            <button onClick={handleExportExcel} style={{ padding: '12px 24px', backgroundColor: theme.navy, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15, 23, 42, 0.2)' }}>
+            <button onClick={handleExportCSV} style={{ padding: '12px 24px', backgroundColor: theme.navy, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15, 23, 42, 0.2)' }}>
               Export to Database (Excel)
             </button>
           </div>
