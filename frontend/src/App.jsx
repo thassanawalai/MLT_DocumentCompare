@@ -472,7 +472,6 @@ const ComparisonPage = ({
         const pdfX = comment.xRatio * width;
         const pdfY = height - (comment.yRatio * height) - fontSize; 
 
-        // 🔥 ถ้าคอมเมนต์นี้เป็นโหมด "เส้นแดงขีดฆ่า"
         if (comment.type === 'line') {
            const lineY = pdfY + (fontSize / 2.5); // ขยับเส้นให้อยู่ประมาณกึ่งกลางบรรทัด
            page.drawLine({
@@ -482,7 +481,7 @@ const ComparisonPage = ({
               color: rgb(1, 0, 0)
            });
         } 
-        // 🔥 ถ้าคอมเมนต์นี้เป็นโหมด "ข้อความ"
+
         else {
            if (comment.text && comment.text.trim() !== '') {
               page.drawText(comment.text, {
@@ -794,7 +793,7 @@ const ComparisonPage = ({
               </div>
             </div>
 
-            {/* ตาราง Discrepancies */}
+            {/* Discrepancies Table */}
             <div style={{
               marginTop: 28, border: `1px solid ${results.discrepancies.length > 0 ? '#fca5a5' : '#86efac'}`,
               borderLeft: `4px solid ${results.discrepancies.length > 0 ? theme.redAccent : theme.greenAccent}`,
@@ -817,15 +816,20 @@ const ComparisonPage = ({
 
               {results.discrepancies.length > 0 && (
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: theme.surface, minWidth: 620 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: theme.surface, minWidth: 800, tableLayout: 'fixed' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#fef2f2' }}>
-                        {[copy.fieldName, leftTitle, rightTitle].map((h, i) => (
+                        {[
+                          { title: copy.fieldName, width: '20%' },
+                          { title: leftTitle, width: '40%' },
+                          { title: rightTitle, width: '40%' }
+                        ].map((col, i) => (
                           <th key={i} style={{
-                            padding: '10px 16px', textAlign: 'left', fontSize: '0.73em',
+                            width: col.width,
+                            padding: '12px 16px', textAlign: 'left', fontSize: '0.75em',
                             fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em',
                             color: theme.red, borderBottom: `1px solid #fecaca`,
-                          }}>{h}</th>
+                          }}>{col.title}</th>
                         ))}
                       </tr>
                     </thead>
@@ -846,13 +850,13 @@ const ComparisonPage = ({
                             onMouseLeave={(e) => { setHoveredField(null); if (!isSelectedRow) e.currentTarget.style.backgroundColor = 'transparent'; }}
                             style={{ cursor: 'pointer', backgroundColor: isSelectedRow ? '#fefce8' : 'transparent', transition: 'background-color 0.15s' }}
                           >
-                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', fontWeight: 700, fontSize: '0.8em', textTransform: 'uppercase', letterSpacing: '0.04em', color: theme.inkMid, whiteSpace: 'nowrap' }}>
+                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 16px', fontWeight: 700, fontSize: '0.82em', textTransform: 'uppercase', letterSpacing: '0.04em', color: theme.inkMid, wordWrap: 'break-word' }}>
                               {diff.field.replace(/_/g, ' ')}
                             </td>
-                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
+                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'break-word', fontSize: '0.88em' }}>
                               {programRawText || '(ว่าง)'}
                             </td>
-                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '11px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.88em' }}>
+                            <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'break-word', fontSize: '0.88em' }}>
                               {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
                             </td>
                           </tr>
@@ -864,7 +868,7 @@ const ComparisonPage = ({
               )}
             </div>
 
-            {/* ตาราง ComparisonFields */}
+            {/*ComparisonFields */}
             <ComparisonFields
               originalData={results.program.data}
               programData={results.original.data}
