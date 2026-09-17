@@ -11,8 +11,7 @@ const HSCodeSearch = () => {
   useEffect(() => {
     const fetchDatabase = async () => {
       try {
-        // Make sure to put "HS_Master.xlsx" inside the frontend/public folder
-        const response = await fetch('/HS_Master.crv');
+        const response = await fetch('/HS_Master.csv');
         
         if (!response.ok) {
           throw new Error('Database file not found in public folder.');
@@ -30,7 +29,7 @@ const HSCodeSearch = () => {
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading database:', error);
-        setErrorMsg('Could not load the database. Please check if HS_Master.xlsx is in the public folder.');
+        setErrorMsg('Could not load the database. Please check if HS_Master.csv is in the public folder.');
         setIsLoading(false);
       }
     };
