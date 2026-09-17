@@ -1,109 +1,121 @@
-# PDF Cross-Checker Web Application (MVP)
+# MLT Document Compare & SI Extraction System
 
-เว็บแอปพลิเคชันสำหรับการตรวจสอบและเปรียบเทียบข้อมูล 15 ฟิลด์สำคัญ ระหว่างเอกสาร PDF ต้นฉบับ (Original PDF) และเอกสารที่ออกจากระบบ (Program-generated PDF) เพื่อป้องกันข้อผิดพลาดของข้อมูลด้วยระบบประมวลผลอัตโนมัติ
-# MLT Document Comparison System
+ระบบอัปโหลด อ่าน และเปรียบเทียบข้อมูลจากเอกสาร Shipping Instruction (SI) และ Bill of Lading (B/L) อัตโนมัติ โดยใช้สถาปัตยกรรม **Hybrid Spatial-NLP** ที่ออกแบบมาเพื่อแก้ปัญหากล่องข้อความยืดหด (Layout Shift) และป้องกันอาการ AI หลอน (Zero-Hallucination) อย่างเด็ดขาด
 
-ระบบเปรียบเทียบและตรวจสอบความถูกต้องของเอกสารสำหรับการขนส่งทางเรือ (Maritime Alliances) โดยใช้เทคโนโลยี OCR และ AI ในการสกัดข้อมูลและเปรียบเทียบความแตกต่าง
-
-## ฟีเจอร์หลัก
-
-- **Multi-Mode Verification:** รองรับการตรวจสอบเอกสาร 3 รูปแบบหลักผ่านแถบเมนูด้านข้าง:
-  1. **Main Comparison:** เปรียบเทียบ Shipping Instruction (SI) กับ Bill of Lading (B/L) ทั่วไป
-  2. **Set 1 (HBL):** เปรียบเทียบ SI จาก Shipper กับ HBL ของ Maritime
-  3. **Set 2 (MBL):** เปรียบเทียบ SI จาก Maritime กับ MBL ของสายเรือ (ONE)
-- **Visual Comparison:** แสดงผลไฟล์ PDF สองฝั่งพร้อมไฮไลต์จุดที่ข้อมูลไม่ตรงกัน
-- **Field Extraction:** ดึงข้อมูลสำคัญตามเทมเพลตที่กำหนด (OOCL, YANGMING, ONE, ฯลฯ)
-- **Real-time Diff:** วิเคราะห์ความแตกต่างของข้อความแบบละเอียด (Insert/Delete)
-
-## โครงสร้างโปรเจกต์
-
-- `backend/`: API Server พัฒนาด้วย Python (FastAPI) ทำหน้าที่ประมวลผล PDF และ OCR
-  - `app/templates/`: ไฟล์กำหนดตำแหน่ง Anchor Point สำหรับแต่ละบริษัท
-- `frontend/`: เว็บแอปพลิเคชันพัฒนาด้วย React
-  - `App.jsx`: ส่วนควบคุมตรรกะหลักและการจัดการสถานะของแต่ละ Set
-  - `DocumentPane.jsx`: ส่วนแสดงผล PDF และการไฮไลต์ Bounding Box
-
-## วิธีการใช้งาน
-
-1. เลือกโหมดที่ต้องการตรวจสอบจากแถบเมนูด้านข้าง (Main, HBL, หรือ MBL)
-2. อัปโหลดเอกสารต้นทาง (ซ้าย) และเอกสารปลายทาง (ขวา) ตามที่โหมดนั้นระบุ
-3. เลือก Template ของบริษัทที่ตรงกับเอกสาร
-4. กดปุ่ม **"เปรียบเทียบข้อมูล"** เพื่อดูผลลัพธ์
-5. ตรวจสอบรายการที่ไม่ตรงกันในตารางด้านล่าง หรือคลิกที่แถวเพื่อดูตำแหน่งใน PDF
-
-## เทคโนโลยีที่ใช้
-
-- **Frontend:** React, Vite, PDF.js
-- **Backend:** Python, FastAPI, PyMuPDF
-- **Comparison logic:** SequenceMatcher / AI-based normalization
-
----
-*Developed for Maritime Alliances Verification*
+ระบบทำงานบน CPU ได้อย่างเต็มประสิทธิภาพ โดยใช้ AI ขนาดเล็ก (Extractive QA) เป็นเพียง "ไม้บรรทัดชี้เป้า" เพื่อระบุ Index ของข้อความ และใช้การหั่นข้อความ (Slicing) จาก String ต้นฉบับโดยตรงเพื่อความถูกต้อง 100%
 
 ---
 
-## 📌 Objectives 
-* ตรวจสอบความถูกต้องของข้อมูลดิจิทัลบนเอกสาร PDF ทั้ง 2 ฝั่ง แบบ 100% Accuracy
-* เปรียบเทียบและไฮไลต์จุดที่ไม่ตรงกันให้เห็นชัดเจนบนหน้าเว็บ UI
-* ประมวลผลแบบ In-memory (Stateless) โดยไม่บันทึกข้อมูลลงฐานข้อมูลในเวอร์ชันเริ่มต้น (MVP)
-
----
-
-## 🎯 Target Fields 
-1. **BOOKING NO.**
-2. **SHIPPER**
-3. **CONSIGNEE**
-4. **NOTIFY PARTY**
-5. **PRE-CARRIAGE BY**
-6. **PLACE OF RECEIPT**
-7. **PORT OF LOADING**
-8. **VESSEL**
-9. **PORT OF DISCHARGE**
-10. **PLACE OF DELIVERY**
-11. **MARK & NUMBERS**
-12. **QUANTITY**
-13. **DESCRIPTION OF GOODS**
-14. **GROSS WEIGHT**
-15. **MEASUREMENT**
-
----
-
-## 🛠️ Tech Stack
-
-* **Frontend:** React.js (Vite), Tailwind CSS
-* **Backend:** Python 3.11+, FastAPI, Uvicorn
-* **PDF Processing:** PyMuPDF (`fitz`)
-* **DevOps / Deployment:** Docker, Docker Compose
-
----
-
-## 📁 Project Structure 
+## 🏗️ Project Architecture (โครงสร้างโปรเจกต์)
 
 ```text
-pdf-cross-checker/
+MLT_DocumentCompare/
 │
-├── backend/                       # Python FastAPI Backend
+├── backend/                           # API Server (FastAPI)
 │   ├── app/
 │   │   ├── __init__.py
-│   │   ├── main.py                # FastAPI Application Entrypoint
-│   │   ├── api/                   # API Endpoints (Upload & Process)
-│   │   │   └── validation.py
-│   │   ├── core/                  # Core Business Logic
-│   │   │   ├── pdf_parser.py      # Text Extraction via PyMuPDF
-│   │   │   ├── normalizer.py      # Data Cleaning & Formatting
-│   │   │   └── comparator.py      # 15-Field Comparison Logic
-│   │   └── schemas/               # Pydantic Response Data Models
-│   ├── Requirements.txt
-│   └── Dockerfile
+│   │   ├── main.py                    # จุดเริ่มต้นของ FastAPI Application
+│   │   │
+│   │   ├── api/                       
+│   │   │   └── routers.py             # Endpoint รับไฟล์ (รองรับ .pdf, .xlsx, .csv)
+│   │   │
+│   │   ├── core/                      # 🧠 Core Processing Pipeline (5 Stages)
+│   │   │   ├── stage1_parser.py       # แกะ Text+พิกัด (pdfplumber) หรืออ่าน DataFrame (pandas)
+│   │   │   ├── stage2_anchoring.py    # หา Anchor ด้วย Fuzzy Match & ตีกรอบ Context Window
+│   │   │   ├── stage3_qa_engine.py    # ชี้เป้าตำแหน่งข้อความด้วย XLM-RoBERTa (Extractive QA)
+│   │   │   ├── stage4_restitching.py  # ตัดข้อความจาก String ต้นฉบับ และเชื่อมต่อบรรทัด (Alignment)
+│   │   │   └── stage5_tables.py       # จัดการดึงข้อมูลที่มีโครงสร้างตาราง (Table Extraction)
+│   │   │
+│   │   ├── models/                    # 📦 Data Contracts (Pydantic Models)
+│   │   │   ├── document.py            # โครงสร้างข้อมูลเอกสารตั้งต้น
+│   │   │   ├── field.py               # โครงสร้างของแต่ละฟิลด์ (เช่น ค่า, พิกัด BBox)
+│   │   │   └── extraction.py          # โครงสร้างข้อมูลที่ไหลระหว่าง 5 Stages ป้องกันปัญหา Dict ซ้อนทับ
+│   │   │
+│   │   ├── utils/                     # 🛠️ Utility Functions
+│   │   │   ├── validation.py          # Anti-Hallucination ลอจิกตรวจสอบความถูกต้องของผลลัพธ์
+│   │   │   └── text_utils.py          # ฟังก์ชันช่วยเหลือด้านข้อความ (เช่น Regex, การทำความสะอาดคำ)
+│   │   │
+│   │   └── templates/                 # 📋 Template Configuration
+│   │       ├── registry.py            # ตัวจัดการลงทะเบียนเทมเพลต
+│   │       ├── BETAGRO.py             # คอนฟิก Anchor และ Keyword ของบริษัท BETAGRO
+│   │       ├── MCKEY.py               # คอนฟิก Anchor และ Keyword ของบริษัท MCKEY
+│   │       └── ...
+│   │
+│   ├── tests/                         # 🧪 Unit Tests (Pytest)
+│   │   ├── test_parser.py             # ทดสอบการแกะพิกัดและการอ่าน Excel
+│   │   ├── test_anchoring.py          # ทดสอบความแม่นยำของ Fuzzy Matching และกรอบ Context
+│   │   ├── test_qa.py                 # ทดสอบการชี้เป้า Index ของโมเดล
+│   │   └── test_extraction.py         # ทดสอบการเชื่อมต่อข้อความ (Re-stitching)
+│   │
+│   ├── requirements.txt               # Dependencies (fastapi, pdfplumber, transformers, pandas, etc.)
+│   └── Dockerfile                     
 │
-├── frontend/                      # React Frontend (Vite)
+├── frontend/                          # Web Application (React + Vite, Tailwind CSS)
 │   ├── src/
-│   │   ├── components/            # UI Components (FileUploader, SplitViewer, ResultTable)
-│   │   ├── services/              # API Integration (Axios/Fetch)
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── Dockerfile
+│   │   ├── components/                # UI Components
+│   │   │   ├── SIUpload.jsx           # หน้าจอหลักสำหรับอัปโหลดไฟล์ (PDF/Excel) และเลือกเทมเพลต
+│   │   │   ├── DocumentViewer.jsx     # ส่วนพรีวิวเอกสารแบบ Responsive Height พร้อมวาด BBox
+│   │   │   ├── ComparisonFields.jsx   # คอมโพเนนต์เปรียบเทียบข้อมูลพร้อม DiffViewer (ไฮไลต์คำผิด)
+│   │   │   └── DiscrepancyTable.jsx   # ตารางสรุปจุดที่ไม่ตรงกัน (Fixed Layout)
+│   │   ├── utils/
+│   │   │   └── exportCSV.js           # ลอจิกการส่งออกข้อมูลเป็นไฟล์ .csv ตามโครงสร้าง DB มาตรฐาน
+│   │   ├── App.jsx                    # State Management หลัก
+│   │   └── main.jsx                   
+│   ├── package.json                   
+│   └── Dockerfile                     
 │
-├── docker-compose.yml             # Orchestration for Local Setup
+├── docker-compose.yml                 # คอนฟิกสำหรับรัน Backend และ Frontend ร่วมกัน
 └── README.md
+
+⚙️ The Extraction Pipeline (กระบวนการทำงานฝั่ง Backend)
+ข้อมูลจะไหลผ่าน Pipeline 5 ขั้นตอน โดยถูกควบคุมโครงสร้างด้วย Pydantic Models (models/) เพื่อความรัดกุม:
+
+Stage 1: Parser
+
+แปลง PDF เป็น List ของ Dictionary ที่มีทั้งคำ (Text) และพิกัด (Bounding Box) โดยใช้ pdfplumber
+
+รองรับการอ่านไฟล์ Spreadsheet (.xlsx, .csv) ด้วย pandas
+
+Stage 2: Anchoring & Context
+
+ค้นหาจุดอ้างอิง (Anchor) ของแต่ละฟิลด์ด้วย Fuzzy Matching
+
+สร้าง Context Window โดยตัดพิกัดเฉพาะพื้นที่บริเวณ Anchor เพื่อจำกัดการมองเห็นของ AI
+
+Stage 3: QA Engine (AI Extraction)
+
+ใช้โมเดล Extractive QA (เช่น xlm-roberta-base-squad2)
+
+ส่งคำถาม (Prompt) เข้าไป เพื่อให้ AI คืนค่ากลับมาเป็นแค่พิกัดตำแหน่ง start_index และ end_index เท่านั้น
+
+Stage 4: Exact Text Re-stitching
+
+นำ Index ที่ได้จาก AI ไปตัด (Slice) ข้อความออกจาก String ต้นฉบับ
+
+หากจำเป็น จะทำการดึงข้อความในบรรทัดถัดไปตามแนวพิกัดแกน Y มาต่อประกอบกันให้สมบูรณ์
+
+Stage 5: Table Extraction
+
+จัดการกับข้อมูลโครงสร้างตาราง (เช่น Description of Goods, Weights, M3) แยกต่างหากจากการใช้ AI โดยใช้ฟังก์ชันวิเคราะห์ตารางเพื่อความแม่นยำ
+
+🛡️ Validation Layer (utils/validation.py)
+ด่านสุดท้ายก่อนส่งข้อมูลกลับไปที่หน้าบ้าน ระบบจะทำการประเมิน (Validate) เพื่อให้แน่ใจว่าข้อความที่สกัดออกมานั้น "มีอยู่จริง" ในเอกสารต้นฉบับ หากตรวจพบอาการ Hallucination (สร้างคำขึ้นมาใหม่) ระบบจะ Reject ข้อมูลนั้นทันที
+
+💻 Frontend Features
+Upload Flexibility: รองรับการอัปโหลดไฟล์ได้ทั้งนามสกุล .pdf, .xlsx และ .csv
+
+Adaptive Document UI: ช่องแสดงพิกัดและพรีวิวเอกสารสามารถปรับขนาดตาม Viewport ได้อัตโนมัติ เพื่อรองรับการแสดงผลฟอร์มขนาดยาว
+
+Visual Diffing: แสดงส่วนต่าง (Discrepancy) ไฮไลต์ให้เห็นชัดเจนว่าตัวอักษรใดหรือคำใดมีความแตกต่างระหว่างเอกสาร 2 ฉบับ
+
+Seamless Database Integration: ส่งออกผลลัพธ์เป็นไฟล์ CSV ในรูปแบบที่เข้ากันได้กับฐานข้อมูลหลักของสายเรือ
+
+🚀 Getting Started
+ติดตั้ง Dependencies ฝั่ง Backend: pip install -r backend/requirements.txt
+
+รัน FastAPI: uvicorn app.main:app --reload
+
+ติดตั้ง Dependencies ฝั่ง Frontend: cd frontend && npm install
+
+รัน React: npm run dev
+(หรือใช้คำสั่ง docker-compose up -d เพื่อรันทั้งระบบพร้อมกัน)

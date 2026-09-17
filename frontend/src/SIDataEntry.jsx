@@ -82,7 +82,7 @@ const SIDataEntry = ({ copy }) => {
     fetchTemplates();
   }, []);
 
-  const handleUploadPDF = async (e) => {
+  const handleUploadFile = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -266,13 +266,13 @@ const SIDataEntry = ({ copy }) => {
           <div style={{ position: 'relative' }}>
             <input 
               type="file" 
-              accept="application/pdf" 
-              onChange={handleUploadPDF} 
+              accept="application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, .csv" 
+              onChange={handleUploadFile} 
               disabled={loading || templateOptions.length === 0}
               style={{ position: 'absolute', inset: 0, opacity: 0, cursor: (loading || templateOptions.length === 0) ? 'not-allowed' : 'pointer' }}
             />
             <button style={{ padding: '8px 16px', backgroundColor: theme.blue, color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {loading ? "Processing..." : "Upload PDF"}
+              {loading ? "Processing..." : "Upload File (PDF/Excel)"}
             </button>
           </div>
         </div>
