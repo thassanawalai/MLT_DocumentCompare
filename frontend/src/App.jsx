@@ -4,6 +4,7 @@ import logo from './assets/LOGO2.png';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import SIDataEntry from './SIDataEntry';
+import HSCodeSearch from './components/HSCodeSearch';
 
 const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
@@ -946,6 +947,7 @@ const menuItems = [
     { id: 'SI_FORM', label: 'SI Database', desc: 'Add data to Excel' }, 
     { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
     { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
+    { id: 'hscode', title: 'HS Code Directory', subtitle: 'Search Master Data' },
   ];
 
   return (
