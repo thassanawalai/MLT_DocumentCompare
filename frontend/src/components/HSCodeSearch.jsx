@@ -11,6 +11,7 @@ const HSCodeSearch = () => {
   useEffect(() => {
     const fetchDatabase = async () => {
       try {
+        // Change the file extension here to .csv
         const response = await fetch('/HS_Master.csv');
         
         if (!response.ok) {
@@ -23,6 +24,7 @@ const HSCodeSearch = () => {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         
+        // Keep range: 2 because the CSV still contains the title rows
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", range: 2 });
         
         setMasterData(jsonData);
