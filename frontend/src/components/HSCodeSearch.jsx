@@ -24,7 +24,7 @@ const HSCodeSearch = () => {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", range: 2 });
         
         setMasterData(jsonData);
         setIsLoading(false);
