@@ -12,7 +12,7 @@ const HSCodeSearch = () => {
     const fetchDatabase = async () => {
       try {
         // Make sure to put "HS_Master.xlsx" inside the frontend/public folder
-        const response = await fetch('/HS_Master.xlsx');
+        const response = await fetch('/HS_Master.crv');
         
         if (!response.ok) {
           throw new Error('Database file not found in public folder.');
