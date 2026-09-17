@@ -947,7 +947,7 @@ const menuItems = [
     { id: 'SI_FORM', label: 'SI Database', desc: 'Add data to Excel' }, 
     { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
     { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
-    { id: 'hscode', title: 'HS Code Directory', subtitle: 'Search Master Data' },
+    { id: 'hscode', label: 'HS Code Directory', desc: 'Search Master Data' },
   ];
 
   return (
