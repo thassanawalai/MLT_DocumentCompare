@@ -11,7 +11,6 @@ const HSCodeSearch = () => {
   useEffect(() => {
     const fetchDatabase = async () => {
       try {
-        // Change the file extension here to .csv
         const response = await fetch('/HS_Master.csv');
         
         if (!response.ok) {
@@ -24,14 +23,40 @@ const HSCodeSearch = () => {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         
-        // Keep range: 2 because the CSV still contains the title rows
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", range: 2 });
+        // Read as an array of arrays (ignores header names completely)
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         
-        setMasterData(jsonData);
+        // Find the actual starting row dynamically (search for 'Customer Name' or 'HS Code')
+        let dataStartIndex = 0;
+        for (let i = 0; i < Math.min(15, rawData.length); i++) {
+          const rowValues = rawData[i].map(val => String(val).toLowerCase());
+          if (rowValues.includes('customer name') || rowValues.includes('hs code')) {
+            dataStartIndex = i + 1; // Start extracting from the row below the headers
+            break;
+          }
+        }
+        
+        // Extract data and format it into clean objects
+        const cleanData = [];
+        for (let i = dataStartIndex; i < rawData.length; i++) {
+          const rowArray = rawData[i];
+          
+          // Skip completely empty rows
+          if (!rowArray || rowArray.length === 0 || rowArray.every(val => !val)) continue;
+          
+          cleanData.push({
+            sale: rowArray[0] || '-',
+            customer: rowArray[1] || '-',
+            commodity: rowArray[2] || '-',
+            hsCode: rowArray[3] || '-'
+          });
+        }
+        
+        setMasterData(cleanData);
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading database:', error);
-        setErrorMsg('Could not load the database. Please check if HS_Master.csv is in the public folder.');
+        setErrorMsg('Could not load the database. Please check the file format.');
         setIsLoading(false);
       }
     };
@@ -39,7 +64,7 @@ const HSCodeSearch = () => {
     fetchDatabase();
   }, []);
 
-  // 2. High-Performance Global Search
+  // 2. High-Performance Global Search (Updated to match new keys)
   const filteredData = useMemo(() => {
     if (!searchTerm) return masterData;
     
@@ -95,22 +120,14 @@ const HSCodeSearch = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.slice(0, 150).map((row, index) => {
-                  // Fallback mappings to handle different column names in Excel
-                  const saleValue = row['Sale'] || row['PIC'] || row['__EMPTY'] || '-';
-                  const customerValue = row['Customer Name'] || '-';
-                  const commodityValue = row['Commodity'] || '-';
-                  const hsCodeValue = row['HS Code'] || '-';
-
-                  return (
-                    <tr key={index}>
-                      <td style={styles.td}>{saleValue}</td>
-                      <td style={styles.td}>{customerValue}</td>
-                      <td style={styles.td}>{commodityValue}</td>
-                      <td style={{...styles.td, fontWeight: 'bold'}}>{hsCodeValue}</td>
-                    </tr>
-                  );
-                })}
+                {filteredData.slice(0, 150).map((row, index) => (
+                  <tr key={index}>
+                    <td style={styles.td}>{row.sale}</td>
+                    <td style={styles.td}>{row.customer}</td>
+                    <td style={styles.td}>{row.commodity}</td>
+                    <td style={{...styles.td, fontWeight: 'bold', color: '#0f172a'}}>{row.hsCode}</td>
+                  </tr>
+                ))}
                 
                 {filteredData.length === 0 && (
                   <tr>
