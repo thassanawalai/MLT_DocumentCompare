@@ -1067,6 +1067,8 @@ const menuItems = [
         <div className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'SI_FORM' ? (
             <SIDataEntry copy={copy} />
+          ) : activeTab === 'hscode' ? (
+            <HSCodeSearch />
           ) : (
             <ComparisonPage
               key={activeTab} 
