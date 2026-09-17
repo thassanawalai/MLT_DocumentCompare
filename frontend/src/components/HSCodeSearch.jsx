@@ -116,9 +116,9 @@ const HSCodeSearch = () => {
     saveBtn: { padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#10b981', color: '#fff', margin: '0 4px' },
     deleteBtn: { padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#ef4444', color: '#fff', margin: '0 4px' },
     searchInput: { width: '100%', padding: '14px 18px', fontSize: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '24px', outline: 'none', boxSizing: 'border-box' },
-    table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'hidden' },
+    table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'hidden',tableLayout: 'fixed' },
     th: { backgroundColor: '#f8fafc', padding: '16px', borderBottom: '2px solid #e2e8f0', color: '#475569', fontWeight: '600' },
-    td: { padding: '16px', borderBottom: '1px solid #e2e8f0', color: '#334155' },
+    td: { padding: '16px', borderBottom: '1px solid #e2e8f0', color: '#334155',wordWrap: 'break-word',overflowWrap: 'break-word' },
     editInput: { width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #94a3b8', fontSize: '14px', boxSizing: 'border-box' },
     addFormBox: { padding: '20px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '24px' },
     formGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '16px' }
@@ -137,7 +137,7 @@ const HSCodeSearch = () => {
         <form style={styles.addFormBox} onSubmit={handleAddSubmit}>
           <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px' }}>Add New Master Data</h3>
           <div style={styles.formGrid}>
-            <input required placeholder="Sale (e.g. P'POK)" style={styles.editInput} value={addFormData.sale} onChange={e => setAddFormData({...addFormData, sale: e.target.value})} />
+            <input required placeholder="Sale" style={styles.editInput} value={addFormData.sale} onChange={e => setAddFormData({...addFormData, sale: e.target.value})} />
             <input required placeholder="Customer Name" style={styles.editInput} value={addFormData.customer} onChange={e => setAddFormData({...addFormData, customer: e.target.value})} />
             <input required placeholder="Commodity" style={styles.editInput} value={addFormData.commodity} onChange={e => setAddFormData({...addFormData, commodity: e.target.value})} />
             <input required placeholder="HS Code" style={styles.editInput} value={addFormData.hsCode} onChange={e => setAddFormData({...addFormData, hsCode: e.target.value})} />
@@ -164,11 +164,11 @@ const HSCodeSearch = () => {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Sale</th>
-                  <th style={styles.th}>Customer Name</th>
-                  <th style={styles.th}>Commodity</th>
-                  <th style={styles.th}>HS Code</th>
-                  <th style={{...styles.th, width: '140px', textAlign: 'center'}}>Actions</th>
+                  <th style={{...styles.th, width: '10%'}}>Sale</th>
+                  <th style={{...styles.th, width: '30%'}}>Customer Name</th>
+                  <th style={{...styles.th, width: '35%'}}>Commodity</th>
+                  <th style={{...styles.th, width: '15%'}}>HS Code</th>
+                  <th style={{...styles.th, width: '10%', textAlign: 'center'}}>Actions</th>
                 </tr>
               </thead>
               <tbody>
