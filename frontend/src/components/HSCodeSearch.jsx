@@ -115,10 +115,13 @@ const HSCodeSearch = () => {
     actionBtn: { padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#fff', margin: '0 4px' },
     saveBtn: { padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#10b981', color: '#fff', margin: '0 4px' },
     deleteBtn: { padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#ef4444', color: '#fff', margin: '0 4px' },
-    searchInput: { width: '100%', padding: '14px 18px', fontSize: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '24px', outline: 'none', boxSizing: 'border-box' },
-    table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'hidden',tableLayout: 'fixed' },
+    searchContainer: { position: 'relative', marginBottom: '24px' },
+    searchInput: { width: '100%', padding: '14px 40px 14px 18px', fontSize: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' },
+    clearSearchBtn: { position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '16px', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    secondaryBtn: { padding: '10px 16px', backgroundColor: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '12px' },
+    table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'hidden', tableLayout: 'fixed' },
     th: { backgroundColor: '#f8fafc', padding: '16px', borderBottom: '2px solid #e2e8f0', color: '#475569', fontWeight: '600' },
-    td: { padding: '16px', borderBottom: '1px solid #e2e8f0', color: '#334155',wordWrap: 'break-word',overflowWrap: 'break-word' },
+    td: { padding: '16px', borderBottom: '1px solid #e2e8f0', color: '#334155', wordWrap: 'break-word', overflowWrap: 'break-word' },
     editInput: { width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #94a3b8', fontSize: '14px', boxSizing: 'border-box' },
     addFormBox: { padding: '20px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '24px' },
     formGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '16px' }
@@ -133,16 +136,26 @@ const HSCodeSearch = () => {
         </button>
       </div>
 
+      {/* --- Add Form Section --- */}
       {showAddForm && (
         <form style={styles.addFormBox} onSubmit={handleAddSubmit}>
-          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px' }}>Add New Master Data</h3>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px', color: '#1e293b' }}>Add New Master Data</h3>
           <div style={styles.formGrid}>
-            <input required placeholder="Sale" style={styles.editInput} value={addFormData.sale} onChange={e => setAddFormData({...addFormData, sale: e.target.value})} />
+            <input required placeholder="Sale (e.g. P'POK)" style={styles.editInput} value={addFormData.sale} onChange={e => setAddFormData({...addFormData, sale: e.target.value})} />
             <input required placeholder="Customer Name" style={styles.editInput} value={addFormData.customer} onChange={e => setAddFormData({...addFormData, customer: e.target.value})} />
             <input required placeholder="Commodity" style={styles.editInput} value={addFormData.commodity} onChange={e => setAddFormData({...addFormData, commodity: e.target.value})} />
             <input required placeholder="HS Code" style={styles.editInput} value={addFormData.hsCode} onChange={e => setAddFormData({...addFormData, hsCode: e.target.value})} />
           </div>
-          <button type="submit" style={styles.primaryBtn}>Save Record</button>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button type="submit" style={styles.primaryBtn}>Save Record</button>
+            <button 
+              type="button" 
+              style={styles.secondaryBtn} 
+              onClick={() => setAddFormData({ sale: '', customer: '', commodity: '', hsCode: '' })}
+            >
+              Clear Form
+            </button>
+          </div>
         </form>
       )}
 
@@ -152,14 +165,28 @@ const HSCodeSearch = () => {
         <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{errorMsg}</div>
       ) : (
         <>
-          <input
-            type="text"
-            placeholder="Search Sale, Customer Name, Commodity, or HS Code..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
+          {/* --- Search Section --- */}
+          <div style={styles.searchContainer}>
+            <input
+              type="text"
+              placeholder="Search Sale, Customer Name, Commodity, or HS Code..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={styles.searchInput}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                style={styles.clearSearchBtn}
+                title="Clear Search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
 
+          {/* --- Table Section --- */}
           <div style={{ overflowX: 'auto', borderRadius: '8px', paddingBottom: '20px' }}>
             <table style={styles.table}>
               <thead>
