@@ -141,7 +141,7 @@ const HSCodeSearch = () => {
         <form style={styles.addFormBox} onSubmit={handleAddSubmit}>
           <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px', color: '#1e293b' }}>Add New Master Data</h3>
           <div style={styles.formGrid}>
-            <input required placeholder="Sale (e.g. P'POK)" style={styles.editInput} value={addFormData.sale} onChange={e => setAddFormData({...addFormData, sale: e.target.value})} />
+            <input required placeholder="Sale" style={styles.editInput} value={addFormData.sale} onChange={e => setAddFormData({...addFormData, sale: e.target.value})} />
             <input required placeholder="Customer Name" style={styles.editInput} value={addFormData.customer} onChange={e => setAddFormData({...addFormData, customer: e.target.value})} />
             <input required placeholder="Commodity" style={styles.editInput} value={addFormData.commodity} onChange={e => setAddFormData({...addFormData, commodity: e.target.value})} />
             <input required placeholder="HS Code" style={styles.editInput} value={addFormData.hsCode} onChange={e => setAddFormData({...addFormData, hsCode: e.target.value})} />
