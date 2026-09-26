@@ -54,7 +54,7 @@ const SIDataEntry = ({ copy }) => {
           const data = await response.json();
           if (data.templates && data.templates.length > 0) {
             
-            const allowedTemplates = ['MCKEY', 'BETAGRO', 'GC-M', 'OOCL', 'SUPER_SIERRA', 'BFOODS_1', 'BFOODS_3', 'PPI', 'AJIMOMOTO', 'SIAMCHAI', 'SURAPON', 'POLYPLEX', 'FORTUNE', 'MITSUI',];
+            const allowedTemplates = ['MCKEY', 'BETAGRO', 'GC-M', 'OOCL', 'SUPER_SIERRA', 'BFOODS_1', 'BFOODS_3', 'PPI', 'AJIMOMOTO', 'SIAMCHAI', 'SURAPON', 'POLYPLEX', 'FORTUNE', 'MITSUI', 'SHANGHAI', 'WANHAI', 'HAPAG', 'ONE'];
             
             const options = data.templates
               .filter(t => allowedTemplates.includes(t))

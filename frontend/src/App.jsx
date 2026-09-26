@@ -166,6 +166,7 @@ const billOfLadingTemplateOptions = [
   { value: 'ONE', label: 'ONE' },
   { value: 'SHANGHAI', label: 'SHANGHAI JINJIANG' },
   { value: 'WANHAI', label: 'WANHAI' },
+  { value: 'HAPAG', label: 'HAPAG'},
 ];
 
 const shippingInstructionTemplateOptions = [

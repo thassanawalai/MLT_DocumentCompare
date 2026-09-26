@@ -9,6 +9,7 @@ _template_map = {
     "ONE": "app.templates.ONE_template",
     "SHANGHAI": "app.templates.SHANGHAI_JINJIANG_BL_template",
     "WANHAI": "app.templates.WANHAI_BL_template",
+    "HAPAG" : "app.templates.HAPAG_templete",
     "MITSUI": "app.templates.MITSUI_SI_template",
     "BFOODS_1": "app.templates.BFOODS_1_template",
     "BFOODS_2": "app.templates.BFOODS_2_template",
