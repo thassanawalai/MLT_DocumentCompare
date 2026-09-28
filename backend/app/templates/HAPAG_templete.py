@@ -5,8 +5,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 15,
-        "height": 5
+        "width": 150,
+        "height": 15
     },
 
     "shipper": {
@@ -14,8 +14,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 265,
-        "height": 80
+        "width": 260,
+        "height": 75
     },
 
     # "shipper_2": {
@@ -32,8 +32,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 265,
-        "height": 80
+        "width": 260,
+        "height": 75
     },
 
     "notify_party": {
@@ -41,8 +41,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 265,
-        "height": 80
+        "width": 260,
+        "height": 75
     },
 
     #"pre_carriage_by": {
@@ -77,17 +77,17 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 265,
-        "height": 10
+        "width": 200,
+        "height": 15
     },
 
     "port_of_discharge": {
         "anchor_text": "Port of Discharge:",
         "anchor_point": "bottom_left",
-        "offset_x": -5,
+        "offset_x": 0,
         "offset_y": 0,
-        "width": 265,
-        "height": 10
+        "width": 260,
+        "height": 15
     },
 
     "voyage_no": {
@@ -95,8 +95,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 60,
-        "height": 10
+        "width": 55,
+        "height": 15
     },
 
     "place_of_delivery": {
@@ -105,16 +105,16 @@ TEMPLATE = {
         "offset_x": -5,
         "offset_y": 0,
         "width": 130,
-        "height": 12
+        "height": 15
     },
 
     "mark": {
         "anchor_text": "Container Nos., Seal Nos.; Marks and Nos.",
         "anchor_point": "bottom_left",
         "offset_x": 0,
-        "offset_y": 100,
-        "width": 200,
-        "height": 100
+        "offset_y": 95,
+        "width": 600,
+        "height": 130
     },
 
     "description_of_good": {
@@ -123,7 +123,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 0,
         "width": 260,
-        "height": 100
+        "height": 95
     },
 
     #"description_of_good": {
@@ -138,10 +138,10 @@ TEMPLATE = {
     "gross_weight": {
         "anchor_text": "Gross Weight:",
         "anchor_point": "bottom_left",
-        "offset_x": -20,
+        "offset_x": 0,
         "offset_y": 18,
-        "width": 80,
-        "height": 20
+        "width": 60,
+        "height": 25
     },
 
     "measurement": {
@@ -165,7 +165,7 @@ TEMPLATE = {
         "anchor_point": "top_right",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 180,
+        "width": 100,
         "height": 10
     },
 
