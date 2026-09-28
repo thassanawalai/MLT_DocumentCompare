@@ -5,9 +5,19 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 0,
-        "width": 150,
+        "width": 70,
         "height": 15
     },
+
+    "bl_no": {
+        "anchor_text": "B/L No.:",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 0,
+        "width": 120,
+        "height": 15
+    }, 
+    
 
     "shipper": {
         "anchor_text": "Shipper:",
@@ -69,7 +79,7 @@ TEMPLATE = {
         "offset_x": 0,
         "offset_y": 0,
         "width": 265,
-        "height": 10
+        "height": 15
     },
 
     "vessel": {
@@ -104,8 +114,8 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": -5,
         "offset_y": 0,
-        "width": 130,
-        "height": 15
+        "width": 260,
+        "height": 65
     },
 
     "mark": {
@@ -113,7 +123,7 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 95,
-        "width": 600,
+        "width": 550,
         "height": 130
     },
 
@@ -140,7 +150,7 @@ TEMPLATE = {
         "anchor_point": "bottom_left",
         "offset_x": 0,
         "offset_y": 18,
-        "width": 60,
+        "width": 65,
         "height": 25
     },
 
