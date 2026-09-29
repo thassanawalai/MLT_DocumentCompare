@@ -21,7 +21,7 @@ const normalizeBoxCoords = (box) => {
 const paneStyle = { flex: 1, padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fafafa' };
 const titleStyle = { textAlign: 'center', color: '#333', borderBottom: '2px solid #ccc', paddingBottom: '10px' };
 const imageContainerStyle = { height: '1000px', overflowY: 'auto', position: 'relative', border: '1px solid #ccc', backgroundColor: '#fff' };
-const imageStyle = { width: '100%', display: 'block', userSelect: 'none', WebkitUserDrag: 'none' }; // 🔥 ป้องกันการเผลอลากรูปภาพ
+const imageStyle = { width: '100%', display: 'block', userSelect: 'none', WebkitUserDrag: 'none' }; // Prevent accidental image dragging
 
 // ============================================================
 // Draggable Comment Component
@@ -86,10 +86,10 @@ const DraggableComment = ({ comment, containerWidth, containerHeight, onUpdate, 
           backgroundColor: '#fff', padding: '4px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0'
         }}>
           {comment.type === 'text' && (
-             <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onEdit(comment); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="แก้ไข">✏️</button>
+             <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onEdit(comment); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Edit">✏️</button>
           )}
           {comment.type === 'text' && <div style={{ width: '1px', backgroundColor: '#e2e8f0' }} />}
-          <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onDelete(comment.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="ลบ">❌</button>
+          <button onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onDelete(comment.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Delete">❌</button>
         </div>
       )}
     </div>
@@ -110,7 +110,7 @@ const DocumentPane = ({
   const [activeTool, setActiveTool] = useState('text');
   const [commentModal, setCommentModal] = useState({ isOpen: false, id: null, text: '' });
   
-  // 🔥 State สำหรับเก็บข้อมูลระหว่างการ "ลากวาดเส้น"
+  // State for storing line drawing data
   const [drawingLine, setDrawingLine] = useState(null);
 
   const images = fileData?.images?.length ? fileData.images : (fileData?.image ? [fileData.image] : []);
@@ -150,7 +150,7 @@ const DocumentPane = ({
       if (!pageElement) return;
       const rect = pageElement.getBoundingClientRect();
       
-      // ดักไม่ให้ลากทะลุขอบกระดาษ
+      // Prevent drawing outside page bounds
       let x = e.clientX - rect.left;
       x = Math.max(0, Math.min(x, rect.width));
       setDrawingLine(prev => ({ ...prev, currentX: x }));
@@ -224,10 +224,10 @@ const DocumentPane = ({
       {enableComments && images.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
           <button onClick={() => setActiveTool('text')} style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', border: activeTool === 'text' ? '2px solid #3b82f6' : '1px solid #cbd5e1', backgroundColor: activeTool === 'text' ? '#eff6ff' : '#fff', color: activeTool === 'text' ? '#1d4ed8' : '#64748b' }}>
-            📝 พิมพ์ข้อความ
+            📝 Add Text
           </button>
           <button onClick={() => setActiveTool('line')} style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', border: activeTool === 'line' ? '2px solid #ef4444' : '1px solid #cbd5e1', backgroundColor: activeTool === 'line' ? '#fef2f2' : '#fff', color: activeTool === 'line' ? '#b91c1c' : '#64748b' }}>
-            ➖ ลากเส้นขีดฆ่า
+            ➖ Draw Strikethrough
           </button>
         </div>
       )}
@@ -262,11 +262,11 @@ const DocumentPane = ({
       {commentModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px', width: '90%', maxWidth: '450px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '1.25em', fontWeight: 'bold' }}>📝 พิมพ์ข้อความที่ถูกต้อง</h3>
-            <textarea autoFocus value={commentModal.text} onChange={(e) => setCommentModal({ ...commentModal, text: e.target.value })} placeholder="พิมพ์ข้อความ..." style={{ width: '100%', height: '100px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontFamily: 'inherit', fontSize: '1.05em', resize: 'none', outline: 'none', backgroundColor: '#f8fafc' }} />
+            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '1.25em', fontWeight: 'bold' }}>📝 Enter Correct Text</h3>
+            <textarea autoFocus value={commentModal.text} onChange={(e) => setCommentModal({ ...commentModal, text: e.target.value })} placeholder="Type text here..." style={{ width: '100%', height: '100px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontFamily: 'inherit', fontSize: '1.05em', resize: 'none', outline: 'none', backgroundColor: '#f8fafc' }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => setCommentModal({ isOpen: false, text: '' })} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#64748b', cursor: 'pointer', fontWeight: '600' }}>ยกเลิก</button>
-              <button onClick={handleSaveTextComment} style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#1d4ed8', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>บันทึก</button>
+              <button onClick={() => setCommentModal({ isOpen: false, text: '' })} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#64748b', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+              <button onClick={handleSaveTextComment} style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#1d4ed8', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>Save</button>
             </div>
           </div>
         </div>
