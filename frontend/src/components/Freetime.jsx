@@ -1,4 +1,3 @@
-// src/components/Freetime.jsx
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
@@ -7,11 +6,10 @@ const Freetime = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [freetimeData, setFreetimeData] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // State สำหรับ Modal เพิ่ม/แก้ไขข้อมูล
+
   const [showAddModal, setShowAddModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // เช็กว่าอยู่ในโหมดแก้ไขหรือไม่
-  const [editId, setEditId] = useState(null); // เก็บ ID ของรายการที่กำลังแก้ไข
+  const [isEditing, setIsEditing] = useState(false); 
+  const [editId, setEditId] = useState(null); 
   
   const [newRecord, setNewRecord] = useState({
     Carrier: '', LAT_KRABANG: '', LAEM_CHABANG: '', PAT_BANGKOK: '', 
@@ -19,7 +17,6 @@ const Freetime = () => {
     DEM_20_40: '', DT_20_40: '', DEM_REEFER: '', DET_REEFER: ''
   });
 
-  // 1. ดึงข้อมูลจากไฟล์ Excel
   useEffect(() => {
     const fetchExcelData = async () => {
       try {
@@ -63,7 +60,6 @@ const Freetime = () => {
     fetchExcelData();
   }, []);
 
-  // 2. ค้นหาข้อมูล
   const filteredData = freetimeData.filter(item => {
     const search = searchTerm.toLowerCase();
     return (
@@ -72,7 +68,6 @@ const Freetime = () => {
     );
   });
 
-  // 3. เปิด Modal สำหรับเพิ่มข้อมูลใหม่
   const handleAddNewClick = () => {
     setIsEditing(false);
     setEditId(null);
@@ -91,24 +86,51 @@ const Freetime = () => {
     setShowAddModal(true);
   };
 
-  // 5. บันทึกข้อมูล (รองรับทั้ง Add และ Edit)
-  const handleSaveRecord = (e) => {
-    e.preventDefault();
-    if (isEditing) {
-      // โหมดแก้ไข: หา ID เดิมแล้วอัปเดตข้อมูล
-      setFreetimeData(prev => prev.map(item => item.id === editId ? { ...newRecord, id: editId } : item));
-    } else {
-      // โหมดเพิ่ม: สร้าง ID ใหม่แล้วดันไปไว้บนสุด
-      const newData = { ...newRecord, id: Date.now() };
-      setFreetimeData([newData, ...freetimeData]); 
+
+  const saveDataToBackend = async (updatedData) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/v1/save-freetime`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      
+      const result = await response.json();
+      if (result.status === 'success') {
+        alert("✅ Data updated and saved to the Excel file successfully!");
+      } else {
+        alert("❌ An error occurred while saving the file.");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("❌ Unable to connect to the backend server.");
     }
-    setShowAddModal(false);
   };
 
-  // 6. ลบข้อมูล
+  const handleSaveRecord = (e) => {
+    e.preventDefault();
+    let updatedData;
+    
+    if (isEditing) {
+      updatedData = freetimeData.map(item => item.id === editId ? { ...newRecord, id: editId } : item);
+    } else {
+      const newData = { ...newRecord, id: Date.now() };
+      updatedData = [newData, ...freetimeData]; 
+    }
+    
+    setFreetimeData(updatedData); 
+    setShowAddModal(false);
+    
+    saveDataToBackend(updatedData);
+  };
+
   const handleDelete = (idToDelete) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      setFreetimeData(prev => prev.filter(item => item.id !== idToDelete));
+      const updatedData = freetimeData.filter(item => item.id !== idToDelete);
+      setFreetimeData(updatedData); 
+      
+      saveDataToBackend(updatedData);
     }
   };
 

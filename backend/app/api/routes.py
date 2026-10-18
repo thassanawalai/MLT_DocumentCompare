@@ -1,15 +1,16 @@
 import io
 import pandas as pd
 from typing import Optional
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Body
 from app.services.process_service import process_pdf
 from app.templates.registry import _template_map
+import os
 
 router = APIRouter()
 
 @router.get("/templates")
 def get_templates():
-    """ส่งรายชื่อเทมเพลตที่มีทั้งหมดกลับไป"""
+    """Return a list of all available templates."""
     return {"templates": list(_template_map.keys())}
 
 @router.post("/process-pdf")
@@ -23,10 +24,10 @@ async def compare_pdfs(
         filename = file_program.filename.lower()
 
         # ==========================================
-        # 1. ดักจับกรณีเป็นไฟล์ EXCEL หรือ CSV
+        # 1. Handle EXCEL or CSV file cases
         # ==========================================
         if filename.endswith((".xlsx", ".xls", ".csv")):
-            # อ่านเนื้อหาไฟล์เข้ามา
+            # Read file contents
             contents = await file_program.read()
             
             if filename.endswith(".csv"):
@@ -35,9 +36,9 @@ async def compare_pdfs(
                 df = pd.read_excel(io.BytesIO(contents))
             
             if df.empty:
-                raise HTTPException(status_code=400, detail="ไฟล์ Excel ไม่มีข้อมูล")
+                raise HTTPException(status_code=400, detail="Excel file contains no data")
             
-            # ดึงข้อมูลจาก Row แรกสุด (Index 0)
+            # Extract data from the first row (Index 0)
             row = df.iloc[0].fillna("")
             
             extracted_data = {
@@ -58,7 +59,7 @@ async def compare_pdfs(
                 "measurement": {"value": str(row.get(" CBM ", ""))}
             }
 
-            # ส่งกลับไปให้หน้าบ้าน (ไม่ต้องมี bbox และ image เพราะ Excel ไม่มีภาพ)
+            # Return data to frontend (no bbox or image needed for Excel)
             return {
                 "status": "success",
                 "program": {
@@ -68,7 +69,7 @@ async def compare_pdfs(
             }
 
         # ==========================================
-        # 2. กรณีเป็นไฟล์ PDF (โยนให้ Service เดิมจัดการ)
+        # 2. Handle PDF file cases (delegate to existing service)
         # ==========================================
         else:
             result = process_pdf(
@@ -82,4 +83,55 @@ async def compare_pdfs(
     except HTTPException as e:
         raise e
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==============================================================
+# Save Freetime Data Endpoint
+# ==============================================================
+@router.post("/save-freetime")
+async def save_freetime_data(data: list = Body(...)):
+    try:
+        # Save the file to /frontend/public/freetime_data.xlsx 
+        # (assuming backend and frontend are parallel directories)
+        file_path = os.path.join("..", "frontend", "public", "freetime_data.xlsx") 
+
+        df = pd.DataFrame(data)
+
+        # 1. Remove the 'id' column used only in React before saving
+        if 'id' in df.columns:
+            df = df.drop(columns=['id'])
+
+        # 2. Rename columns to match the original Excel headers exactly
+        df = df.rename(columns={
+            "LAT_KRABANG": "LAT KRABANG",
+            "LAEM_CHABANG": "LAEM CHABANG",
+            "PAT_BANGKOK": "PAT (BANGKOK)",
+            "DEM_20_40": "DEM  20'GP & 40'HC",
+            "DT_20_40": "DT  20'GP & 40'HC",
+            "DEM_REEFER": "DEM/REFFER",
+            "DET_REEFER": "DET/REFFEER"
+        })
+
+        # 3. Reorder columns to match the original layout
+        cols_order = [
+            "Carrier", "LAT KRABANG", "LAEM CHABANG", "PAT (BANGKOK)", 
+            "REEFER", "SONGKLA", "REMARK", "FREE TIME PLUG",
+            "DEM  20'GP & 40'HC", "DT  20'GP & 40'HC", "DEM/REFFER", "DET/REFFEER"
+        ]
+        
+        # Add any missing columns with empty values
+        for col in cols_order:
+            if col not in df.columns:
+                df[col] = ""
+
+        df = df[cols_order]
+
+        # 4. Overwrite the Excel file
+        # Use engine='openpyxl' to ensure proper .xlsx saving
+        df.to_excel(file_path, index=False, engine='openpyxl')
+        
+        return {"status": "success", "message": "Data successfully saved to Excel"}
+
+    except Exception as e:
+        # Return a 500 error with the exception details if it fails
         raise HTTPException(status_code=500, detail=str(e))
