@@ -233,32 +233,33 @@ const Freetime = () => {
                 ) : filteredData.length > 0 ? (
                   filteredData.map((row) => (
                     <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '16px 24px', color: '#334155', fontWeight: 'bold' }}>{row.Carrier}</td>
+                      <td style={{ padding: '12px 16px', color: '#334155', fontWeight: 'bold', fontSize: '0.85em' }}>{row.Carrier}</td>
                       
                       {activeTab === 'ORIGIN' ? (
                         <>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.LAT_KRABANG || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.LAEM_CHABANG || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.PAT_BANGKOK || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.SONGKLA || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#0369a1', fontWeight: 'bold' }}>{row.REEFER || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#b91c1c' }}>{row.REMARK || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.LAT_KRABANG || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.LAEM_CHABANG || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.PAT_BANGKOK || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.SONGKLA || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.REEFER || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.REMARK || '-'}</td>
                         </>
                       ) : (
                         <>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.DEM_20_40 || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.DT_20_40 || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.DEM_REEFER || '-'}</td>
-                          <td style={{ padding: '16px 24px', color: '#475569' }}>{row.DET_REEFER || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.DEM_20_40 || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.DT_20_40 || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.DEM_REEFER || '-'}</td>
+                          <td style={{ padding: '12px 16px', color: '#334155', fontSize: '0.85em' }}>{row.DET_REEFER || '-'}</td>
                         </>
                       )}
 
-                      <td style={{ padding: '16px 24px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <td style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
                         <button 
                           onClick={() => handleEditClick(row)}
                           style={{
-                            padding: '6px 12px', backgroundColor: '#eab308', color: '#fff',
-                            border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9em', fontWeight: 'bold'
+                            width: '100%', // ให้ปุ่มกว้างเต็มพื้นที่ column
+                            padding: '4px 8px', backgroundColor: '#eab308', color: '#fff',
+                            border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8em', fontWeight: 'bold'
                           }}
                         >
                           Edit
@@ -266,8 +267,9 @@ const Freetime = () => {
                         <button 
                           onClick={() => handleDelete(row.id)}
                           style={{
-                            padding: '6px 12px', backgroundColor: '#ef4444', color: '#fff',
-                            border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9em', fontWeight: 'bold'
+                            width: '100%', // ให้ปุ่มกว้างเต็มพื้นที่ column
+                            padding: '4px 8px', backgroundColor: '#ef4444', color: '#fff',
+                            border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8em', fontWeight: 'bold'
                           }}
                         >
                           Del
