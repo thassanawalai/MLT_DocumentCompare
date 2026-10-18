@@ -112,9 +112,10 @@ const HSCodeSearch = () => {
     headerBox: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
     header: { fontSize: '24px', fontWeight: 'bold', color: '#1e293b', margin: 0 },
     primaryBtn: { padding: '10px 16px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' },
-    actionBtn: { padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#fff', margin: '0 4px' },
-    saveBtn: { padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#10b981', color: '#fff', margin: '0 4px' },
-    deleteBtn: { padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', backgroundColor: '#ef4444', color: '#fff', margin: '0 4px' },
+    actionStack: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', width: '98px', margin: '0 auto' },
+    actionBtn: { width: '100%', padding: '7px 10px', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', lineHeight: 1, fontWeight: 'bold', backgroundColor: '#efb400', color: '#fff' },
+    saveBtn: { width: '100%', padding: '7px 10px', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', lineHeight: 1, fontWeight: 'bold', backgroundColor: '#10b981', color: '#fff' },
+    deleteBtn: { width: '100%', padding: '7px 10px', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', lineHeight: 1, fontWeight: 'bold', backgroundColor: '#ef4444', color: '#fff' },
     searchContainer: { position: 'relative', marginBottom: '24px' },
     searchInput: { width: '100%', padding: '14px 40px 14px 18px', fontSize: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' },
     clearSearchBtn: { position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '16px', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
@@ -234,17 +235,19 @@ const HSCodeSearch = () => {
 
                       {/* Actions */}
                       <td style={{...styles.td, textAlign: 'center'}}>
-                        {isEditing ? (
-                          <>
+                        <div style={styles.actionStack}>
+                          {isEditing ? (
+                            <>
                             <button style={styles.saveBtn} onClick={handleEditSave}>Save</button>
                             <button style={styles.actionBtn} onClick={handleEditCancel}>Cancel</button>
-                          </>
-                        ) : (
-                          <>
+                            </>
+                          ) : (
+                            <>
                             <button style={styles.actionBtn} onClick={() => handleEditClick(row)}>Edit</button>
                             <button style={styles.deleteBtn} onClick={() => handleDelete(row.id)}>Del</button>
-                          </>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
