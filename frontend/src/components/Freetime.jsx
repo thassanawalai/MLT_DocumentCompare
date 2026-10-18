@@ -184,20 +184,37 @@ const Freetime = () => {
         </div>
 
         {/* ======== SEARCH BAR ======== */}
-        <div style={{ marginBottom: '20px', backgroundColor: '#374151', padding: '16px', borderRadius: '0 8px 8px 8px' }}>
+        <div style={{ 
+          marginBottom: '20px', backgroundColor: '#374151', padding: '16px', 
+          borderRadius: '0 8px 8px 8px', display: 'flex', gap: '12px' 
+        }}>
           <input 
             type="text" 
             placeholder="Search Carrier Name or Remark..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
-              width: '100%', padding: '12px 16px', borderRadius: '6px', border: 'none',
+              flex: 1, padding: '12px 16px', borderRadius: '6px', border: 'none',
               backgroundColor: '#4b5563', color: '#ffffff', fontSize: '1em', outline: 'none',
               boxSizing: 'border-box'
             }}
           />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              style={{
+                padding: '0 20px', backgroundColor: '#64748b', color: '#ffffff',
+                border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold',
+                fontSize: '0.9em', transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#94a3b8'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#64748b'}
+            >
+              Clear
+            </button>
+          )}
         </div>
-
+        
         {/* ======== DATA TABLE ======== */}
         <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
@@ -316,7 +333,7 @@ const Freetime = () => {
               )}
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
-                <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', backgroundColor: '#fff', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', backgroundColor: '#fff',color: '#475569', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" style={{ padding: '10px 20px', border: 'none', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
                   {isEditing ? 'Update Record' : 'Save Record'}
                 </button>
