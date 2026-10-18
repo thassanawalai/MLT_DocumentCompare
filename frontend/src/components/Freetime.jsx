@@ -70,6 +70,11 @@ const Freetime = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP Error ${response.status}`);
+      }
       
       const result = await response.json();
       if (result.status === 'success') {
@@ -79,7 +84,7 @@ const Freetime = () => {
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert("❌ Cannot connect to the backend server.");
+      alert(`❌ Cannot connect to the backend server.\nDetails: ${error.message}`);server.");
     }
   };
 
