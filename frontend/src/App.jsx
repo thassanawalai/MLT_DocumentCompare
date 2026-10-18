@@ -5,6 +5,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import SIDataEntry from './SIDataEntry';
 import HSCodeSearch from './components/HSCodeSearch';
+import Freetime from './components/Freetime';
 
 const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
@@ -949,6 +950,7 @@ const menuItems = [
     { id: 'HBL', label: 'HBL (Set 1)', desc: 'SI Shipper vs HBL' },
     { id: 'MBL', label: 'MBL (Set 2)', desc: 'SI Maritime vs MBL' },
     { id: 'hscode', label: 'HS Code Directory', desc: 'Search Master Data' },
+    { id: 'freetime', label: 'Freetime Directory', desc: 'Check Port Freetime' },
   ];
 
   return (
@@ -1070,6 +1072,8 @@ const menuItems = [
             <SIDataEntry copy={copy} />
           ) : activeTab === 'hscode' ? (
             <HSCodeSearch />
+          ) : activeTab === 'freetime' ? (
+          <Freetime />
           ) : (
             <ComparisonPage
               key={activeTab} 
