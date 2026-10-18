@@ -1,5 +1,6 @@
 import io
 import pandas as pd
+from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Body
 from app.services.process_service import process_pdf
@@ -93,8 +94,13 @@ async def save_freetime_data(data: list = Body(...)):
     try:
         # Save the file to /frontend/public/freetime_data.xlsx 
         # (assuming backend and frontend are parallel directories)
-        file_path = os.path.join("..", "frontend", "public", "freetime_data.xlsx") 
+        current_dir = Path(__file__).resolve().parent
+        project_root = current_dir.parent.parent.parent
+        file_path = project_root / "frontend" / "public" / "freetime_data.xlsx"
 
+        if not file_path.parent.exists():
+            raise FileNotFoundError(f"Target directory does not exist: {file_path.parent}")
+        
         df = pd.DataFrame(data)
 
         # 1. Remove the 'id' column used only in React before saving
@@ -128,7 +134,7 @@ async def save_freetime_data(data: list = Body(...)):
 
         # 4. Overwrite the Excel file
         # Use engine='openpyxl' to ensure proper .xlsx saving
-        df.to_excel(file_path, index=False, engine='openpyxl')
+        df.to_excel(str(file_path), index=False, engine='openpyxl')
         
         return {"status": "success", "message": "Data successfully saved to Excel"}
 
