@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from app.api.routes import router
+from app.api.master_data import router as master_data_router
 from app.core.config import setup_cors
 import os
 
@@ -14,6 +15,7 @@ setup_cors(app)
 
 # API routes
 app.include_router(router, prefix="/api/v1")
+app.include_router(master_data_router, prefix="/api/v1")
 
 # Path to the directory containing the built frontend files
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
