@@ -96,7 +96,7 @@ const SIDataEntry = ({ copy }) => {
     apiData.append('company_program', selectedTemplate); 
 
     try {
-      const apiUrl = 'https://mlt-documentcompare.onrender.com';
+      const apiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
       const response = await fetch(`${apiUrl}/api/v1/process-pdf`, { 
         method: 'POST', body: apiData 
       });

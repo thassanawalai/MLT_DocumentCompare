@@ -25,7 +25,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://mlt-backend.onrender.com
+        value: https://mlt-backend-bufr.onrender.com
 
 databases:
   - name: mlt-documentcompare-db

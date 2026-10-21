@@ -9,7 +9,7 @@ The frontend calls the backend through `VITE_API_URL`. For the default
 Blueprint in this repo, that value is:
 
 ```text
-https://mlt-backend.onrender.com
+https://mlt-backend-bufr.onrender.com
 ```
 
 If Render gives the backend a different URL, update `VITE_API_URL` in
