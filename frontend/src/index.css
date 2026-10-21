@@ -3,19 +3,8 @@
 /* นำเข้าฟอนต์ TH Sarabun New จากโฟลเดอร์ fonts */
 @font-face {
   font-family: 'TH Sarabun New';
-  src: url('./fonts/THSarabunNew.woff2') format('woff2'),
-       url('./fonts/THSarabunNew.woff') format('woff'),
-       url('./fonts/THSarabunNew.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'TH Sarabun New';
-  src: url('./fonts/THSarabunNew-Bold.woff2') format('woff2'),
-       url('./fonts/THSarabunNew-Bold.woff') format('woff'),
-       url('./fonts/THSarabunNew-Bold.ttf') format('truetype');
-  font-weight: bold;
+  src: url('/fonts/THSarabunNew.ttf') format('truetype');
+  font-weight: 400;
   font-style: normal;
 }
 
@@ -41,7 +30,7 @@
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
-  font-synthesis: none;
+  font-synthesis: weight;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

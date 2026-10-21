@@ -954,9 +954,9 @@ const menuItems = [
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'Times New Roman', 'TH Sarabun New', 'TH Sarabun PSK', serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: theme.bg, fontFamily: "'TH Sarabun New', 'IBM Plex Sans Thai', 'IBM Plex Sans', sans-serif" }}>
       <style>{`
-        * { font-family: 'Sarabun', sans-serif !important; }
+        * { font-family: 'TH Sarabun New', 'IBM Plex Sans Thai', 'IBM Plex Sans', sans-serif !important; }
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         .diff-equal { color: #15803d; font-weight: 500; }

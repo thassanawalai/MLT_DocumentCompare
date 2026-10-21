@@ -1,19 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+import { apiRequest, jsonRequest } from '../apiClient';
+
+const emptyFreetimeRecord = {
+  Carrier: '', LAT_KRABANG: '', LAEM_CHABANG: '', PAT_BANGKOK: '',
+  SONGKLA: '', REEFER: '', REMARK: '', FREE_TIME_PLUG: '',
+  DEM_20_40: '', DT_20_40: '', DEM_REEFER: '', DET_REEFER: '',
+};
+
+const fromApiRecord = (record) => ({
+  id: record.id,
+  Carrier: record.carrier,
+  LAT_KRABANG: record.lat_krabang,
+  LAEM_CHABANG: record.laem_chabang,
+  PAT_BANGKOK: record.pat_bangkok,
+  SONGKLA: record.songkla,
+  REEFER: record.reefer,
+  REMARK: record.remark,
+  FREE_TIME_PLUG: record.free_time_plug,
+  DEM_20_40: record.dem_20_40,
+  DT_20_40: record.dt_20_40,
+  DEM_REEFER: record.dem_reefer,
+  DET_REEFER: record.det_reefer,
+});
+
+const toApiRecord = (record) => ({
+  carrier: record.Carrier.trim(),
+  lat_krabang: record.LAT_KRABANG,
+  laem_chabang: record.LAEM_CHABANG,
+  pat_bangkok: record.PAT_BANGKOK,
+  songkla: record.SONGKLA,
+  reefer: record.REEFER,
+  remark: record.REMARK,
+  free_time_plug: record.FREE_TIME_PLUG,
+  dem_20_40: record.DEM_20_40,
+  dt_20_40: record.DT_20_40,
+  dem_reefer: record.DEM_REEFER,
+  det_reefer: record.DET_REEFER,
+});
 
 const Freetime = () => {
   const [activeTab, setActiveTab] = useState('ORIGIN'); 
   const [searchTerm, setSearchTerm] = useState('');
   const [freetimeData, setFreetimeData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [operationError, setOperationError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   
   // States for Add Modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newRecord, setNewRecord] = useState({
-    Carrier: '', LAT_KRABANG: '', LAEM_CHABANG: '', PAT_BANGKOK: '', 
-    SONGKLA: '', REEFER: '', REMARK: '', 
-    DEM_20_40: '', DT_20_40: '', DEM_REEFER: '', DET_REEFER: ''
-  });
+  const [newRecord, setNewRecord] = useState(emptyFreetimeRecord);
 
   // States for Inline Editing
   const [editingId, setEditingId] = useState(null);
@@ -22,39 +57,11 @@ const Freetime = () => {
   useEffect(() => {
     const fetchExcelData = async () => {
       try {
-        const response = await fetch('/freetime_data.xlsx'); 
-        if (!response.ok) throw new Error("Excel file not found");
-        
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-        
-        let lastCarrier = "";
-        const formattedData = jsonData.map((row, index) => {
-          if (row.Carrier) lastCarrier = row.Carrier;
-          else row.Carrier = lastCarrier; 
-          
-          return {
-            id: index, 
-            Carrier: row.Carrier,
-            LAT_KRABANG: row["LAT KRABANG"] || row["LAT KRABANG "] || '',
-            LAEM_CHABANG: row["LAEM CHABANG"] || row["LAEM CHABANG "] || '',
-            PAT_BANGKOK: row["PAT (BANGKOK)"] || row["PAT (BANGKOK) "] || '',
-            SONGKLA: row["SONGKLA"] || '',
-            REEFER: row["REEFER"] || '',
-            REMARK: row["REMARK"] || '',
-            DEM_20_40: row["DEM  20'GP & 40'HC"] || '',
-            DT_20_40: row["DT  20'GP & 40'HC"] || '',
-            DEM_REEFER: row["DEM/REFFER"] || row["DEM/REFFER "] || '',
-            DET_REEFER: row["DET/REFFEER"] || row["DET/REFFEER "] || ''
-          };
-        });
-
-        setFreetimeData(formattedData);
+        const records = await apiRequest('/api/v1/freetime');
+        setFreetimeData(records.map(fromApiRecord));
       } catch (error) {
-        console.error("Error loading Excel file:", error);
+        console.error("Error loading Freetime data:", error);
+        setOperationError(`Could not load Freetime data. ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -62,62 +69,49 @@ const Freetime = () => {
     fetchExcelData();
   }, []);
 
-  const saveDataToBackend = async (updatedData) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/v1/save-freetime`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP Error ${response.status}`);
-      }
-      
-      const result = await response.json();
-      if (result.status === 'success') {
-        alert("✅ Data successfully updated and saved to Excel!");
-      } else {
-        alert("❌ Error saving file.");
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-      alert(`❌ Cannot connect to the backend server.\nDetails: ${error.message}`);
-    }
-  };
-
   const filteredData = freetimeData.filter(item => {
     const search = searchTerm.toLowerCase();
     return (
       (item.Carrier || '').toLowerCase().includes(search) ||
-      (item.REMARK || '').toLowerCase().includes(search)
+      (item.REMARK || '').toLowerCase().includes(search) ||
+      (item.FREE_TIME_PLUG || '').toLowerCase().includes(search)
     );
   });
 
   const handleAddNewClick = () => {
-    setNewRecord({ 
-      Carrier: '', LAT_KRABANG: '', LAEM_CHABANG: '', PAT_BANGKOK: '', 
-      SONGKLA: '', REEFER: '', REMARK: '', DEM_20_40: '', DT_20_40: '', DEM_REEFER: '', DET_REEFER: '' 
-    });
+    setNewRecord(emptyFreetimeRecord);
+    setOperationError('');
     setShowAddModal(true);
   };
 
-  const handleSaveNewRecord = (e) => {
+  const handleSaveNewRecord = async (e) => {
     e.preventDefault();
-    const newData = { ...newRecord, id: Date.now() };
-    const updatedData = [newData, ...freetimeData];
-    setFreetimeData(updatedData); 
-    setShowAddModal(false);
-    saveDataToBackend(updatedData);
+    setIsSaving(true);
+    setOperationError('');
+    try {
+      const record = await apiRequest('/api/v1/freetime', jsonRequest('POST', toApiRecord(newRecord)));
+      setFreetimeData((rows) => [fromApiRecord(record), ...rows]);
+      setShowAddModal(false);
+      setNewRecord(emptyFreetimeRecord);
+    } catch (error) {
+      setOperationError(`Could not add record. ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (idToDelete) => {
+  const handleDelete = async (idToDelete) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-      const updatedData = freetimeData.filter(item => item.id !== idToDelete);
-      setFreetimeData(updatedData);
-      saveDataToBackend(updatedData);
+      setIsSaving(true);
+      setOperationError('');
+      try {
+        await apiRequest(`/api/v1/freetime/${idToDelete}`, { method: 'DELETE' });
+        setFreetimeData((rows) => rows.filter((item) => item.id !== idToDelete));
+      } catch (error) {
+        setOperationError(`Could not delete record. ${error.message}`);
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -135,13 +129,18 @@ const Freetime = () => {
     setEditFormData({ ...editFormData, [field]: e.target.value });
   };
 
-  const handleSaveInline = () => {
-    const updatedData = freetimeData.map(item => 
-      item.id === editingId ? { ...editFormData } : item
-    );
-    setFreetimeData(updatedData);
-    setEditingId(null);
-    saveDataToBackend(updatedData);
+  const handleSaveInline = async () => {
+    setIsSaving(true);
+    setOperationError('');
+    try {
+      const record = await apiRequest(`/api/v1/freetime/${editingId}`, jsonRequest('PATCH', toApiRecord(editFormData)));
+      setFreetimeData((rows) => rows.map((item) => item.id === editingId ? fromApiRecord(record) : item));
+      setEditingId(null);
+    } catch (error) {
+      setOperationError(`Could not update record. ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const inputStyle = {
@@ -160,6 +159,7 @@ const Freetime = () => {
           </h2>
           <button 
             onClick={handleAddNewClick}
+            disabled={isSaving}
             style={{
               padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', 
               border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer',
@@ -169,6 +169,8 @@ const Freetime = () => {
             + Add New Record
           </button>
         </div>
+
+        {operationError && <div role="alert" style={{ marginBottom: '16px', padding: '12px', color: '#b91c1c', backgroundColor: '#fee2e2', borderRadius: '6px' }}>{operationError}</div>}
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <button 
@@ -251,12 +253,13 @@ const Freetime = () => {
                       <th style={{ padding: '16px 24px', color: '#475569', fontWeight: 'bold' }}>DET/REEFER</th>
                     </>
                   )}
+                  <th style={{ padding: '16px 24px', color: '#475569', fontWeight: 'bold' }}>Free Time Plug</th>
                   <th style={{ padding: '16px 24px', color: '#475569', fontWeight: 'bold', textAlign: 'center', width: '100px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={activeTab === 'ORIGIN' ? 8 : 6} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading...</td></tr>
+                  <tr><td colSpan={activeTab === 'ORIGIN' ? 9 : 7} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading...</td></tr>
                 ) : filteredData.length > 0 ? (
                   filteredData.map((row) => (
                     <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
@@ -309,18 +312,24 @@ const Freetime = () => {
                         </>
                       )}
 
+                      <td style={{ padding: '12px 16px' }}>
+                        {editingId === row.id ? <input style={inputStyle} value={editFormData.FREE_TIME_PLUG} onChange={(e) => handleEditChange(e, 'FREE_TIME_PLUG')} /> : <span style={{ color: '#334155', fontSize: '0.85em' }}>{row.FREE_TIME_PLUG || '-'}</span>}
+                      </td>
+
                       {/* Actions Column */}
                       <td style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
                         {editingId === row.id ? (
                           <>
                             <button 
                               onClick={handleSaveInline}
+                              disabled={isSaving}
                               style={{ width: '100%', padding: '4px 8px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8em', fontWeight: 'bold' }}
                             >
-                              Save
+                              {isSaving ? 'Saving...' : 'Save'}
                             </button>
                             <button 
                               onClick={handleCancelEdit}
+                              disabled={isSaving}
                               style={{ width: '100%', padding: '4px 8px', backgroundColor: '#94a3b8', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8em', fontWeight: 'bold' }}
                             >
                               Cancel
@@ -330,12 +339,14 @@ const Freetime = () => {
                           <>
                             <button 
                               onClick={() => handleEditClick(row)}
+                              disabled={isSaving}
                               style={{ width: '100%', padding: '4px 8px', backgroundColor: '#eab308', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8em', fontWeight: 'bold' }}
                             >
                               Edit
                             </button>
                             <button 
                               onClick={() => handleDelete(row.id)}
+                              disabled={isSaving}
                               style={{ width: '100%', padding: '4px 8px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8em', fontWeight: 'bold' }}
                             >
                               Del
@@ -347,7 +358,7 @@ const Freetime = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={activeTab === 'ORIGIN' ? 8 : 6} style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>No records found.</td></tr>
+                  <tr><td colSpan={activeTab === 'ORIGIN' ? 9 : 7} style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>No records found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -380,10 +391,11 @@ const Freetime = () => {
                   <input placeholder="DET/REEFER" value={newRecord.DET_REEFER} onChange={e => setNewRecord({...newRecord, DET_REEFER: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                 </>
               )}
+              <input placeholder="Free Time Plug" value={newRecord.FREE_TIME_PLUG} onChange={e => setNewRecord({...newRecord, FREE_TIME_PLUG: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
-                <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#475569', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
-                <button type="submit" style={{ padding: '10px 20px', border: 'none', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Save Record</button>
+                <button type="button" onClick={() => setShowAddModal(false)} disabled={isSaving} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#475569', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+                <button type="submit" disabled={isSaving} style={{ padding: '10px 20px', border: 'none', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>{isSaving ? 'Saving...' : 'Save Record'}</button>
               </div>
             </form>
           </div>

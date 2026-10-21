@@ -1,14 +1,44 @@
 services:
-  backend:
-    build: ./backend
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mlt_documentcompare
+      POSTGRES_USER: mlt_user
+      POSTGRES_PASSWORD: mlt_password
     ports:
-      - "10000:10000"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mlt_user -d mlt_documentcompare"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "10001:10000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://mlt_user:mlt_password@db:5432/mlt_documentcompare
+      MASTER_DATA_DIR: /import-data
+    volumes:
+      - ./frontend/public:/import-data:ro
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
     build: ./frontend
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  postgres_data:

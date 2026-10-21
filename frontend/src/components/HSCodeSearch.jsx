@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import * as XLSX from 'xlsx';
+import { apiRequest, jsonRequest } from '../apiClient';
 
 const HSCodeSearch = () => {
   const [masterData, setMasterData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [operationError, setOperationError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // States for Add/Edit/Delete functionality
   const [showAddForm, setShowAddForm] = useState(false);
@@ -14,46 +16,21 @@ const HSCodeSearch = () => {
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({ sale: '', customer: '', commodity: '', hsCode: '' });
 
-  // 1. Auto-fetch data
   useEffect(() => {
     const fetchDatabase = async () => {
       try {
-        const response = await fetch('/HS_Master.csv');
-        if (!response.ok) throw new Error('Database file not found in public folder.');
-
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
-        let dataStartIndex = 0;
-        for (let i = 0; i < Math.min(15, rawData.length); i++) {
-          const rowValues = rawData[i].map(val => String(val).toLowerCase());
-          if (rowValues.includes('customer name') || rowValues.includes('hs code')) {
-            dataStartIndex = i + 1; 
-            break;
-          }
-        }
-        
-        const cleanData = [];
-        for (let i = dataStartIndex; i < rawData.length; i++) {
-          const rowArray = rawData[i];
-          if (!rowArray || rowArray.length === 0 || rowArray.every(val => !val)) continue;
-          
-          cleanData.push({
-            id: `id_${Date.now()}_${i}`, // Generate unique ID for CRUD operations
-            sale: rowArray[0] || '-',
-            customer: rowArray[1] || '-',
-            commodity: rowArray[2] || '-',
-            hsCode: rowArray[3] || '-'
-          });
-        }
-        
-        setMasterData(cleanData);
-        setIsLoading(false);
+        const records = await apiRequest('/api/v1/hs-codes');
+        setMasterData(records.map((record) => ({
+          id: record.id,
+          sale: record.sale,
+          customer: record.customer,
+          commodity: record.commodity,
+          hsCode: record.hs_code,
+        })));
       } catch (error) {
-        console.error('Error loading database:', error);
-        setErrorMsg('Could not load the database. Please check the file format.');
+        console.error('Error loading HS Code data:', error);
+        setErrorMsg(`Could not load HS Code data. ${error.message}`);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -75,21 +52,45 @@ const HSCodeSearch = () => {
   }, [masterData, searchTerm]);
 
   // --- CRUD Handlers ---
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    const newRecord = {
-      ...addFormData,
-      id: `id_${Date.now()}`
-    };
-    // Add new record to the top of the list
-    setMasterData([newRecord, ...masterData]);
-    setShowAddForm(false);
-    setAddFormData({ sale: '', customer: '', commodity: '', hsCode: '' });
+    setIsSaving(true);
+    setOperationError('');
+    try {
+      const record = await apiRequest('/api/v1/hs-codes', jsonRequest('POST', {
+        sale: addFormData.sale.trim(),
+        customer: addFormData.customer.trim(),
+        commodity: addFormData.commodity.trim(),
+        hs_code: addFormData.hsCode.trim(),
+      }));
+      setMasterData((rows) => [{
+        id: record.id,
+        sale: record.sale,
+        customer: record.customer,
+        commodity: record.commodity,
+        hsCode: record.hs_code,
+      }, ...rows]);
+      setShowAddForm(false);
+      setAddFormData({ sale: '', customer: '', commodity: '', hsCode: '' });
+    } catch (error) {
+      setOperationError(`Could not add record. ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      setMasterData(masterData.filter(row => row.id !== id));
+      setIsSaving(true);
+      setOperationError('');
+      try {
+        await apiRequest(`/api/v1/hs-codes/${id}`, { method: 'DELETE' });
+        setMasterData((rows) => rows.filter((row) => row.id !== id));
+      } catch (error) {
+        setOperationError(`Could not delete record. ${error.message}`);
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -98,9 +99,29 @@ const HSCodeSearch = () => {
     setEditFormData({ ...row });
   };
 
-  const handleEditSave = () => {
-    setMasterData(masterData.map(row => (row.id === editingId ? editFormData : row)));
-    setEditingId(null);
+  const handleEditSave = async () => {
+    setIsSaving(true);
+    setOperationError('');
+    try {
+      const record = await apiRequest(`/api/v1/hs-codes/${editingId}`, jsonRequest('PATCH', {
+        sale: editFormData.sale.trim(),
+        customer: editFormData.customer.trim(),
+        commodity: editFormData.commodity.trim(),
+        hs_code: String(editFormData.hsCode).trim(),
+      }));
+      setMasterData((rows) => rows.map((row) => row.id === editingId ? {
+        id: record.id,
+        sale: record.sale,
+        customer: record.customer,
+        commodity: record.commodity,
+        hsCode: record.hs_code,
+      } : row));
+      setEditingId(null);
+    } catch (error) {
+      setOperationError(`Could not update record. ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEditCancel = () => {
@@ -132,7 +153,7 @@ const HSCodeSearch = () => {
     <div style={styles.container}>
       <div style={styles.headerBox}>
         <h2 style={styles.header}>HS Code Directory</h2>
-        <button style={styles.primaryBtn} onClick={() => setShowAddForm(!showAddForm)}>
+        <button style={styles.primaryBtn} onClick={() => setShowAddForm(!showAddForm)} disabled={isSaving}>
           {showAddForm ? 'Cancel Adding' : '+ Add New Record'}
         </button>
       </div>
@@ -148,7 +169,7 @@ const HSCodeSearch = () => {
             <input required placeholder="HS Code" style={styles.editInput} value={addFormData.hsCode} onChange={e => setAddFormData({...addFormData, hsCode: e.target.value})} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button type="submit" style={styles.primaryBtn}>Save Record</button>
+            <button type="submit" style={styles.primaryBtn} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Record'}</button>
             <button 
               type="button" 
               style={styles.secondaryBtn} 
@@ -166,6 +187,7 @@ const HSCodeSearch = () => {
         <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{errorMsg}</div>
       ) : (
         <>
+          {operationError && <div role="alert" style={{ marginBottom: '16px', padding: '12px', color: '#b91c1c', backgroundColor: '#fee2e2', borderRadius: '6px' }}>{operationError}</div>}
           {/* --- Search Section --- */}
           <div style={styles.searchContainer}>
             <input
@@ -238,13 +260,13 @@ const HSCodeSearch = () => {
                         <div style={styles.actionStack}>
                           {isEditing ? (
                             <>
-                            <button style={styles.saveBtn} onClick={handleEditSave}>Save</button>
-                            <button style={styles.actionBtn} onClick={handleEditCancel}>Cancel</button>
+                            <button style={styles.saveBtn} onClick={handleEditSave} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save'}</button>
+                            <button style={styles.actionBtn} onClick={handleEditCancel} disabled={isSaving}>Cancel</button>
                             </>
                           ) : (
                             <>
-                            <button style={styles.actionBtn} onClick={() => handleEditClick(row)}>Edit</button>
-                            <button style={styles.deleteBtn} onClick={() => handleDelete(row.id)}>Del</button>
+                            <button style={styles.actionBtn} onClick={() => handleEditClick(row)} disabled={isSaving}>Edit</button>
+                            <button style={styles.deleteBtn} onClick={() => handleDelete(row.id)} disabled={isSaving}>Del</button>
                             </>
                           )}
                         </div>
