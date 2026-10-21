@@ -84,7 +84,7 @@ const Freetime = () => {
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert(`❌ Cannot connect to the backend server.\nDetails: ${error.message}`);server.");
+      alert(`❌ Cannot connect to the backend server.\nDetails: ${error.message}`);
     }
   };
 
