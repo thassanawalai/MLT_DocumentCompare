@@ -8,6 +8,7 @@ def setup_cors(app):
             "http://localhost:5173", 
             "http://localhost:3000"
         ],
+        allow_origin_regex=r"https://[a-z0-9-]+\.onrender\.com",
         allow_credentials=True, 
         allow_methods=["*"],
         allow_headers=["*"],
