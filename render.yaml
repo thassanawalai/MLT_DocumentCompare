@@ -5,7 +5,7 @@ services:
     plan: starter
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    preDeployCommand: alembic upgrade head && python scripts/import_master_data.py --if-empty
+    preDeployCommand: sh scripts/predeploy.sh
     healthCheckPath: /api/v1/templates
     envVars:
       - key: DATABASE_URL
