@@ -1,7 +1,7 @@
 """Import the customer workbook into the customer master tables."""
+import argparse
 import re
 import sys
-import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -12,103 +12,289 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from app.db import SessionLocal
-from app.models.customer import Customer, CustomerAddress, CustomerBank, CustomerContact, CustomerIdentifier
+from app.models.customer import (
+    Customer,
+    CustomerAddress,
+    CustomerBank,
+    CustomerContact,
+    CustomerIdentifier,
+)
 
 
-def parse_customer_block(block: list[str], db: Session) -> None:
+WORKBOOK_NAME = "637232394860757623_DETAIL CUSTOMER_9096.xlsx"
+SHEET_NAME = "THAI RAYON"
+
+COUNTRY_RE = re.compile(
+    r"\b(INDIA|PAKISTAN|BANGLADESH|THAILAND|CHINA|SINGAPORE|"
+    r"UNITED STATES|USA|UNITED KINGDOM|UK)\b",
+    re.IGNORECASE,
+)
+EMAIL_RE = re.compile(r"[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}", re.IGNORECASE)
+EMAIL_LABEL_RE = re.compile(r"\bE[\s\u00a0]*MAIL\b\s*[:*]?\s*", re.IGNORECASE)
+
+IDENTIFIER_PATTERNS = [
+    (re.compile(r"\bN\.?\s*T\.?\s*N\.?\s*(?:NO\.?|NUMBER)?\s*[:#.\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "NTN"),
+    (re.compile(r"\bGSTIN\s*(?:NO\.?|NUMBER)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "GSTIN"),
+    (re.compile(r"\bIEC\s*(?:NO\.?|NUMBER)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "IEC"),
+    (re.compile(r"\bPAN\s*(?:NO\.?|NUMBER)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "PAN"),
+    (re.compile(r"\bBIN\s*/?\s*VAT(?:\s+REG(?:ISTRATION)?\.?\s+NO\.?)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "BIN/VAT"),
+    (re.compile(r"\bBIN\s*(?:NO\.?|NUMBER)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "BIN"),
+]
+
+PHONE_LABEL_RE = re.compile(
+    r"\b(?P<label>CONTACT\s*(?:NO\.?|NUMBER)|TEL(?:EPHONE)?|PHONE|MOBILE|CELL|FAX)"
+    r"(?:\b|(?=\s|[:#\-]))\s*[:#\-]?\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+BANK_FIELD_RE = re.compile(
+    r"^\s*(?P<label>BRANCH(?:\s+NAME)?|SWIFT(?:\s*/\s*BIC)?|BIC|"
+    r"ACCOUNT(?:\s+NO\.?|\s+NUMBER)?|A/C(?:\s+NO\.?)?)\s*[:#\-]?\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+BANK_NAME_RE = re.compile(r"^\s*BANK(?:\s+NAME)?\s*[:#\-]\s*(.+)$", re.IGNORECASE)
+
+
+def clean_value(value: object) -> str:
+    """Normalize Excel cell whitespace while preserving its wording."""
+    if value is None or pd.isna(value):
+        return ""
+    text = str(value).replace("\u00a0", " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    return "" if text.casefold() in {"nan", "none", "null"} else text
+
+
+def split_blocks(series: pd.Series) -> list[list[str]]:
+    """Split column B into customer blocks separated by blank rows."""
+    blocks: list[list[str]] = []
+    current: list[str] = []
+
+    for cell in series.tolist():
+        value = clean_value(cell)
+        if not value:
+            if current:
+                blocks.append(current)
+                current = []
+            continue
+        if value.casefold() == "consignee/notify address":
+            continue
+        current.append(value)
+
+    if current:
+        blocks.append(current)
+    return blocks
+
+
+def extract_country(address: str) -> str | None:
+    matches = list(COUNTRY_RE.finditer(address))
+    if not matches:
+        return None
+    value = matches[-1].group(1).upper()
+    return {"USA": "United States", "UK": "United Kingdom"}.get(value, value.title())
+
+
+def parse_customer_block(block: list[str]) -> dict:
+    """Convert one non-empty Excel block into customer and child-row data."""
     if not block:
-        return
+        raise ValueError("Customer block cannot be empty")
 
-    customer = Customer(customer_name=block[0].strip(), status="Active")
-    db.add(customer)
-    db.flush()
-    address_lines = []
-    customer.country = None
+    parsed = {
+        "customer_name": clean_value(block[0]),
+        "customer_type": None,
+        "status": "Active",
+        "country": None,
+        "addresses": [],
+        "contacts": [],
+        "banks": [],
+        "identifiers": [],
+    }
+    address_lines: list[str] = []
+    seen_contacts: set[tuple[str, str]] = set()
+    seen_identifiers: set[tuple[str, str]] = set()
+    current_bank: dict | None = None
 
-    for line in block[1:]:
-        value = str(line).strip()
-        if not value or value.lower() == "nan":
+    def add_contact(contact_type: str, **values: str) -> None:
+        key_value = values.get("email") or values.get("phone") or values.get("fax") or ""
+        key = (contact_type.casefold(), key_value.casefold())
+        if key_value and key not in seen_contacts:
+            seen_contacts.add(key)
+            parsed["contacts"].append({
+                "contact_type": contact_type,
+                "contact_name": None,
+                "job_title": None,
+                "email": None,
+                "phone": None,
+                "fax": None,
+                "is_primary": not any(item["contact_type"] == contact_type for item in parsed["contacts"]),
+                **values,
+            })
+
+    for raw_line in block[1:]:
+        line = clean_value(raw_line)
+        if not line or line.upper() in {"AND", "OR"}:
             continue
-        upper = value.upper()
 
-        if "EMAIL:" in upper or "@" in value:
-            emails = re.split(r"[;,]", re.sub(r"EMAIL\s*:", "", value, flags=re.I))
-            for index, email in enumerate(emails):
-                if email.strip():
-                    db.add(CustomerContact(customer_id=customer.customer_id, contact_type="Email", email=email.strip(), is_primary=index == 0))
+        # Emails can appear in a labeled or unlabeled line, including alongside an address.
+        emails = EMAIL_RE.findall(line)
+        for email in emails:
+            add_contact("Email", email=email.rstrip(".,;"))
+        line = EMAIL_RE.sub(" ", line)
+        line = EMAIL_LABEL_RE.sub(" ", line)
+        line = re.sub(r"\s+", " ", line).strip(" ,;:-")
+        if not line:
             continue
 
-        phone_match = re.search(r"(?:CONTACT\s*NO\.?|TEL|PHONE|MOBILE|CELL)\s*[:#-]\s*(.+)$", value, flags=re.I)
+        phone_match = PHONE_LABEL_RE.search(line)
         if phone_match:
-            phone = phone_match.group(1).strip()
-            db.add(CustomerContact(customer_id=customer.customer_id, contact_type="Phone", phone=phone, is_primary=True))
-            address_prefix = value[:phone_match.start()].strip(" ,;:-")
-            if address_prefix:
-                address_lines.append(address_prefix)
+            label = phone_match.group("label").upper()
+            contact_type = "Fax" if label == "FAX" else "Phone"
+            phone = phone_match.group("value").strip(" ,;:-")
+            if phone:
+                add_contact(contact_type, **({"fax": phone} if contact_type == "Fax" else {"phone": phone}))
+            line = line[:phone_match.start()].strip(" ,;:-")
+
+        # Store bank details in the latest bank row when the source spreads them across lines.
+        bank_field = BANK_FIELD_RE.match(line)
+        if bank_field and current_bank is not None:
+            label = re.sub(r"[^A-Z]", "", bank_field.group("label").upper())
+            value = bank_field.group("value").strip(" ,;:-")
+            field = "branch_name" if label.startswith("BRANCH") else (
+                "swift_bic_code" if label.startswith("SWIFT") or label == "BIC" else "account_no"
+            )
+            current_bank[field] = value
             continue
 
-        if "BANK" in upper:
-            db.add(CustomerBank(customer_id=customer.customer_id, bank_name=value))
+        if "BANK" in line.upper():
+            name_match = BANK_NAME_RE.match(line)
+            bank_name = (name_match.group(1) if name_match else line).strip(" ,;:-")
+            current_bank = {
+                "bank_name": bank_name,
+                "branch_name": None,
+                "bank_address": None,
+                "bank_country": None,
+                "swift_bic_code": None,
+                "account_no": None,
+            }
+            parsed["banks"].append(current_bank)
             continue
 
-        matched_identifier = False
-        for keyword, identifier_type in (("N.T.N", "NTN"), ("GSTIN", "GSTIN"), ("IEC", "IEC"), ("PAN", "PAN"), ("BIN", "BIN")):
-            match = re.search(rf"{re.escape(keyword)}\s*[:#-]?\s*(.+)", value, flags=re.I)
-            if match:
-                identifier_value = match.group(1).strip()
-                if identifier_value:
-                    db.add(CustomerIdentifier(customer_id=customer.customer_id, identifier_type=identifier_type, identifier_value=identifier_value))
-                matched_identifier = True
-                break
-        if not matched_identifier and value.upper() not in {"AND", "OR"}:
-            address_lines.append(value)
+        # One source row may contain more than one tax/registration identifier.
+        identifier_found = False
+        for pattern, identifier_type in IDENTIFIER_PATTERNS:
+            for match in pattern.finditer(line):
+                identifier_value = match.group(1).strip(" .,:;-")
+                key = (identifier_type.casefold(), identifier_value.casefold())
+                if identifier_value and key not in seen_identifiers:
+                    seen_identifiers.add(key)
+                    parsed["identifiers"].append({
+                        "identifier_type": identifier_type,
+                        "identifier_value": identifier_value,
+                        "issuing_country": None,
+                    })
+                identifier_found = True
+            line = pattern.sub(" ", line)
+
+        residual = re.sub(r"\s+", " ", line).strip(" ,;:-")
+        if residual and not (identifier_found and not re.search(r"[A-Za-z]{3,}", residual)):
+            address_lines.append(residual)
 
     if address_lines:
         raw_address = " ".join(address_lines)
-        country_match = re.search(r"\b(INDIA|PAKISTAN|BANGLADESH|THAILAND|CHINA|SINGAPORE|UNITED STATES|USA|UNITED KINGDOM|UK)\b\s*$", raw_address, flags=re.I)
-        country = country_match.group(1).title() if country_match else None
-        customer.country = country
-        db.add(CustomerAddress(customer_id=customer.customer_id, address_type="General", raw_address=raw_address, country=country, is_primary=True))
+        country = extract_country(raw_address)
+        parsed["country"] = country
+        parsed["addresses"].append({
+            "address_type": "General",
+            "raw_address": raw_address,
+            "address_line1": None,
+            "address_line2": None,
+            "city": None,
+            "state": None,
+            "postal_code": None,
+            "country": country,
+            "is_primary": True,
+        })
+        for bank in parsed["banks"]:
+            bank["bank_country"] = country
+
+    return parsed
+
+
+def insert_customer(data: dict, db: Session) -> Customer:
+    customer = Customer(
+        customer_name=data["customer_name"],
+        customer_type=data["customer_type"],
+        status=data["status"],
+        country=data["country"],
+    )
+    customer.addresses = [CustomerAddress(**row) for row in data["addresses"]]
+    customer.contacts = [CustomerContact(**row) for row in data["contacts"]]
+    customer.banks = [CustomerBank(**row) for row in data["banks"]]
+    customer.identifiers = [CustomerIdentifier(**row) for row in data["identifiers"]]
+    db.add(customer)
+    return customer
+
+
+def find_workbook() -> Path:
+    project_root = Path(__file__).resolve().parents[2]
+    candidates = [
+        Path("/import-data") / WORKBOOK_NAME,
+        project_root / "frontend" / "public" / WORKBOOK_NAME,
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    checked = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"Customer workbook not found. Checked: {checked}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import the customer workbook once.")
-    parser.add_argument("--replace", action="store_true", help="Replace the current customer dataset with the workbook contents.")
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace existing customer rows with this workbook. Use only when refreshing this dataset.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Parse the workbook and print counts without connecting to or changing the database.",
+    )
     args = parser.parse_args()
-    filename = "637232394860757623_DETAIL CUSTOMER_9096.xlsx"
-    project_root = Path(__file__).resolve().parents[2]
-    candidates = [Path("/import-data") / filename, project_root / "frontend" / "public" / filename]
-    workbook = next((path for path in candidates if path.is_file()), None)
-    if workbook is None:
-        raise FileNotFoundError(f"Customer workbook not found. Checked: {', '.join(map(str, candidates))}")
+
+    workbook = find_workbook()
+    dataframe = pd.read_excel(workbook, sheet_name=SHEET_NAME, header=None)
+    if dataframe.shape[1] < 2:
+        raise ValueError(f"Expected customer data in column B of the {SHEET_NAME!r} sheet.")
+
+    blocks = split_blocks(dataframe.iloc[:, 1])
+    records = [parse_customer_block(block) for block in blocks]
+    if not records:
+        raise ValueError(f"No customer blocks found in column B of the {SHEET_NAME!r} sheet.")
+
+    counts = {
+        "customers": len(records),
+        "addresses": sum(len(row["addresses"]) for row in records),
+        "contacts": sum(len(row["contacts"]) for row in records),
+        "banks": sum(len(row["banks"]) for row in records),
+        "identifiers": sum(len(row["identifiers"]) for row in records),
+    }
+    if args.dry_run:
+        print(f"Dry run: parsed {counts} from {workbook}; database unchanged.")
+        return
 
     db = SessionLocal()
     try:
-        if db.query(Customer.customer_id).first() is not None:
-            if not args.replace:
-                raise RuntimeError("Customer table already contains records; pass --replace to refresh this imported dataset.")
+        has_customers = db.query(Customer.customer_id).first() is not None
+        if has_customers and not args.replace:
+            raise RuntimeError(
+                "Customer table already contains records; refusing to import duplicates. "
+                "Use --replace only when intentionally refreshing this customer dataset."
+            )
+        if has_customers:
             db.query(Customer).delete(synchronize_session=False)
-        df = pd.read_excel(workbook, sheet_name="THAI RAYON", header=None)
-        if df.shape[1] < 2:
-            raise ValueError("Expected customer data in column B of the THAI RAYON sheet.")
-
-        count = 0
-        block = []
-        for cell in df[1].tolist():
-            value = "" if pd.isna(cell) else str(cell).strip()
-            if not value:
-                if block:
-                    parse_customer_block(block, db)
-                    count += 1
-                    block = []
-            else:
-                block.append(value)
-        if block:
-            parse_customer_block(block, db)
-            count += 1
-
+        for record in records:
+            insert_customer(record, db)
         db.commit()
-        print(f"Imported {count} customers from {workbook}.")
+        print(f"Imported {counts} from {workbook}.")
     except Exception:
         db.rollback()
         raise

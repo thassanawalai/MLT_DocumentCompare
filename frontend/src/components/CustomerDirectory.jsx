@@ -70,7 +70,7 @@ export default function CustomerDirectory() {
       <header style={{ marginBottom: 24 }}>
         <div style={{ color: '#2563eb', fontWeight: 700, fontSize: 12, letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 7 }}>Master Data</div>
         <h1 style={styles.heading}>Customer Directory</h1>
-        <p style={{ ...styles.muted, margin: '7px 0 0', fontSize: 15 }}>Search companies by name, contact email, or GSTIN.</p>
+        <p style={{ ...styles.muted, margin: '7px 0 0', fontSize: 15 }}>Search companies</p>
       </header>
 
       <div style={{ ...styles.card, padding: 18, marginBottom: 16 }}>
