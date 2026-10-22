@@ -20,6 +20,7 @@ The migrations create:
 
 - `hs_code_records`: HS Code master data, with a generated ID and indexes on HS Code and customer.
 - `freetime_records`: port freetime data, with a generated ID and an index on carrier.
+- `customers`, `customer_addresses`, `customer_contacts`, `customer_banks`, and `customer_identifiers`: customer master data and its related records.
 - `alembic_version`: Alembic's record of the current schema revision.
 
 ## Import the existing master files
@@ -33,6 +34,16 @@ docker compose run --rm backend python scripts/import_master_data.py
 ```
 
 The Compose service mounts `frontend/public` read-only into the importer container. The importer skips empty source rows, carries a blank Carrier cell forward as the current Freetime page does, and preserves the `FREE TIME PLUG` column. It inserts both datasets in one transaction and refuses to run if either destination table already contains rows.
+
+Import the customer workbook once, after applying migrations:
+
+```powershell
+docker compose build backend
+docker compose run --rm backend alembic upgrade head
+docker compose run --rm backend python scripts/seed_customers.py
+```
+
+The customer importer reads `637232394860757623_DETAIL CUSTOMER_9096.xlsx` from the mounted `frontend/public` directory. It treats blank rows as customer boundaries and imports addresses, contact email/phone, banks, and common tax or registration identifiers. It refuses to duplicate an existing customer dataset. To intentionally replace the customer records with a fresh import from that workbook, pass `--replace`.
 
 Connect to the local database at `localhost:5432` with database `mlt_documentcompare`, user `mlt_user`, and password `mlt_password`. To inspect it with psql, run `docker compose exec db psql -U mlt_user -d mlt_documentcompare`.
 
@@ -70,5 +81,6 @@ The FastAPI routes use snake_case JSON fields and the database-generated record 
 | `POST` | `/api/v1/freetime` | Add a Freetime row |
 | `PATCH` | `/api/v1/freetime/{id}` | Update supplied fields on one Freetime row |
 | `DELETE` | `/api/v1/freetime/{id}` | Delete one Freetime row |
+| `GET` | `/api/v1/customers/search?keyword=...` | Search customers across company and related data, returning nested addresses, contacts, banks, and identifiers |
 
 For example, an HS Code create body uses `sale`, `customer`, `commodity`, and `hs_code`. Both the HS Code and Freetime pages use these routes for listing, adding, editing, and deleting records.

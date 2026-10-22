@@ -5,7 +5,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.db import Base
-from app.models import db_models  # noqa: F401 - register ORM tables with Base.metadata
+from app.models import db_models, customer  # noqa: F401 - register ORM tables with Base.metadata
 
 
 config = context.config

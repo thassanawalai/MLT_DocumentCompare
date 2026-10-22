@@ -2,12 +2,133 @@ import io
 import pandas as pd
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Body
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Body, Depends, Query
+from sqlalchemy import or_, select
+from sqlalchemy.orm import Session
+from app.db import get_db
+from app.models.customer import (
+    Customer, CustomerAddress, CustomerBank, CustomerContact, CustomerIdentifier,
+)
 from app.services.process_service import process_pdf
 from app.templates.registry import _template_map
 import os
 
 router = APIRouter()
+
+
+@router.get("/customers/search")
+def search_customers(
+    keyword: str = Query(..., min_length=1, description="Company name, email, or GSTIN"),
+    db: Session = Depends(get_db),
+):
+    """Search companies and return each company once, even if multiple joined rows match."""
+    normalized_keyword = keyword.strip()
+    if not normalized_keyword:
+        raise HTTPException(status_code=422, detail="keyword must not be blank")
+    term = f"%{normalized_keyword}%"
+    statement = (
+        select(Customer)
+        .outerjoin(CustomerContact, CustomerContact.customer_id == Customer.customer_id)
+        .outerjoin(CustomerAddress, CustomerAddress.customer_id == Customer.customer_id)
+        .outerjoin(CustomerBank, CustomerBank.customer_id == Customer.customer_id)
+        .outerjoin(CustomerIdentifier, CustomerIdentifier.customer_id == Customer.customer_id)
+        .where(
+            or_(
+                Customer.customer_name.ilike(term),
+                Customer.customer_type.ilike(term),
+                Customer.status.ilike(term),
+                Customer.raw_address.ilike(term),
+                Customer.city.ilike(term),
+                Customer.state.ilike(term),
+                Customer.postal_code.ilike(term),
+                Customer.country.ilike(term),
+                CustomerContact.contact_name.ilike(term),
+                CustomerContact.job_title.ilike(term),
+                CustomerContact.contact_type.ilike(term),
+                CustomerContact.email.ilike(term),
+                CustomerContact.phone.ilike(term),
+                CustomerContact.fax.ilike(term),
+                CustomerAddress.raw_address.ilike(term),
+                CustomerAddress.address_line1.ilike(term),
+                CustomerAddress.address_line2.ilike(term),
+                CustomerAddress.city.ilike(term),
+                CustomerAddress.state.ilike(term),
+                CustomerAddress.postal_code.ilike(term),
+                CustomerAddress.country.ilike(term),
+                CustomerBank.bank_name.ilike(term),
+                CustomerBank.branch_name.ilike(term),
+                CustomerBank.bank_address.ilike(term),
+                CustomerBank.bank_country.ilike(term),
+                CustomerBank.swift_bic_code.ilike(term),
+                CustomerBank.account_no.ilike(term),
+                CustomerIdentifier.identifier_value.ilike(term),
+                CustomerIdentifier.identifier_type.ilike(term),
+            )
+        )
+        .distinct()
+        .order_by(Customer.customer_name, Customer.customer_id)
+    )
+    customers = db.scalars(statement).all()
+    return [
+        {
+            "customer_id": customer.customer_id,
+            "customer_name": customer.customer_name,
+            "customer_type": customer.customer_type,
+            "raw_address": customer.raw_address,
+            "address_line1": customer.address_line1,
+            "address_line2": customer.address_line2,
+            "city": customer.city,
+            "state": customer.state,
+            "postal_code": customer.postal_code,
+            "country": customer.country,
+            "status": customer.status,
+            "addresses": [
+                {
+                    "address_type": address.address_type,
+                    "raw_address": address.raw_address,
+                    "address_line1": address.address_line1,
+                    "address_line2": address.address_line2,
+                    "city": address.city,
+                    "state": address.state,
+                    "postal_code": address.postal_code,
+                    "country": address.country,
+                    "is_primary": address.is_primary,
+                }
+                for address in customer.addresses
+            ],
+            "contacts": [
+                {
+                    "contact_name": contact.contact_name,
+                    "job_title": contact.job_title,
+                    "contact_type": contact.contact_type,
+                    "email": contact.email,
+                    "phone": contact.phone,
+                    "fax": contact.fax,
+                    "is_primary": contact.is_primary,
+                }
+                for contact in customer.contacts
+            ],
+            "banks": [
+                {
+                    "bank_name": bank.bank_name,
+                    "branch_name": bank.branch_name,
+                    "bank_country": bank.bank_country,
+                    "swift_bic_code": bank.swift_bic_code,
+                    "account_no": bank.account_no,
+                }
+                for bank in customer.banks
+            ],
+            "identifiers": [
+                {
+                    "identifier_type": identifier.identifier_type,
+                    "identifier_value": identifier.identifier_value,
+                    "issuing_country": identifier.issuing_country,
+                }
+                for identifier in customer.identifiers
+            ],
+        }
+        for customer in customers
+    ]
 
 @router.get("/templates")
 def get_templates():
