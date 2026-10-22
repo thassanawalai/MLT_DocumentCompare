@@ -27,6 +27,7 @@ services:
       MASTER_DATA_DIR: /import-data
     volumes:
       - ./frontend/public:/import-data:ro
+      - ./backend/master_data:/master-data:ro
     depends_on:
       db:
         condition: service_healthy

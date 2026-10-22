@@ -45,6 +45,18 @@ docker compose run --rm backend python scripts/seed_customers.py
 
 The customer importer reads `637232394860757623_DETAIL CUSTOMER_9096.xlsx` from the mounted `frontend/public` directory. It treats blank rows as customer boundaries and imports addresses, contact email/phone, banks, and common tax or registration identifiers. It refuses to duplicate an existing customer dataset. To intentionally replace the customer records with a fresh import from that workbook, pass `--replace`.
 
+For new or corrected customer data, use `backend/master_data/customer_import_template.xlsx`. The local Compose service mounts `backend/master_data` read-only at `/master-data`, so edits to this workbook do not require rebuilding the image. Fill one company per row in `Customers`; put each address, contact method, bank, and identifier on its own row in the corresponding sheet, repeating the exact `customer_name` to link it. Check the filled file before importing:
+
+```powershell
+docker compose run --rm backend python scripts/seed_customers.py --workbook /master-data/customer_import_template.xlsx --dry-run
+```
+
+When the dry-run counts look right, import the new workbook. Use `--replace` only if you intend to replace the customer records currently in the database:
+
+```powershell
+docker compose run --rm backend python scripts/seed_customers.py --workbook /master-data/customer_import_template.xlsx --replace
+```
+
 Connect to the local database at `localhost:5432` with database `mlt_documentcompare`, user `mlt_user`, and password `mlt_password`. To inspect it with psql, run `docker compose exec db psql -U mlt_user -d mlt_documentcompare`.
 
 ## Existing PostgreSQL server or hosted database

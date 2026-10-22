@@ -31,6 +31,12 @@ COUNTRY_RE = re.compile(
 )
 EMAIL_RE = re.compile(r"[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}", re.IGNORECASE)
 EMAIL_LABEL_RE = re.compile(r"\bE[\s\u00a0]*MAIL\b\s*[:*]?\s*", re.IGNORECASE)
+CONTACT_HEADER_RE = re.compile(
+    r"^\s*(?:CONTACT\s*(?:NO\.?|NUMBER)?|TEL(?:EPHONE)?|PHONE|MOBILE|CELL|FAX|"
+    r"E[\s\u00a0]*MAIL)\b",
+    re.IGNORECASE,
+)
+PERSON_NAME_RE = re.compile(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$")
 
 IDENTIFIER_PATTERNS = [
     (re.compile(r"\bN\.?\s*T\.?\s*N\.?\s*(?:NO\.?|NUMBER)?\s*[:#.\-]?\s*([A-Z0-9][A-Z0-9./\-]*)", re.I), "NTN"),
@@ -67,6 +73,7 @@ def split_blocks(series: pd.Series) -> list[list[str]]:
     """Split column B into customer blocks separated by blank rows."""
     blocks: list[list[str]] = []
     current: list[str] = []
+    blank_rows = 0
 
     for cell in series.tolist():
         value = clean_value(cell)
@@ -74,10 +81,26 @@ def split_blocks(series: pd.Series) -> list[list[str]]:
             if current:
                 blocks.append(current)
                 current = []
+                blank_rows = 1
+            elif blocks:
+                blank_rows += 1
             continue
         if value.casefold() == "consignee/notify address":
             continue
+
+        # A single email line directly after a customer's last row is a continuation,
+        # as with ABDULLAH FIBRES. Do not turn it into a separate customer block.
+        if (
+            not current
+            and blocks
+            and blank_rows == 1
+            and (CONTACT_HEADER_RE.match(value) or EMAIL_RE.search(value))
+        ):
+            blocks[-1].append(value)
+            continue
+
         current.append(value)
+        blank_rows = 0
 
     if current:
         blocks.append(current)
@@ -92,13 +115,33 @@ def extract_country(address: str) -> str | None:
     return {"USA": "United States", "UK": "United Kingdom"}.get(value, value.title())
 
 
-def parse_customer_block(block: list[str]) -> dict:
+def parse_customer_block(block: list[str]) -> dict | None:
     """Convert one non-empty Excel block into customer and child-row data."""
     if not block:
-        raise ValueError("Customer block cannot be empty")
+        return None
+
+    first_line = clean_value(block[0])
+    # The workbook has a few detached contact-only blocks. They are not companies;
+    # importing their first TEL/EMAIL line as customer_name creates bogus customers.
+    if CONTACT_HEADER_RE.match(first_line) or EMAIL_RE.search(first_line):
+        return None
+
+    customer_name = first_line
+    contact_person = None
+    body_start = 1
+    # One block lists a person's name first and the company on the next line.
+    if (
+        len(block) > 1
+        and PERSON_NAME_RE.fullmatch(first_line)
+        and not PERSON_NAME_RE.fullmatch(clean_value(block[1]))
+        and not CONTACT_HEADER_RE.match(clean_value(block[1]))
+    ):
+        contact_person = first_line
+        customer_name = clean_value(block[1])
+        body_start = 2
 
     parsed = {
-        "customer_name": clean_value(block[0]),
+        "customer_name": customer_name,
         "customer_type": None,
         "status": "Active",
         "country": None,
@@ -119,7 +162,7 @@ def parse_customer_block(block: list[str]) -> dict:
             seen_contacts.add(key)
             parsed["contacts"].append({
                 "contact_type": contact_type,
-                "contact_name": None,
+                "contact_name": contact_person,
                 "job_title": None,
                 "email": None,
                 "phone": None,
@@ -128,7 +171,7 @@ def parse_customer_block(block: list[str]) -> dict:
                 **values,
             })
 
-    for raw_line in block[1:]:
+    for raw_line in block[body_start:]:
         line = clean_value(raw_line)
         if not line or line.upper() in {"AND", "OR"}:
             continue
@@ -151,6 +194,10 @@ def parse_customer_block(block: list[str]) -> dict:
             if phone:
                 add_contact(contact_type, **({"fax": phone} if contact_type == "Fax" else {"phone": phone}))
             line = line[:phone_match.start()].strip(" ,;:-")
+
+        # A bare label such as the workbook's standalone "TEL" row is not address data.
+        if CONTACT_HEADER_RE.match(line):
+            continue
 
         # Store bank details in the latest bank row when the source spreads them across lines.
         bank_field = BANK_FIELD_RE.match(line)
@@ -233,6 +280,100 @@ def insert_customer(data: dict, db: Session) -> Customer:
     return customer
 
 
+def parse_normalized_workbook(workbook: Path) -> list[dict]:
+    """Read the clean, one-record-per-row workbook format."""
+    excel = pd.ExcelFile(workbook)
+    if "Customers" not in excel.sheet_names:
+        raise ValueError("Normalized workbook must contain a 'Customers' sheet.")
+
+    def read_rows(sheet_name: str) -> list[dict[str, str]]:
+        if sheet_name not in excel.sheet_names:
+            return []
+        frame = pd.read_excel(excel, sheet_name=sheet_name, dtype=object)
+        frame.columns = [str(column).strip().casefold() for column in frame.columns]
+        return [
+            {str(key).strip().casefold(): clean_value(value) for key, value in row.items()}
+            for row in frame.to_dict(orient="records")
+        ]
+
+    def as_bool(value: str, default: bool) -> bool:
+        if not value:
+            return default
+        return value.casefold() in {"true", "1", "yes", "y"}
+
+    records: list[dict] = []
+    by_name: dict[str, dict] = {}
+    for row_number, row in enumerate(read_rows("Customers"), start=2):
+        name = clean_value(row.get("customer_name"))
+        if not name:
+            continue
+        key = name.casefold()
+        if key in by_name:
+            raise ValueError(f"Duplicate customer_name {name!r} in Customers row {row_number}.")
+        record = {
+            "customer_name": name,
+            "customer_type": clean_value(row.get("customer_type")) or None,
+            "status": clean_value(row.get("status")) or "Active",
+            "country": clean_value(row.get("country")) or None,
+            "addresses": [],
+            "contacts": [],
+            "banks": [],
+            "identifiers": [],
+        }
+        by_name[key] = record
+        records.append(record)
+
+    if not records:
+        raise ValueError("The Customers sheet has no customer rows.")
+
+    child_sheets = {
+        "Addresses": ("addresses", (
+            "address_type", "raw_address", "address_line1", "address_line2", "city",
+            "state", "postal_code", "country",
+        )),
+        "Contacts": ("contacts", (
+            "contact_name", "job_title", "contact_type", "email", "phone", "fax",
+        )),
+        "Banks": ("banks", (
+            "bank_name", "branch_name", "bank_address", "bank_country", "swift_bic_code", "account_no",
+        )),
+        "Identifiers": ("identifiers", ("identifier_type", "identifier_value", "issuing_country")),
+    }
+    for sheet_name, (target, fields) in child_sheets.items():
+        for row_number, row in enumerate(read_rows(sheet_name), start=2):
+            name = clean_value(row.get("customer_name"))
+            if not any(clean_value(row.get(field)) for field in fields):
+                continue
+            if not name:
+                raise ValueError(f"{sheet_name} row {row_number} has data but no customer_name.")
+            parent = by_name.get(name.casefold())
+            if parent is None:
+                raise ValueError(
+                    f"{sheet_name} row {row_number} references unknown customer_name {name!r}. "
+                    "Use the exact name from the Customers sheet."
+                )
+            item = {field: clean_value(row.get(field)) or None for field in fields}
+            if target == "addresses":
+                item["address_type"] = item["address_type"] or "General"
+                item["country"] = item["country"] or parent["country"]
+                item["is_primary"] = as_bool(row.get("is_primary", ""), not parent[target])
+            elif target == "contacts":
+                if not item["contact_type"]:
+                    item["contact_type"] = (
+                        "Email" if item["email"] else "Phone" if item["phone"] else "Fax" if item["fax"] else None
+                    )
+                item["is_primary"] = as_bool(row.get("is_primary", ""), not any(
+                    entry["contact_type"] == item["contact_type"] for entry in parent[target]
+                ))
+            elif target == "banks":
+                item["bank_country"] = item["bank_country"] or parent["country"]
+            parent[target].append(item)
+            if target == "addresses" and not parent["country"] and item.get("country"):
+                parent["country"] = item["country"]
+
+    return records
+
+
 def find_workbook() -> Path:
     project_root = Path(__file__).resolve().parents[2]
     candidates = [
@@ -249,6 +390,11 @@ def find_workbook() -> Path:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import the customer workbook once.")
     parser.add_argument(
+        "--workbook",
+        type=Path,
+        help="Workbook path. Supports the normalized Customers/Addresses/Contacts/Banks/Identifiers template.",
+    )
+    parser.add_argument(
         "--replace",
         action="store_true",
         help="Replace existing customer rows with this workbook. Use only when refreshing this dataset.",
@@ -260,15 +406,22 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    workbook = find_workbook()
-    dataframe = pd.read_excel(workbook, sheet_name=SHEET_NAME, header=None)
-    if dataframe.shape[1] < 2:
-        raise ValueError(f"Expected customer data in column B of the {SHEET_NAME!r} sheet.")
-
-    blocks = split_blocks(dataframe.iloc[:, 1])
-    records = [parse_customer_block(block) for block in blocks]
-    if not records:
-        raise ValueError(f"No customer blocks found in column B of the {SHEET_NAME!r} sheet.")
+    workbook = args.workbook if args.workbook else find_workbook()
+    if not workbook.is_file():
+        raise FileNotFoundError(f"Workbook not found: {workbook}")
+    excel = pd.ExcelFile(workbook)
+    skipped_blocks = 0
+    if "Customers" in excel.sheet_names:
+        records = parse_normalized_workbook(workbook)
+    else:
+        dataframe = pd.read_excel(excel, sheet_name=SHEET_NAME, header=None)
+        if dataframe.shape[1] < 2:
+            raise ValueError(f"Expected customer data in column B of the {SHEET_NAME!r} sheet.")
+        blocks = split_blocks(dataframe.iloc[:, 1])
+        records = [record for block in blocks if (record := parse_customer_block(block)) is not None]
+        if not records:
+            raise ValueError(f"No customer blocks found in column B of the {SHEET_NAME!r} sheet.")
+        skipped_blocks = len(blocks) - len(records)
 
     counts = {
         "customers": len(records),
@@ -278,7 +431,10 @@ def main() -> None:
         "identifiers": sum(len(row["identifiers"]) for row in records),
     }
     if args.dry_run:
-        print(f"Dry run: parsed {counts} from {workbook}; database unchanged.")
+        print(
+            f"Dry run: parsed {counts} from {workbook}; "
+            f"skipped {skipped_blocks} contact-only block(s); database unchanged."
+        )
         return
 
     db = SessionLocal()
@@ -294,7 +450,7 @@ def main() -> None:
         for record in records:
             insert_customer(record, db)
         db.commit()
-        print(f"Imported {counts} from {workbook}.")
+        print(f"Imported {counts} from {workbook}; skipped {skipped_blocks} contact-only block(s).")
     except Exception:
         db.rollback()
         raise
