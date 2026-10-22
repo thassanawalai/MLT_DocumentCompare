@@ -18,21 +18,21 @@ router = APIRouter()
 
 @router.get("/customers/search")
 def search_customers(
-    keyword: str = Query(..., min_length=1, description="Company name, email, or GSTIN"),
+    keyword: Optional[str] = Query(None, description="Company name or any customer field"),
     db: Session = Depends(get_db),
 ):
-    """Search companies and return each company once, even if multiple joined rows match."""
-    normalized_keyword = keyword.strip()
-    if not normalized_keyword:
-        raise HTTPException(status_code=422, detail="keyword must not be blank")
-    term = f"%{normalized_keyword}%"
-    statement = (
-        select(Customer)
-        .outerjoin(CustomerContact, CustomerContact.customer_id == Customer.customer_id)
-        .outerjoin(CustomerAddress, CustomerAddress.customer_id == Customer.customer_id)
-        .outerjoin(CustomerBank, CustomerBank.customer_id == Customer.customer_id)
-        .outerjoin(CustomerIdentifier, CustomerIdentifier.customer_id == Customer.customer_id)
-        .where(
+    """List customers, or search across the company and its related records."""
+    statement = select(Customer)
+    normalized_keyword = (keyword or "").strip()
+    if normalized_keyword:
+        term = f"%{normalized_keyword}%"
+        statement = (
+            statement
+            .outerjoin(CustomerContact, CustomerContact.customer_id == Customer.customer_id)
+            .outerjoin(CustomerAddress, CustomerAddress.customer_id == Customer.customer_id)
+            .outerjoin(CustomerBank, CustomerBank.customer_id == Customer.customer_id)
+            .outerjoin(CustomerIdentifier, CustomerIdentifier.customer_id == Customer.customer_id)
+            .where(
             or_(
                 Customer.customer_name.ilike(term),
                 Customer.customer_type.ilike(term),
@@ -63,11 +63,11 @@ def search_customers(
                 CustomerBank.account_no.ilike(term),
                 CustomerIdentifier.identifier_value.ilike(term),
                 CustomerIdentifier.identifier_type.ilike(term),
+                )
             )
+            .distinct()
         )
-        .distinct()
-        .order_by(Customer.customer_name, Customer.customer_id)
-    )
+    statement = statement.order_by(Customer.customer_name, Customer.customer_id)
     customers = db.scalars(statement).all()
     return [
         {

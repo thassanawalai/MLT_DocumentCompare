@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../apiClient';
 
 const styles = {
@@ -29,35 +29,41 @@ export default function CustomerDirectory() {
   const [keyword, setKeyword] = useState('');
   const [customers, setCustomers] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const term = keyword.trim();
-    if (!term) {
-      setCustomers([]);
-      setExpandedId(null);
-      setError('');
-      return undefined;
-    }
     let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      setLoading(true);
-      setError('');
+    const loadCustomers = async () => {
       try {
-        const result = await apiRequest(`/api/v1/customers/search?keyword=${encodeURIComponent(term)}`);
+        const result = await apiRequest('/api/v1/customers/search');
         if (!cancelled) setCustomers(result);
       } catch (requestError) {
         if (!cancelled) setError(requestError.message || 'Unable to search customers.');
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }, 250);
+    };
+    loadCustomers();
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
-  }, [keyword]);
+  }, []);
+
+  const filteredCustomers = useMemo(() => {
+    const term = keyword.trim().toLocaleLowerCase();
+    if (!term) return customers;
+    return customers.filter((customer) => {
+      const baseValues = Object.entries(customer)
+        .filter(([, value]) => !Array.isArray(value))
+        .map(([, value]) => value);
+      const relatedValues = ['addresses', 'contacts', 'banks', 'identifiers']
+        .flatMap((key) => (customer[key] || []).flatMap((item) => Object.values(item)));
+      return [...baseValues, ...relatedValues].some((value) =>
+        String(value ?? '').toLocaleLowerCase().includes(term)
+      );
+    });
+  }, [customers, keyword]);
 
   return (
     <main style={styles.page}>
@@ -78,19 +84,17 @@ export default function CustomerDirectory() {
 
       <div style={{ ...styles.card, overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 18px', borderBottom: '1px solid #e2e8f0', fontSize: 13 }}>
-          <strong>Companies</strong><span style={styles.muted}>{loading ? 'Searching…' : keyword.trim() ? `${customers.length} result${customers.length === 1 ? '' : 's'}` : 'Enter a keyword to search'}</span>
+          <strong>Companies</strong><span style={styles.muted}>{loading ? 'Loading customers…' : `${filteredCustomers.length} result${filteredCustomers.length === 1 ? '' : 's'}`}</span>
         </div>
-        {error ? <div role="alert" style={{ padding: 24, color: '#b91c1c', fontSize: 14 }}>{error}</div> : !keyword.trim() ? (
-          <div style={{ padding: '42px 20px', textAlign: 'center', ...styles.muted, fontSize: 14 }}>Start typing to find a customer.</div>
-        ) : customers.length === 0 && !loading ? (
-          <div style={{ padding: '42px 20px', textAlign: 'center', ...styles.muted, fontSize: 14 }}>No customers found. Try another keyword.</div>
+        {error ? <div role="alert" style={{ padding: 24, color: '#b91c1c', fontSize: 14 }}>{error}</div> : filteredCustomers.length === 0 && !loading ? (
+          <div style={{ padding: '42px 20px', textAlign: 'center', ...styles.muted, fontSize: 14 }}>{keyword.trim() ? 'No customers found. Try another keyword.' : 'No customer data available.'}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 520 }}>
               <thead><tr style={{ background: '#f8fafc', color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.06em' }}>
                 <th style={{ width: 48, padding: '12px 16px' }}></th><th style={{ padding: '12px 16px' }}>Company name</th><th style={{ padding: '12px 16px' }}>Status</th><th style={{ padding: '12px 16px' }}>Country</th>
               </tr></thead>
-              <tbody>{customers.map((customer) => {
+              <tbody>{filteredCustomers.map((customer) => {
                 const expanded = expandedId === customer.customer_id;
                 return <Fragment key={customer.customer_id}>
                   <tr key={customer.customer_id} style={{ borderTop: '1px solid #e2e8f0' }}>
