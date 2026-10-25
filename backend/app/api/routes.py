@@ -130,6 +130,96 @@ def search_customers(
         for customer in customers
     ]
 
+@router.patch("/customers/{customer_id}")
+def update_customer(
+    customer_id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """Update the customer's editable summary fields."""
+    customer = db.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    if "customer_name" in payload:
+        name = payload["customer_name"]
+        if not isinstance(name, str) or not name.strip():
+            raise HTTPException(status_code=422, detail="customer_name must not be empty")
+        customer.customer_name = name.strip()
+    if "country" in payload:
+        country = payload["country"]
+        if country is not None and not isinstance(country, str):
+            raise HTTPException(status_code=422, detail="country must be a string or null")
+        customer.country = country.strip() if country and country.strip() else None
+        primary_address = next((address for address in customer.addresses if address.is_primary), None)
+        if primary_address:
+            primary_address.country = customer.country
+    if "status" in payload:
+        status = payload["status"]
+        if status is not None and not isinstance(status, str):
+            raise HTTPException(status_code=422, detail="status must be a string or null")
+        customer.status = status.strip() if status and status.strip() else None
+
+    relationship_specs = {
+        "addresses": (CustomerAddress, ("address_type", "raw_address", "address_line1", "address_line2", "city", "state", "postal_code", "country", "is_primary")),
+        "contacts": (CustomerContact, ("contact_name", "job_title", "contact_type", "email", "phone", "fax", "is_primary")),
+        "banks": (CustomerBank, ("bank_name", "branch_name", "bank_address", "bank_country", "swift_bic_code", "account_no")),
+        "identifiers": (CustomerIdentifier, ("identifier_type", "identifier_value", "issuing_country")),
+    }
+    for relationship_name, (model, allowed_fields) in relationship_specs.items():
+        if relationship_name not in payload:
+            continue
+        entries = payload[relationship_name]
+        if not isinstance(entries, list) or any(not isinstance(entry, dict) for entry in entries):
+            raise HTTPException(status_code=422, detail=f"{relationship_name} must be a list of objects")
+        replacements = []
+        for index, entry in enumerate(entries):
+            values = {
+                key: (value.strip() or None if isinstance(value, str) else value)
+                for key, value in entry.items()
+                if key in allowed_fields
+            }
+            if relationship_name == "addresses":
+                values.setdefault("is_primary", index == 0)
+            elif relationship_name == "contacts":
+                if not values.get("contact_type"):
+                    values["contact_type"] = "Email" if values.get("email") else "Phone" if values.get("phone") else "Fax" if values.get("fax") else None
+                values.setdefault("is_primary", index == 0)
+            elif relationship_name == "banks":
+                if not values.get("bank_country"):
+                    values["bank_country"] = customer.country
+            elif relationship_name == "identifiers":
+                if not values.get("issuing_country"):
+                    values["issuing_country"] = customer.country
+            replacements.append(model(**values))
+        getattr(customer, relationship_name)[:] = replacements
+
+    if "country" in payload:
+        primary_address = next((address for address in customer.addresses if address.is_primary), None)
+        if primary_address:
+            primary_address.country = customer.country
+
+    db.commit()
+    db.refresh(customer)
+    return {
+        "customer_id": customer.customer_id,
+        "customer_name": customer.customer_name,
+        "country": customer.country,
+        "status": customer.status,
+    }
+
+
+@router.delete("/customers/{customer_id}")
+def delete_customer(customer_id: int, db: Session = Depends(get_db)):
+    """Delete a customer and its related records."""
+    customer = db.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    db.delete(customer)
+    db.commit()
+    return {"deleted": True, "customer_id": customer_id}
+
+
 @router.get("/templates")
 def get_templates():
     """Return a list of all available templates."""
