@@ -17,7 +17,6 @@ function CategoryIcon({ name, size = 20 }) {
     bank: <><path d="m3 9 9-6 9 6M4 21h16M6 9v9M10 9v9M14 9v9M18 9v9M3 18h18" /></>,
     identifier: <><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8" cy="11" r="2" /><path d="M5.5 16a2.5 2.5 0 0 1 5 0M13 10h5M13 14h5" /></>,
     search: <><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></>,
-    view: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></>,
   };
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" {...common}>{shapes[name]}</svg>;
 }
@@ -229,14 +228,14 @@ export default function CustomerDirectory() {
           <div style={{ padding: '42px 20px', textAlign: 'center', ...styles.muted, fontSize: 14 }}>{keyword.trim() ? 'No customers found. Try another keyword.' : 'No customer data available.'}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 620 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 440 }}>
               <thead><tr style={{ background: '#f8fafc', color: '#64748b', fontSize: 12, letterSpacing: '.02em' }}>
-                <th style={{ padding: '12px 20px' }}>Company Name</th><th style={{ padding: '12px 20px', width: 220 }}>Country</th><th style={{ padding: '12px 20px', width: 130 }}>Actions</th>
+                <th style={{ padding: '12px 20px' }}>Company Name</th><th style={{ padding: '12px 20px', width: 220 }}>Country</th>
               </tr></thead>
               <tbody>{sortedCustomers.map((customer) => {
                 const taxIds = (customer.identifiers || []).filter((item) => item.identifier_type && item.identifier_value);
                 return (
-                <tr key={customer.customer_id} style={{ borderTop: '1px solid #e2e8f0' }}>
+                  <tr key={customer.customer_id} onClick={() => setSelectedCustomer(customer)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedCustomer(customer); } }} tabIndex={0} aria-label={`View details for ${customer.customer_name}`} style={{ borderTop: '1px solid #e2e8f0', cursor: 'pointer' }}>
                   <td style={{ padding: '14px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span aria-hidden="true" style={{ display: 'inline-flex', flex: '0 0 auto', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: '50%', background: '#eff6ff', color: '#2563eb' }}><CategoryIcon name="company" size={22} /></span>
@@ -247,9 +246,6 @@ export default function CustomerDirectory() {
                     </div>
                   </td>
                   <td style={{ padding: '16px 20px', fontSize: 14, color: '#475569' }}>{customer.country || <span aria-label="Not provided">&mdash;</span>}</td>
-                  <td style={{ padding: '12px 20px' }}>
-                    <button type="button" onClick={() => setSelectedCustomer(customer)} aria-label={`View ${customer.customer_name}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid #bfdbfe', borderRadius: 8, padding: '7px 12px', background: '#fff', color: '#1d4ed8', fontSize: 13, fontWeight: 650, cursor: 'pointer' }}><CategoryIcon name="view" size={16} />View</button>
-                  </td>
                 </tr>
               );})}</tbody>
             </table>
