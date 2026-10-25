@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../apiClient';
 
 const styles = {
@@ -32,23 +32,23 @@ export default function CustomerDirectory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadCustomers = async () => {
-      try {
-        const result = await apiRequest('/api/v1/customers/search');
-        if (!cancelled) setCustomers(result);
-      } catch (requestError) {
-        if (!cancelled) setError(requestError.message || 'Unable to search customers.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    loadCustomers();
-    return () => {
-      cancelled = true;
-    };
+  const loadCustomers = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await apiRequest('/api/v1/customers/search');
+      if (!Array.isArray(result)) throw new Error('Customer API returned an unexpected response.');
+      setCustomers(result);
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to search customers.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
 
   const filteredCustomers = useMemo(() => {
     const term = keyword.trim().toLocaleLowerCase();
@@ -84,7 +84,11 @@ export default function CustomerDirectory() {
 
       <div style={{ ...styles.card, overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 18px', borderBottom: '1px solid #e2e8f0', fontSize: 13 }}>
-          <strong>Companies</strong><span style={styles.muted}>{loading ? 'Loading customers…' : `${filteredCustomers.length} result${filteredCustomers.length === 1 ? '' : 's'}`}</span>
+          <strong>Companies</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={styles.muted}>{loading ? 'Loading customers…' : `${filteredCustomers.length} result${filteredCustomers.length === 1 ? '' : 's'}`}</span>
+            <button type="button" onClick={loadCustomers} disabled={loading} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '6px 10px', background: loading ? '#f1f5f9' : '#fff', color: '#2563eb', cursor: loading ? 'wait' : 'pointer', fontSize: 12, fontWeight: 650 }}>Refresh</button>
+          </div>
         </div>
         {error ? <div role="alert" style={{ padding: 24, color: '#b91c1c', fontSize: 14 }}>{error}</div> : filteredCustomers.length === 0 && !loading ? (
           <div style={{ padding: '42px 20px', textAlign: 'center', ...styles.muted, fontSize: 14 }}>{keyword.trim() ? 'No customers found. Try another keyword.' : 'No customer data available.'}</div>
