@@ -69,6 +69,81 @@ function EditableListSection({ title, items, fields, onChange }) {
   );
 }
 
+function getContactType(contact) {
+  const normalizedType = String(contact.contact_type || '').trim().toLowerCase();
+  if (['email', 'phone', 'fax'].includes(normalizedType)) return normalizedType[0].toUpperCase() + normalizedType.slice(1);
+  if (contact.email) return 'Email';
+  if (contact.phone) return 'Phone';
+  if (contact.fax) return 'Fax';
+  return 'Email';
+}
+
+function getContactDetails(contact) {
+  const type = getContactType(contact);
+  return contact[type.toLowerCase()] || '';
+}
+
+function EditableContactsSection({ items, onChange }) {
+  const addContact = () => onChange([...items, { contact_name: '', job_title: '', contact_type: 'Email', email: '', phone: '', fax: '' }]);
+  const updateContact = (index, key, value) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item));
+  const updateType = (index, nextType) => onChange(items.map((item, itemIndex) => {
+    if (itemIndex !== index) return item;
+    const details = getContactDetails(item);
+    return {
+      ...item,
+      contact_type: nextType,
+      email: nextType === 'Email' ? details : '',
+      phone: nextType === 'Phone' ? details : '',
+      fax: nextType === 'Fax' ? details : '',
+    };
+  }));
+  const deleteContact = (index) => {
+    if (!window.confirm('Delete this contact method?')) return;
+    onChange(items.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  return (
+    <section style={{ gridColumn: '1 / -1', padding: 12, border: '1px solid #dbeafe', borderRadius: 9, background: '#f8fbff' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+        <strong style={{ color: '#123c72', fontSize: 13 }}>Contact Information</strong>
+        <button type="button" onClick={addContact} style={{ border: '1px solid #93c5fd', borderRadius: 6, padding: '5px 9px', background: '#fff', color: '#1d4ed8', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>+ Add Contact</button>
+      </div>
+      {!items.length ? <div style={{ color: '#64748b', fontSize: 12, padding: '8px 2px' }}>No contact information. Select Add Contact to create one.</div> : (
+        <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff' }}>
+          <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead><tr style={{ background: '#eff6ff', color: '#475569', fontSize: 11 }}>
+              <th style={{ padding: '9px 10px' }}>Contact Name</th>
+              <th style={{ padding: '9px 10px' }}>Job Title</th>
+              <th style={{ padding: '9px 10px', width: 130 }}>Contact Type</th>
+              <th style={{ padding: '9px 10px' }}>Contact Details</th>
+              <th style={{ padding: '9px 10px', width: 90 }}>Actions</th>
+            </tr></thead>
+            <tbody>{items.map((item, index) => {
+              const type = getContactType(item);
+              const detailKey = type.toLowerCase();
+              return (
+                <tr key={`contact-${index}`} style={{ borderTop: '1px solid #e2e8f0' }}>
+                  <td style={{ padding: 8 }}><input aria-label="Contact Name" value={item.contact_name || ''} onChange={(event) => updateContact(index, 'contact_name', event.target.value)} placeholder="Optional" style={contactInputStyle} /></td>
+                  <td style={{ padding: 8 }}><input aria-label="Job Title" value={item.job_title || ''} onChange={(event) => updateContact(index, 'job_title', event.target.value)} placeholder="Optional" style={contactInputStyle} /></td>
+                  <td style={{ padding: 8 }}>
+                    <select aria-label="Contact Type" required value={type} onChange={(event) => updateType(index, event.target.value)} style={{ ...contactInputStyle, padding: '0 8px' }}>
+                      <option value="Email">Email</option><option value="Phone">Phone</option><option value="Fax">Fax</option>
+                    </select>
+                  </td>
+                  <td style={{ padding: 8 }}><input aria-label="Contact Details" required type={type === 'Email' ? 'email' : 'text'} value={item[detailKey] || ''} onChange={(event) => updateContact(index, detailKey, event.target.value)} placeholder={type === 'Email' ? 'name@company.com' : 'Enter number'} style={contactInputStyle} /></td>
+                  <td style={{ padding: 8 }}><button type="button" onClick={() => deleteContact(index)} style={{ border: 0, padding: '6px 4px', background: 'transparent', color: '#b91c1c', fontSize: 12, fontWeight: 650, cursor: 'pointer' }}>Delete</button></td>
+                </tr>
+              );
+            })}</tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+const contactInputStyle = { boxSizing: 'border-box', width: '100%', minWidth: 0, height: 34, padding: '0 9px', border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12 };
+
 const EDIT_SECTIONS = [
   { key: 'addresses', title: 'Addresses', fields: [['address_type', 'Address type'], ['raw_address', 'Full address'], ['address_line1', 'Address line 1'], ['address_line2', 'Address line 2'], ['city', 'City'], ['state', 'State'], ['postal_code', 'Postal code']] },
   { key: 'contacts', title: 'Contacts', fields: [['contact_name', 'Contact'], ['job_title', 'Title'], ['contact_type', 'Type'], ['email', 'Email'], ['phone', 'Phone'], ['fax', 'Fax']] },
@@ -142,7 +217,9 @@ export default function CustomerDirectory() {
           status: editForm.status || null,
           ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
             key,
-            (editForm[key] || []).filter((item) => Object.values(item).some((value) => String(value ?? '').trim())),
+            (editForm[key] || []).filter((item) => key === 'contacts'
+              ? String(getContactDetails(item) ?? '').trim()
+              : Object.values(item).some((value) => String(value ?? '').trim())),
           ])),
         })
       );
@@ -291,9 +368,9 @@ export default function CustomerDirectory() {
                     <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 13px', background: '#2563eb', color: '#fff', fontSize: 12, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Saving...' : 'Save'}</button>
                     <button type="button" disabled={actionBusy} onClick={() => { setEditing(false); setActionError(''); }} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '8px 12px', background: '#fff', color: '#475569', fontSize: 12, cursor: actionBusy ? 'wait' : 'pointer' }}>Cancel</button>
                   </div>
-                  {EDIT_SECTIONS.map(({ key, title, fields }) => (
-                    <EditableListSection key={key} title={title} items={editForm[key] || []} fields={fields} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />
-                  ))}
+                  {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
+                    ? <EditableContactsSection key={key} items={editForm[key] || []} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />
+                    : <EditableListSection key={key} title={title} items={editForm[key] || []} fields={fields} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />)}
                 </form>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: 16 }}>
