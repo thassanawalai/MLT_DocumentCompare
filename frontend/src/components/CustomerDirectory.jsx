@@ -156,12 +156,15 @@ export default function CustomerDirectory() {
   const [sortOrder, setSortOrder] = useState('asc');
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [addingCompany, setAddingCompany] = useState(false);
+  const [addForm, setAddForm] = useState({ customer_name: '', country: '', status: 'Active', addresses: [], contacts: [], banks: [], identifiers: [] });
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ customer_name: '', country: '', status: '' });
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const loadCustomers = useCallback(async () => {
     setLoading(true);
@@ -202,6 +205,41 @@ export default function CustomerDirectory() {
     });
     setActionError('');
     setEditing(true);
+  };
+
+  const startAddingCompany = () => {
+    setAddForm({ customer_name: '', country: '', status: 'Active', addresses: [], contacts: [], banks: [], identifiers: [] });
+    setActionError('');
+    setSuccessMessage('');
+    setAddingCompany(true);
+  };
+
+  const createCompany = async (event) => {
+    event.preventDefault();
+    setActionBusy(true);
+    setActionError('');
+    try {
+      const payload = {
+        customer_name: addForm.customer_name,
+        country: addForm.country || null,
+        status: addForm.status || 'Active',
+        ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
+          key,
+          (addForm[key] || []).filter((item) => key === 'contacts'
+            ? String(getContactDetails(item) ?? '').trim()
+            : Object.values(item).some((value) => String(value ?? '').trim())),
+        ])),
+      };
+      const created = await apiRequest('/api/v1/customers', jsonRequest('POST', payload));
+      setCustomers((current) => [...current, { ...payload, ...created }]);
+      setKeyword('');
+      setAddingCompany(false);
+      setSuccessMessage(`${created.customer_name} was added successfully.`);
+    } catch (requestError) {
+      setActionError(requestError.message || 'Unable to add company.');
+    } finally {
+      setActionBusy(false);
+    }
   };
 
   const saveCustomer = async (event) => {
@@ -270,13 +308,52 @@ export default function CustomerDirectory() {
     return sortOrder === 'asc' ? comparison : -comparison;
   }), [filteredCustomers, sortOrder]);
 
+  if (addingCompany) {
+    return (
+      <main style={styles.page}>
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 24 }}>
+          <div>
+            <div style={{ color: '#2563eb', fontWeight: 700, fontSize: 12, letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 7 }}>Master Data</div>
+            <h1 style={styles.heading}>Add Company</h1>
+            <p style={{ ...styles.muted, margin: '7px 0 0', fontSize: 15 }}>Create a company profile and add its master data.</p>
+          </div>
+          <button type="button" onClick={() => { setAddingCompany(false); setActionError(''); }} disabled={actionBusy} style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: '9px 13px', background: '#fff', color: '#334155', fontWeight: 650, cursor: actionBusy ? 'wait' : 'pointer' }}>Back to Companies</button>
+        </header>
+        {actionError && <div role="alert" style={{ marginBottom: 14, padding: '10px 12px', border: '1px solid #fecaca', borderRadius: 8, background: '#fff1f2', color: '#b91c1c', fontSize: 13 }}>{actionError}</div>}
+        <form onSubmit={createCompany} style={{ ...styles.card, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', alignItems: 'end', gap: 14, padding: 20 }}>
+          <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Company Name
+            <input required autoFocus value={addForm.customer_name} onChange={(event) => setAddForm((current) => ({ ...current, customer_name: event.target.value }))} placeholder="Registered company name" style={contactInputStyle} />
+          </label>
+          <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Country
+            <input value={addForm.country} onChange={(event) => setAddForm((current) => ({ ...current, country: event.target.value }))} placeholder="Country" style={contactInputStyle} />
+          </label>
+          <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
+            <input value={addForm.status} onChange={(event) => setAddForm((current) => ({ ...current, status: event.target.value }))} placeholder="Active" style={contactInputStyle} />
+          </label>
+          {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
+            ? <EditableContactsSection key={key} items={addForm[key]} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />
+            : <EditableListSection key={key} title={title} items={addForm[key]} fields={fields} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />)}
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 9, paddingTop: 4 }}>
+            <button type="button" onClick={() => { setAddingCompany(false); setActionError(''); }} disabled={actionBusy} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '9px 13px', background: '#fff', color: '#475569', fontSize: 13, cursor: actionBusy ? 'wait' : 'pointer' }}>Cancel</button>
+            <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 15px', background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Adding...' : 'Add Company'}</button>
+          </div>
+        </form>
+      </main>
+    );
+  }
+
   return (
     <main style={styles.page}>
-      <header style={{ marginBottom: 24 }}>
-        <div style={{ color: '#2563eb', fontWeight: 700, fontSize: 12, letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 7 }}>Master Data</div>
-        <h1 style={styles.heading}>Companies</h1>
-        <p style={{ ...styles.muted, margin: '7px 0 0', fontSize: 15 }}>Search and view company information</p>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 24 }}>
+        <div>
+          <div style={{ color: '#2563eb', fontWeight: 700, fontSize: 12, letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 7 }}>Master Data</div>
+          <h1 style={styles.heading}>Companies</h1>
+          <p style={{ ...styles.muted, margin: '7px 0 0', fontSize: 15 }}>Search and view company information</p>
+        </div>
+        <button type="button" onClick={startAddingCompany} style={{ border: 0, borderRadius: 8, padding: '10px 15px', background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Company</button>
       </header>
+
+      {successMessage && <div role="status" style={{ marginBottom: 14, padding: '10px 12px', border: '1px solid #bbf7d0', borderRadius: 8, background: '#f0fdf4', color: '#166534', fontSize: 13 }}>{successMessage}</div>}
 
       <div style={{ ...styles.card, padding: 18, marginBottom: 16 }}>
         <label htmlFor="customer-search" style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#123c72' }}>Search Companies</label>
