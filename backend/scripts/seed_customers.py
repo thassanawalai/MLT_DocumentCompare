@@ -394,10 +394,16 @@ def main() -> None:
         type=Path,
         help="Workbook path. Supports the normalized Customers/Addresses/Contacts/Banks/Identifiers template.",
     )
-    parser.add_argument(
+    import_mode = parser.add_mutually_exclusive_group()
+    import_mode.add_argument(
         "--replace",
         action="store_true",
         help="Replace existing customer rows with this workbook. Use only when refreshing this dataset.",
+    )
+    import_mode.add_argument(
+        "--if-empty",
+        action="store_true",
+        help="Import only when the customer table is empty; safe to run during deployment.",
     )
     parser.add_argument(
         "--dry-run",
@@ -440,6 +446,9 @@ def main() -> None:
     db = SessionLocal()
     try:
         has_customers = db.query(Customer.customer_id).first() is not None
+        if has_customers and args.if_empty:
+            print("Import skipped: customer table already contains records; database unchanged.")
+            return
         if has_customers and not args.replace:
             raise RuntimeError(
                 "Customer table already contains records; refusing to import duplicates. "

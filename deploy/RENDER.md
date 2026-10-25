@@ -25,6 +25,24 @@ the frontend.
 5. Deploy the Blueprint.
 6. After deploy, open the frontend service URL.
 
+## Customer Directory data
+
+The backend pre-deploy command runs migrations and imports
+`backend/master_data/customer_import_template.xlsx` only when the production
+customer table is empty. This keeps normal deployments from replacing customer
+edits. Importing the workbook into local Docker PostgreSQL does not change the
+Render production database.
+
+To deliberately refresh an existing production customer dataset, first review
+the workbook and then run this command from the Render backend Shell:
+
+```sh
+python scripts/seed_customers.py --workbook /import-data/customer_import_template.xlsx --replace
+```
+
+`--replace` removes the existing customer rows and their related addresses,
+contacts, banks, and identifiers before importing the workbook.
+
 ## Custom domains
 
 For production, a clean setup is:
