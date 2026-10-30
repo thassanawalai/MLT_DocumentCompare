@@ -3,12 +3,15 @@
   "private": true,
   "scripts": {
     "dev": "npm run dev --prefix frontend",
-    "build": "npm run build --prefix frontend",
+    "build": "npm --prefix frontend install && npm run build --prefix frontend",
     "preview": "npm run preview --prefix frontend"
   },
   "dependencies": {
     "pdfjs-dist": "^6.2.108",
     "react-pdf": "^10.4.1",
     "xlsx": "^0.18.5"
-  }
+  },
+  "workspaces": [
+    "frontend"
+  ]
 }

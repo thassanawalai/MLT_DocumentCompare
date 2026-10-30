@@ -6,9 +6,9 @@
 import React, { useState, useCallback } from 'react';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { DocumentComparison } from './components/DocumentComparison';
-import { HSCodeSearch } from './components/HSCodeSearch';
+import { HSCodeSearch } from './components/HSCodeSearch.tsx';
 import { FreetimeCalculator } from './components/FreetimeCalculator';
-import { CustomerDirectory } from './components/CustomerDirectory';
+import { CustomerDirectory } from './components/CustomerDirectory.tsx';
 import { SIEntryForm } from './components/SIEntryForm';
 import { SystemArchitecture } from './components/SystemArchitecture';
 import { AIDeepCompare } from './components/AIDeepCompare';
