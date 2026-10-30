@@ -33,3 +33,4 @@ temp_uploads/
 
 # Environment
 .env
+package-lock.json
