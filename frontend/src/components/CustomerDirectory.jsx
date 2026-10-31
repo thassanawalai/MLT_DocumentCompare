@@ -310,7 +310,7 @@ export default function CustomerDirectory() {
   };
 
   const startAddingCompany = () => {
-    setAddForm({ customer_name: '', country: '', status: 'Active', addresses: [], contacts: [], banks: [], identifiers: [] });
+    setAddForm({ customer_name: '', country: '', status: 'Active', acid_no: '', importer_no: '', exporter_no: '', uasc_no: '', remark: '', addresses: [], contacts: [], banks: [], identifiers: [] });
     setActionError('');
     setSuccessMessage('');
     setAddingCompany(true);
