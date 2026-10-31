@@ -58,7 +58,9 @@ function EditableListSection({ title, items, fields, onChange }) {
           <div key={`${title}-${index}`} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff' }}>
             {fields.map(([key, label]) => (
               <label key={key} style={{ display: 'grid', gap: 4, color: '#64748b', fontSize: 11, fontWeight: 600 }}>{label}
-                <input value={item[key] || ''} onChange={(event) => updateItem(index, key, event.target.value)} style={{ minWidth: 0, height: 32, padding: '0 8px', border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12 }} />
+                {key === 'remark'
+                  ? <textarea value={item[key] || ''} onChange={(event) => updateItem(index, key, event.target.value)} rows={3} style={{ boxSizing: 'border-box', width: '100%', minWidth: 0, padding: 8, border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12, resize: 'vertical' }} />
+                  : <input value={item[key] || ''} onChange={(event) => updateItem(index, key, event.target.value)} style={{ minWidth: 0, height: 32, padding: '0 8px', border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12 }} />}
               </label>
             ))}
             <button type="button" onClick={() => removeItem(index)} style={{ justifySelf: 'start', alignSelf: 'end', border: 0, padding: '7px 4px', background: 'transparent', color: '#b91c1c', fontSize: 11, fontWeight: 650, cursor: 'pointer' }}>Remove</button>
@@ -149,6 +151,7 @@ const EDIT_SECTIONS = [
   { key: 'contacts', title: 'Contacts', fields: [['contact_name', 'Contact'], ['job_title', 'Title'], ['contact_type', 'Type'], ['email', 'Email'], ['phone', 'Phone'], ['fax', 'Fax']] },
   { key: 'banks', title: 'Banks', fields: [['bank_name', 'Bank name'], ['branch_name', 'Branch'], ['bank_country', 'Country'], ['swift_bic_code', 'SWIFT / BIC']] },
   { key: 'identifiers', title: 'Identifiers', fields: [['identifier_type', 'Type'], ['identifier_value', 'Value'], ['issuing_country', 'Country']] },
+  { key: 'trade_details', title: 'Trade Details', fields: [['acid_no', 'ACID NO'], ['importer_no', 'IMPORTER NO'], ['exporter_no', 'EXPORTER NO'], ['uasc_no', 'UASC NO'], ['remark', 'REMARK']] },
 ];
 
 function CompanyExtraFields({ form, setForm }) {
@@ -252,6 +255,7 @@ export default function CustomerDirectory() {
   contacts: [],
   banks: [],
   identifiers: [],
+  trade_details: [],
   });
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ customer_name: '', country: '', status: '' });
@@ -304,13 +308,14 @@ export default function CustomerDirectory() {
       contacts: (selectedCustomer.contacts || []).map((item) => ({ ...item })),
       banks: (selectedCustomer.banks || []).map((item) => ({ ...item })),
       identifiers: (selectedCustomer.identifiers || []).map((item) => ({ ...item })),
+      trade_details: (selectedCustomer.trade_details || []).map((item) => ({ ...item })),
     });
     setActionError('');
     setEditing(true);
   };
 
   const startAddingCompany = () => {
-    setAddForm({ customer_name: '', country: '', status: 'Active', acid_no: '', importer_no: '', exporter_no: '', uasc_no: '', remark: '', addresses: [], contacts: [], banks: [], identifiers: [] });
+    setAddForm({ customer_name: '', country: '', status: 'Active', acid_no: '', importer_no: '', exporter_no: '', uasc_no: '', remark: '', addresses: [], contacts: [], banks: [], identifiers: [], trade_details: [] });
     setActionError('');
     setSuccessMessage('');
     setAddingCompany(true);
@@ -409,7 +414,7 @@ export default function CustomerDirectory() {
       const baseValues = Object.entries(customer)
         .filter(([, value]) => !Array.isArray(value))
         .map(([, value]) => value);
-      const relatedValues = ['addresses', 'contacts', 'banks', 'identifiers']
+      const relatedValues = ['addresses', 'contacts', 'banks', 'identifiers', 'trade_details']
         .flatMap((key) => (customer[key] || []).flatMap((item) => Object.values(item)));
       return [...baseValues, ...relatedValues].some((value) =>
         String(value ?? '').toLocaleLowerCase().includes(term)
@@ -444,10 +449,6 @@ export default function CustomerDirectory() {
           <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
             <input value={addForm.status} onChange={(event) => setAddForm((current) => ({ ...current, status: event.target.value }))} placeholder="Active" style={contactInputStyle} />
           </label>
-        <CompanyExtraFields
-          form={addForm}
-          setForm={setAddForm}
-        />
           {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
             ? <EditableContactsSection key={key} items={addForm[key]} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />
             : <EditableListSection key={key} title={title} items={addForm[key]} fields={fields} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />)}
@@ -560,10 +561,6 @@ export default function CustomerDirectory() {
                     <input value={editForm.status} onChange={(event) => setEditForm((current) => ({ ...current, status: event.target.value }))} style={{ height: 36, padding: '0 10px', border: '1px solid #94a3b8', borderRadius: 7, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light' }} />
                   </label>
 
-                  <CompanyExtraFields
-                    form={editForm}
-                    setForm={setEditForm}
-                  />
 
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 13px', background: '#2563eb', color: '#fff', fontSize: 12, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Saving...' : 'Save'}</button>
