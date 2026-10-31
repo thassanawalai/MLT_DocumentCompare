@@ -151,13 +151,108 @@ const EDIT_SECTIONS = [
   { key: 'identifiers', title: 'Identifiers', fields: [['identifier_type', 'Type'], ['identifier_value', 'Value'], ['issuing_country', 'Country']] },
 ];
 
+function CompanyExtraFields({ form, setForm }) {
+  const fields = [
+    ['acid_no', 'ACID NO'],
+    ['importer_no', 'IMPORTER NO'],
+    ['exporter_no', 'EXPORTER NO'],
+    ['uasc_no', 'UASC NO'],
+  ];
+
+  const inputStyle = {
+    ...contactInputStyle,
+    height: 36,
+    fontSize: 13,
+  };
+
+  return (
+    <>
+      {fields.map(([key, label]) => (
+        <label
+          key={key}
+          style={{
+            display: 'grid',
+            gap: 5,
+            color: '#475569',
+            fontSize: 12,
+            fontWeight: 650,
+          }}
+        >
+          {label}
+          <input
+            value={form[key] || ''}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                [key]: event.target.value,
+              }))
+            }
+            style={inputStyle}
+          />
+        </label>
+      ))}
+
+      <label
+        style={{
+          gridColumn: '1 / -1',
+          display: 'grid',
+          gap: 5,
+          color: '#475569',
+          fontSize: 12,
+          fontWeight: 650,
+        }}
+      >
+        REMARK
+        <textarea
+          value={form.remark || ''}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              remark: event.target.value,
+            }))
+          }
+          placeholder="Enter remark..."
+          rows={3}
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            padding: '9px 10px',
+            border: '1px solid #94a3b8',
+            borderRadius: 7,
+            color: '#0f172a',
+            background: '#fff',
+            fontSize: 13,
+            resize: 'vertical',
+            fontFamily: 'inherit',
+          }}
+        />
+      </label>
+    </>
+  );
+}
+
 export default function CustomerDirectory() {
   const [keyword, setKeyword] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [addingCompany, setAddingCompany] = useState(false);
-  const [addForm, setAddForm] = useState({ customer_name: '', country: '', status: 'Active', addresses: [], contacts: [], banks: [], identifiers: [] });
+  const [addForm, setAddForm] = useState({
+  customer_name: '',
+  country: '',
+  status: 'Active',
+
+  acid_no: '',
+  importer_no: '',
+  exporter_no: '',
+  uasc_no: '',
+  remark: '',
+
+  addresses: [],
+  contacts: [],
+  banks: [],
+  identifiers: [],
+  });
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ customer_name: '', country: '', status: '' });
   const [actionBusy, setActionBusy] = useState(false);
@@ -198,6 +293,13 @@ export default function CustomerDirectory() {
       customer_name: selectedCustomer.customer_name || '',
       country: selectedCustomer.country || '',
       status: selectedCustomer.status || '',
+
+      acid_no: selectedCustomer.acid_no || '',
+      importer_no: selectedCustomer.importer_no || '',
+      exporter_no: selectedCustomer.exporter_no || '',
+      uasc_no: selectedCustomer.uasc_no || '',
+      remark: selectedCustomer.remark || '',
+
       addresses: (selectedCustomer.addresses || []).map((item) => ({ ...item })),
       contacts: (selectedCustomer.contacts || []).map((item) => ({ ...item })),
       banks: (selectedCustomer.banks || []).map((item) => ({ ...item })),
@@ -223,6 +325,12 @@ export default function CustomerDirectory() {
         customer_name: addForm.customer_name,
         country: addForm.country || null,
         status: addForm.status || 'Active',
+        acid_no: addForm.acid_no || null,
+        importer_no: addForm.importer_no || null,
+        exporter_no: addForm.exporter_no || null,
+        uasc_no: addForm.uasc_no || null,
+        remark: addForm.remark || null,
+        
         ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
           key,
           (addForm[key] || []).filter((item) => key === 'contacts'
@@ -253,6 +361,12 @@ export default function CustomerDirectory() {
           customer_name: editForm.customer_name,
           country: editForm.country || null,
           status: editForm.status || null,
+          acid_no: editForm.acid_no || null,
+          importer_no: editForm.importer_no || null,
+          exporter_no: editForm.exporter_no || null,
+          uasc_no: editForm.uasc_no || null,
+          remark: editForm.remark || null,
+          
           ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
             key,
             (editForm[key] || []).filter((item) => key === 'contacts'
@@ -330,6 +444,10 @@ export default function CustomerDirectory() {
           <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
             <input value={addForm.status} onChange={(event) => setAddForm((current) => ({ ...current, status: event.target.value }))} placeholder="Active" style={contactInputStyle} />
           </label>
+        <CompanyExtraFields
+          form={addForm}
+          setForm={setAddForm}
+        />
           {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
             ? <EditableContactsSection key={key} items={addForm[key]} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />
             : <EditableListSection key={key} title={title} items={addForm[key]} fields={fields} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />)}
@@ -441,6 +559,12 @@ export default function CustomerDirectory() {
                   <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
                     <input value={editForm.status} onChange={(event) => setEditForm((current) => ({ ...current, status: event.target.value }))} style={{ height: 36, padding: '0 10px', border: '1px solid #94a3b8', borderRadius: 7, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light' }} />
                   </label>
+
+                  <CompanyExtraFields
+                    form={editForm}
+                    setForm={setEditForm}
+                  />
+
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 13px', background: '#2563eb', color: '#fff', fontSize: 12, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Saving...' : 'Save'}</button>
                     <button type="button" disabled={actionBusy} onClick={() => { setEditing(false); setActionError(''); }} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '8px 12px', background: '#fff', color: '#475569', fontSize: 12, cursor: actionBusy ? 'wait' : 'pointer' }}>Cancel</button>

@@ -63,6 +63,11 @@ def search_customers(
                 CustomerBank.account_no.ilike(term),
                 CustomerIdentifier.identifier_value.ilike(term),
                 CustomerIdentifier.identifier_type.ilike(term),
+                Customer.acid_no.ilike(term),
+                Customer.importer_no.ilike(term),
+                Customer.exporter_no.ilike(term),
+                Customer.uasc_no.ilike(term),
+                Customer.remark.ilike(term),
                 )
             )
             .distinct()
@@ -82,6 +87,11 @@ def search_customers(
             "postal_code": customer.postal_code,
             "country": customer.country,
             "status": customer.status,
+            "acid_no": customer.acid_no,
+            "importer_no": customer.importer_no,
+            "exporter_no": customer.exporter_no,
+            "uasc_no": customer.uasc_no,
+            "remark": customer.remark,
             "addresses": [
                 {
                     "address_type": address.address_type,
@@ -148,6 +158,11 @@ def create_customer(payload: dict = Body(...), db: Session = Depends(get_db)):
         customer_name=name.strip(),
         country=country.strip() if country and country.strip() else None,
         status=status.strip() if status and status.strip() else "Active",
+        acid_no=payload.get("acid_no"),
+        importer_no=payload.get("importer_no"),
+        exporter_no=payload.get("exporter_no"),
+        uasc_no=payload.get("uasc_no"),
+        remark=payload.get("remark"),
     )
     db.add(customer)
     db.flush()
@@ -225,6 +240,26 @@ def update_customer(
         if status is not None and not isinstance(status, str):
             raise HTTPException(status_code=422, detail="status must be a string or null")
         customer.status = status.strip() if status and status.strip() else None
+
+        company_fields = [
+    "acid_no",
+    "importer_no",
+    "exporter_no",
+    "uasc_no",
+    "remark",
+]
+
+for field in company_fields:
+    if field in payload:
+        value = payload[field]
+
+        if value is not None and not isinstance(value, str):
+            raise HTTPException(
+                status_code=422,
+                detail=f"{field} must be a string or null"
+            )
+
+        setattr(customer, field, value.strip() or None if value else None)
 
     relationship_specs = {
         "addresses": (CustomerAddress, ("address_type", "raw_address", "address_line1", "address_line2", "city", "state", "postal_code", "country", "is_primary")),

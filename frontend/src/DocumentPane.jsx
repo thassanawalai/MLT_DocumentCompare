@@ -212,7 +212,27 @@ const DocumentPane = ({
         if (selectedField === key) { bgColor = 'rgba(254, 240, 138, 0.5)'; zIndex = 10; } 
         else if (hoveredField === key) { bgColor = 'rgba(59, 130, 246, 0.35)'; zIndex = 5; }
 
-        return <div key={`box-${key}-${index}`} onClick={(e) => { e.stopPropagation(); setSelectedField(key); }} onMouseEnter={() => setHoveredField(key)} onMouseLeave={() => setHoveredField(null)} style={{ position: 'absolute', left: `${box.x * scale}px`, top: `${box.y * scale}px`, width: `${Math.max(box.width * scale, 2)}px`, height: `${Math.max(box.height * scale, 2)}px`, backgroundColor: bgColor, cursor: 'pointer', pointerEvents: 'auto', zIndex, transition: 'background-color 0.15s ease' }} />;
+        // ซ่อม Syntax เครื่องหมายคูณ (*) ในบรรทัดนี้แล้ว
+        return (
+          <div 
+            key={`box-${key}-${index}`} 
+            onClick={(e) => { e.stopPropagation(); setSelectedField(key); }} 
+            onMouseEnter={() => setHoveredField(key)} 
+            onMouseLeave={() => setHoveredField(null)} 
+            style={{ 
+              position: 'absolute', 
+              left: `${box.x * scale}px`, 
+              top: `${box.y * scale}px`, 
+              width: `${Math.max(box.width * scale, 2)}px`, 
+              height: `${Math.max(box.height * scale, 2)}px`, 
+              backgroundColor: bgColor, 
+              cursor: 'pointer', 
+              pointerEvents: 'auto', 
+              zIndex, 
+              transition: 'background-color 0.15s ease' 
+            }} 
+          />
+        );
       });
     });
   };
@@ -245,6 +265,7 @@ const DocumentPane = ({
                     position: 'absolute',
                     left: `${Math.min(drawingLine.startX, drawingLine.currentX)}px`,
                     top: `${drawingLine.startY}px`,
+                    // ซ่อม Syntax เครื่องหมายลบ (-) ในบรรทัดนี้แล้ว
                     width: `${Math.abs(drawingLine.currentX - drawingLine.startX)}px`,
                     height: '2px', backgroundColor: '#ef4444', zIndex: 100, pointerEvents: 'none'
                   }} />
