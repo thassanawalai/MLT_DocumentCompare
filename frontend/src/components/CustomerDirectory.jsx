@@ -58,9 +58,7 @@ function EditableListSection({ title, items, fields, onChange }) {
           <div key={`${title}-${index}`} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff' }}>
             {fields.map(([key, label]) => (
               <label key={key} style={{ display: 'grid', gap: 4, color: '#64748b', fontSize: 11, fontWeight: 600 }}>{label}
-                {key === 'remark'
-                  ? <textarea value={item[key] || ''} onChange={(event) => updateItem(index, key, event.target.value)} rows={3} style={{ boxSizing: 'border-box', width: '100%', minWidth: 0, padding: 8, border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12, resize: 'vertical' }} />
-                  : <input value={item[key] || ''} onChange={(event) => updateItem(index, key, event.target.value)} style={{ minWidth: 0, height: 32, padding: '0 8px', border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12 }} />}
+                <input value={item[key] || ''} onChange={(event) => updateItem(index, key, event.target.value)} style={{ minWidth: 0, height: 32, padding: '0 8px', border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12 }} />
               </label>
             ))}
             <button type="button" onClick={() => removeItem(index)} style={{ justifySelf: 'start', alignSelf: 'end', border: 0, padding: '7px 4px', background: 'transparent', color: '#b91c1c', fontSize: 11, fontWeight: 650, cursor: 'pointer' }}>Remove</button>
@@ -146,93 +144,51 @@ function EditableContactsSection({ items, onChange }) {
 
 const contactInputStyle = { boxSizing: 'border-box', width: '100%', minWidth: 0, height: 34, padding: '0 9px', border: '1px solid #94a3b8', borderRadius: 6, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light', fontSize: 12 };
 
+const COMPANY_FIELDS = [["acid_no","ACID NO"],["importer_no","IMPORTER NO"],["exporter_no","EXPORTER NO"],["uasc_no","UASC NO"],["remark","REMARK"]];
+const emptyCompanyFields = () => ({ acid_no: '', importer_no: '', exporter_no: '', uasc_no: '', remark: '' });
+
+function CompanyInformationFields({ values, onChange }) {
+  return (
+    <section style={{ gridColumn: '1 / -1', border: '1px solid #dbeafe', borderRadius: 10, background: '#f8fbff', padding: 14 }}>
+      <h3 style={{ margin: '0 0 12px', color: '#123c72', fontSize: 14 }}>Company Information</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+        {COMPANY_FIELDS.map(([key, label]) => (
+          <label key={key} style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650, gridColumn: key === 'remark' ? '1 / -1' : undefined }}>
+            {label}
+            {key === 'remark' ? (
+              <textarea rows={2} value={values[key] || ''} onChange={(event) => onChange(key, event.target.value)} style={{ ...contactInputStyle, height: 'auto', minHeight: 58, padding: 9, resize: 'vertical' }} />
+            ) : (
+              <input type="text" value={values[key] || ''} onChange={(event) => onChange(key, event.target.value)} style={contactInputStyle} />
+            )}
+          </label>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CompanyInformationDetails({ customer }) {
+  return (
+    <section style={{ gridColumn: '1 / -1', border: '1px solid #dbeafe', borderRadius: 10, background: '#fff', padding: 16 }}>
+      <h3 style={{ margin: '0 0 12px', color: '#123c72', fontSize: 14 }}>Company Information</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14 }}>
+        {COMPANY_FIELDS.map(([key, label]) => (
+          <div key={key} style={{ gridColumn: key === 'remark' ? '1 / -1' : undefined, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 13, color: '#0f172a', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>{customer[key] || '—'}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const EDIT_SECTIONS = [
   { key: 'addresses', title: 'Addresses', fields: [['address_type', 'Address type'], ['raw_address', 'Full address'], ['address_line1', 'Address line 1'], ['address_line2', 'Address line 2'], ['city', 'City'], ['state', 'State'], ['postal_code', 'Postal code']] },
   { key: 'contacts', title: 'Contacts', fields: [['contact_name', 'Contact'], ['job_title', 'Title'], ['contact_type', 'Type'], ['email', 'Email'], ['phone', 'Phone'], ['fax', 'Fax']] },
   { key: 'banks', title: 'Banks', fields: [['bank_name', 'Bank name'], ['branch_name', 'Branch'], ['bank_country', 'Country'], ['swift_bic_code', 'SWIFT / BIC']] },
   { key: 'identifiers', title: 'Identifiers', fields: [['identifier_type', 'Type'], ['identifier_value', 'Value'], ['issuing_country', 'Country']] },
-  { key: 'trade_details', title: 'Trade Details', fields: [['acid_no', 'ACID NO'], ['importer_no', 'IMPORTER NO'], ['exporter_no', 'EXPORTER NO'], ['uasc_no', 'UASC NO'], ['remark', 'REMARK']] },
 ];
-
-function CompanyExtraFields({ form, setForm }) {
-  const fields = [
-    ['acid_no', 'ACID NO'],
-    ['importer_no', 'IMPORTER NO'],
-    ['exporter_no', 'EXPORTER NO'],
-    ['uasc_no', 'UASC NO'],
-  ];
-
-  const inputStyle = {
-    ...contactInputStyle,
-    height: 36,
-    fontSize: 13,
-  };
-
-  return (
-    <>
-      {fields.map(([key, label]) => (
-        <label
-          key={key}
-          style={{
-            display: 'grid',
-            gap: 5,
-            color: '#475569',
-            fontSize: 12,
-            fontWeight: 650,
-          }}
-        >
-          {label}
-          <input
-            value={form[key] || ''}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                [key]: event.target.value,
-              }))
-            }
-            style={inputStyle}
-          />
-        </label>
-      ))}
-
-      <label
-        style={{
-          gridColumn: '1 / -1',
-          display: 'grid',
-          gap: 5,
-          color: '#475569',
-          fontSize: 12,
-          fontWeight: 650,
-        }}
-      >
-        REMARK
-        <textarea
-          value={form.remark || ''}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              remark: event.target.value,
-            }))
-          }
-          placeholder="Enter remark..."
-          rows={3}
-          style={{
-            width: '100%',
-            boxSizing: 'border-box',
-            padding: '9px 10px',
-            border: '1px solid #94a3b8',
-            borderRadius: 7,
-            color: '#0f172a',
-            background: '#fff',
-            fontSize: 13,
-            resize: 'vertical',
-            fontFamily: 'inherit',
-          }}
-        />
-      </label>
-    </>
-  );
-}
 
 export default function CustomerDirectory() {
   const [keyword, setKeyword] = useState('');
@@ -240,25 +196,9 @@ export default function CustomerDirectory() {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [addingCompany, setAddingCompany] = useState(false);
-  const [addForm, setAddForm] = useState({
-  customer_name: '',
-  country: '',
-  status: 'Active',
-
-  acid_no: '',
-  importer_no: '',
-  exporter_no: '',
-  uasc_no: '',
-  remark: '',
-
-  addresses: [],
-  contacts: [],
-  banks: [],
-  identifiers: [],
-  trade_details: [],
-  });
+  const [addForm, setAddForm] = useState({ customer_name: '', country: '', status: 'Active', ...emptyCompanyFields(), addresses: [], contacts: [], banks: [], identifiers: [] });
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ customer_name: '', country: '', status: '' });
+  const [editForm, setEditForm] = useState({ customer_name: '', country: '', status: '', ...emptyCompanyFields() });
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -297,25 +237,18 @@ export default function CustomerDirectory() {
       customer_name: selectedCustomer.customer_name || '',
       country: selectedCustomer.country || '',
       status: selectedCustomer.status || '',
-
-      acid_no: selectedCustomer.acid_no || '',
-      importer_no: selectedCustomer.importer_no || '',
-      exporter_no: selectedCustomer.exporter_no || '',
-      uasc_no: selectedCustomer.uasc_no || '',
-      remark: selectedCustomer.remark || '',
-
+      ...Object.fromEntries(COMPANY_FIELDS.map(([key]) => [key, selectedCustomer[key] || ''])),
       addresses: (selectedCustomer.addresses || []).map((item) => ({ ...item })),
       contacts: (selectedCustomer.contacts || []).map((item) => ({ ...item })),
       banks: (selectedCustomer.banks || []).map((item) => ({ ...item })),
       identifiers: (selectedCustomer.identifiers || []).map((item) => ({ ...item })),
-      trade_details: (selectedCustomer.trade_details || []).map((item) => ({ ...item })),
     });
     setActionError('');
     setEditing(true);
   };
 
   const startAddingCompany = () => {
-    setAddForm({ customer_name: '', country: '', status: 'Active', acid_no: '', importer_no: '', exporter_no: '', uasc_no: '', remark: '', addresses: [], contacts: [], banks: [], identifiers: [], trade_details: [] });
+    setAddForm({ customer_name: '', country: '', status: 'Active', ...emptyCompanyFields(), addresses: [], contacts: [], banks: [], identifiers: [] });
     setActionError('');
     setSuccessMessage('');
     setAddingCompany(true);
@@ -330,12 +263,7 @@ export default function CustomerDirectory() {
         customer_name: addForm.customer_name,
         country: addForm.country || null,
         status: addForm.status || 'Active',
-        acid_no: addForm.acid_no || null,
-        importer_no: addForm.importer_no || null,
-        exporter_no: addForm.exporter_no || null,
-        uasc_no: addForm.uasc_no || null,
-        remark: addForm.remark || null,
-        
+        ...Object.fromEntries(COMPANY_FIELDS.map(([key]) => [key, addForm[key]?.trim() || null])),
         ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
           key,
           (addForm[key] || []).filter((item) => key === 'contacts'
@@ -366,12 +294,7 @@ export default function CustomerDirectory() {
           customer_name: editForm.customer_name,
           country: editForm.country || null,
           status: editForm.status || null,
-          acid_no: editForm.acid_no || null,
-          importer_no: editForm.importer_no || null,
-          exporter_no: editForm.exporter_no || null,
-          uasc_no: editForm.uasc_no || null,
-          remark: editForm.remark || null,
-          
+          ...Object.fromEntries(COMPANY_FIELDS.map(([key]) => [key, editForm[key]?.trim() || null])),
           ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
             key,
             (editForm[key] || []).filter((item) => key === 'contacts'
@@ -414,7 +337,7 @@ export default function CustomerDirectory() {
       const baseValues = Object.entries(customer)
         .filter(([, value]) => !Array.isArray(value))
         .map(([, value]) => value);
-      const relatedValues = ['addresses', 'contacts', 'banks', 'identifiers', 'trade_details']
+      const relatedValues = ['addresses', 'contacts', 'banks', 'identifiers']
         .flatMap((key) => (customer[key] || []).flatMap((item) => Object.values(item)));
       return [...baseValues, ...relatedValues].some((value) =>
         String(value ?? '').toLocaleLowerCase().includes(term)
@@ -449,6 +372,7 @@ export default function CustomerDirectory() {
           <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
             <input value={addForm.status} onChange={(event) => setAddForm((current) => ({ ...current, status: event.target.value }))} placeholder="Active" style={contactInputStyle} />
           </label>
+          <CompanyInformationFields values={addForm} onChange={(key, value) => setAddForm((current) => ({ ...current, [key]: value }))} />
           {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
             ? <EditableContactsSection key={key} items={addForm[key]} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />
             : <EditableListSection key={key} title={title} items={addForm[key]} fields={fields} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />)}
@@ -560,18 +484,18 @@ export default function CustomerDirectory() {
                   <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
                     <input value={editForm.status} onChange={(event) => setEditForm((current) => ({ ...current, status: event.target.value }))} style={{ height: 36, padding: '0 10px', border: '1px solid #94a3b8', borderRadius: 7, color: '#0f172a', backgroundColor: '#fff', colorScheme: 'light' }} />
                   </label>
-
-
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 13px', background: '#2563eb', color: '#fff', fontSize: 12, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Saving...' : 'Save'}</button>
                     <button type="button" disabled={actionBusy} onClick={() => { setEditing(false); setActionError(''); }} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '8px 12px', background: '#fff', color: '#475569', fontSize: 12, cursor: actionBusy ? 'wait' : 'pointer' }}>Cancel</button>
                   </div>
+                  <CompanyInformationFields values={editForm} onChange={(key, value) => setEditForm((current) => ({ ...current, [key]: value }))} />
                   {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
                     ? <EditableContactsSection key={key} items={editForm[key] || []} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />
                     : <EditableListSection key={key} title={title} items={editForm[key] || []} fields={fields} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />)}
                 </form>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: 16 }}>
+                <CompanyInformationDetails customer={selectedCustomer} />
                 <DetailSection title="Address" icon="address" items={selectedCustomer.addresses} fields={[["raw_address", "Full address"], ["address_line1", "Address line 1"], ["address_line2", "Address line 2"], ["city", "City"], ["state", "State"], ["postal_code", "Postal code"], ["country", "Country"]]} />
                 <DetailSection title="Contact information" icon="contact" items={selectedCustomer.contacts} fields={[["contact_name", "Contact"], ["job_title", "Title"], ["email", "Email"], ["phone", "Phone"], ["fax", "Fax"]]} />
                 <DetailSection title="Bank details" icon="bank" items={selectedCustomer.banks} fields={[["bank_name", "Bank name"], ["branch_name", "Branch"], ["bank_country", "Country"], ["swift_bic_code", "SWIFT / BIC"]]} />
