@@ -59,6 +59,12 @@ class Customer(Base):
         cascade="all, delete-orphan"
     )
 
+    trade_details = relationship(
+        "CustomerTradeDetail",
+        back_populates="customer",
+        cascade="all, delete-orphan"
+    )
+
 
 class CustomerAddress(Base):
     __tablename__ = "customer_addresses"
@@ -144,3 +150,18 @@ class CustomerIdentifier(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     customer = relationship("Customer", back_populates="identifiers")
+
+
+
+class CustomerTradeDetail(Base):
+    __tablename__ = "customer_trade_details"
+
+    trade_detail_id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="CASCADE"), nullable=False, index=True)
+    acid_no = Column(String, nullable=True)
+    importer_no = Column(String, nullable=True)
+    exporter_no = Column(String, nullable=True)
+    uasc_no = Column(String, nullable=True)
+    remark = Column(Text, nullable=True)
+
+    customer = relationship("Customer", back_populates="trade_details")
