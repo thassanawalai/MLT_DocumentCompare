@@ -241,25 +241,22 @@ def update_customer(
             raise HTTPException(status_code=422, detail="status must be a string or null")
         customer.status = status.strip() if status and status.strip() else None
 
-        company_fields = [
-    "acid_no",
-    "importer_no",
-    "exporter_no",
-    "uasc_no",
-    "remark",
-]
-
-for field in company_fields:
-    if field in payload:
-        value = payload[field]
-
-        if value is not None and not isinstance(value, str):
-            raise HTTPException(
-                status_code=422,
-                detail=f"{field} must be a string or null"
-            )
-
-        setattr(customer, field, value.strip() or None if value else None)
+    company_fields = (
+        "acid_no",
+        "importer_no",
+        "exporter_no",
+        "uasc_no",
+        "remark",
+    )
+    for field in company_fields:
+        if field in payload:
+            value = payload[field]
+            if value is not None and not isinstance(value, str):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"{field} must be a string or null",
+                )
+            setattr(customer, field, value.strip() or None if value else None)
 
     relationship_specs = {
         "addresses": (CustomerAddress, ("address_type", "raw_address", "address_line1", "address_line2", "city", "state", "postal_code", "country", "is_primary")),
