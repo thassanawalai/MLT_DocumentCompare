@@ -7,7 +7,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.customer import (
-    Customer, CustomerAddress, CustomerBank, CustomerContact, CustomerIdentifier,
+    Customer, CustomerAddress, CustomerBank, CustomerContact, CustomerIdentifier, CustomerTradeDetail,
 )
 from app.services.process_service import process_pdf
 from app.templates.registry import _template_map
@@ -32,6 +32,7 @@ def search_customers(
             .outerjoin(CustomerAddress, CustomerAddress.customer_id == Customer.customer_id)
             .outerjoin(CustomerBank, CustomerBank.customer_id == Customer.customer_id)
             .outerjoin(CustomerIdentifier, CustomerIdentifier.customer_id == Customer.customer_id)
+            .outerjoin(CustomerTradeDetail, CustomerTradeDetail.customer_id == Customer.customer_id)
             .where(
             or_(
                 Customer.customer_name.ilike(term),
@@ -63,6 +64,11 @@ def search_customers(
                 CustomerBank.account_no.ilike(term),
                 CustomerIdentifier.identifier_value.ilike(term),
                 CustomerIdentifier.identifier_type.ilike(term),
+                CustomerTradeDetail.acid_no.ilike(term),
+                CustomerTradeDetail.importer_no.ilike(term),
+                CustomerTradeDetail.exporter_no.ilike(term),
+                CustomerTradeDetail.uasc_no.ilike(term),
+                CustomerTradeDetail.remark.ilike(term),
                 )
             )
             .distinct()
@@ -126,6 +132,16 @@ def search_customers(
                 }
                 for identifier in customer.identifiers
             ],
+            "trade_details": [
+                {
+                    "acid_no": detail.acid_no,
+                    "importer_no": detail.importer_no,
+                    "exporter_no": detail.exporter_no,
+                    "uasc_no": detail.uasc_no,
+                    "remark": detail.remark,
+                }
+                for detail in customer.trade_details
+            ],
         }
         for customer in customers
     ]
@@ -157,6 +173,8 @@ def create_customer(payload: dict = Body(...), db: Session = Depends(get_db)):
         "contacts": (CustomerContact, ("contact_name", "job_title", "contact_type", "email", "phone", "fax", "is_primary")),
         "banks": (CustomerBank, ("bank_name", "branch_name", "bank_address", "bank_country", "swift_bic_code", "account_no")),
         "identifiers": (CustomerIdentifier, ("identifier_type", "identifier_value", "issuing_country")),
+        "trade_details": (CustomerTradeDetail, ("acid_no", "importer_no", "exporter_no", "uasc_no", "remark")),
+        "trade_details": (CustomerTradeDetail, ("acid_no", "importer_no", "exporter_no", "uasc_no", "remark")),
     }
     for relationship_name, (model, allowed_fields) in relationship_specs.items():
         entries = payload.get(relationship_name, [])
