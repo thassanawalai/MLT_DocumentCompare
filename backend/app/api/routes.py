@@ -227,6 +227,7 @@ def update_customer(
         if not isinstance(name, str) or not name.strip():
             raise HTTPException(status_code=422, detail="customer_name must not be empty")
         customer.customer_name = name.strip()
+
     if "country" in payload:
         country = payload["country"]
         if country is not None and not isinstance(country, str):
@@ -235,31 +236,29 @@ def update_customer(
         primary_address = next((address for address in customer.addresses if address.is_primary), None)
         if primary_address:
             primary_address.country = customer.country
+
     if "status" in payload:
         status = payload["status"]
         if status is not None and not isinstance(status, str):
             raise HTTPException(status_code=422, detail="status must be a string or null")
         customer.status = status.strip() if status and status.strip() else None
 
-        company_fields = [
-    "acid_no",
-    "importer_no",
-    "exporter_no",
-    "uasc_no",
-    "remark",
-]
-
-for field in company_fields:
-    if field in payload:
-        value = payload[field]
-
-        if value is not None and not isinstance(value, str):
-            raise HTTPException(
-                status_code=422,
-                detail=f"{field} must be a string or null"
-            )
-
-        setattr(customer, field, value.strip() or None if value else None)
+    company_fields = [
+        "acid_no",
+        "importer_no",
+        "exporter_no",
+        "uasc_no",
+        "remark",
+    ]
+    for field in company_fields:
+        if field in payload:
+            value = payload[field]
+            if value is not None and not isinstance(value, str):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"{field} must be a string or null"
+                )
+            setattr(customer, field, value.strip() or None if value else None)
 
     relationship_specs = {
         "addresses": (CustomerAddress, ("address_type", "raw_address", "address_line1", "address_line2", "city", "state", "postal_code", "country", "is_primary")),
@@ -426,15 +425,20 @@ async def save_freetime_data(data: list = Body(...)):
             "PAT_BANGKOK": "PAT (BANGKOK)",
             "DEM_20_40": "DEM  20'GP & 40'HC",
             "DT_20_40": "DT  20'GP & 40'HC",
-            "DEM_REEFER": "DEM/REFFER",
-            "DET_REEFER": "DET/REFFEER"
+            "DEM_REEFER": "DEM/REEFER",
+            "DET_REEFER": "DET/REEFER",
+            "DEM/REFFER": "DEM/REEFER",
+            "DET/REFFER": "DET/REEFER",
+            "DET/REFFEER": "DET/REEFER",
+            "DEM/REEFER": "DEM/REEFER",
+            "DET/REEFER": "DET/REEFER",
         })
 
         # 3. Reorder columns to match the original layout
         cols_order = [
             "Carrier", "LAT KRABANG", "LAEM CHABANG", "PAT (BANGKOK)", 
             "REEFER", "SONGKLA", "REMARK", "FREE TIME PLUG",
-            "DEM  20'GP & 40'HC", "DT  20'GP & 40'HC", "DEM/REFFER", "DET/REFFEER"
+            "DEM  20'GP & 40'HC", "DT  20'GP & 40'HC", "DEM/REEFER", "DET/REEFER"
         ]
         
         # Add any missing columns with empty values
