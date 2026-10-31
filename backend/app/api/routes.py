@@ -174,7 +174,6 @@ def create_customer(payload: dict = Body(...), db: Session = Depends(get_db)):
         "banks": (CustomerBank, ("bank_name", "branch_name", "bank_address", "bank_country", "swift_bic_code", "account_no")),
         "identifiers": (CustomerIdentifier, ("identifier_type", "identifier_value", "issuing_country")),
         "trade_details": (CustomerTradeDetail, ("acid_no", "importer_no", "exporter_no", "uasc_no", "remark")),
-        "trade_details": (CustomerTradeDetail, ("acid_no", "importer_no", "exporter_no", "uasc_no", "remark")),
     }
     for relationship_name, (model, allowed_fields) in relationship_specs.items():
         entries = payload.get(relationship_name, [])
@@ -249,6 +248,7 @@ def update_customer(
         "contacts": (CustomerContact, ("contact_name", "job_title", "contact_type", "email", "phone", "fax", "is_primary")),
         "banks": (CustomerBank, ("bank_name", "branch_name", "bank_address", "bank_country", "swift_bic_code", "account_no")),
         "identifiers": (CustomerIdentifier, ("identifier_type", "identifier_value", "issuing_country")),
+        "trade_details": (CustomerTradeDetail, ("acid_no", "importer_no", "exporter_no", "uasc_no", "remark")),
     }
     for relationship_name, (model, allowed_fields) in relationship_specs.items():
         if relationship_name not in payload:
