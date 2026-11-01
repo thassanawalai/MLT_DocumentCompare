@@ -379,7 +379,8 @@ const ComparisonPage = ({
   rightDesc,
   leftTemplates,
   rightTemplates,
-  copy
+  copy,
+  language = 'en',
 }) => {
   const [fileOriginal, setFileOriginal] = useState(null); // ฝั่งขวา (B/L)
   const [fileProgram, setFileProgram] = useState(null);   // ฝั่งซ้าย (SI)
@@ -1086,6 +1087,7 @@ const menuItems = [
               key={activeTab} 
               {...currentProps}
               copy={copy}
+              language={language}
             />
           )}
         </div>
