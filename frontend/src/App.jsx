@@ -7,6 +7,7 @@ import SIDataEntry from './SIDataEntry';
 import HSCodeSearch from './components/HSCodeSearch';
 import Freetime from './components/Freetime';
 import CustomerDirectory from './components/CustomerDirectory';
+import DiscrepancyOverview from './components/DiscrepancyOverview';
 
 const DiffText = ({ diffData }) => {
   if (!diffData || diffData.length === 0) return null;
@@ -740,6 +741,12 @@ const ComparisonPage = ({
         {/* ======== RESULTS ======== */}
         {results && (
           <>
+            <DiscrepancyOverview
+              discrepancies={results.discrepancies}
+              leftTitle={leftTitle}
+              rightTitle={rightTitle}
+              language={language}
+            />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
               <span style={{ fontSize: '0.75em', fontWeight: 700, color: theme.inkSoft, letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
