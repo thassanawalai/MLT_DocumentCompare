@@ -117,26 +117,28 @@ code {
   background: var(--code-bg);
 }
 
-/* Styles for Diff Viewer */
+/* Styles for readable word-level comparison */
 .diff-equal {
-  color: #15803d; /* Green for equal/matching parts */
-  font-weight: 500;
+  color: inherit;
+  font-weight: inherit;
 }
 .diff-insert,
 .diff-delete {
-  background-color: #fee2e2; /* Light red */
-  color: #b91c1c; /* Dark red */
-  border-radius: 2px;
-  padding: 0 2px;
+  background-color: #fff1f2;
+  color: #9f1239;
+  border-radius: 0.25rem;
+  padding: 0 0.15em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 @media (prefers-color-scheme: dark) {
   .diff-equal {
-    color: #22c55e; /* Light green for dark mode equal parts */
-    font-weight: 500;
+    color: inherit;
+    font-weight: inherit;
   }
   .diff-insert,
   .diff-delete {
     background-color: #3b171a;
-    color: #ef9a9a;
+    color: #fecdd3;
   }
 }
