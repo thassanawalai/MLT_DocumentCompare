@@ -120,7 +120,7 @@ const renderDiffValue = (fieldValue, fallbackText, isTh) => {
           padding: '0.02em 0.16em',
           boxDecorationBreak: 'clone',
           WebkitBoxDecorationBreak: 'clone',
-        } : { color: '#0f172a' }}
+        } : { color: '#166534' }}
       >
         {chunk.value}
       </span>
