@@ -25,7 +25,7 @@ const formatPages = (fieldValue, isTh) => {
 };
 
 const findMeasurement = (value) => {
-  const match = value.match(/([\d,]+(?:\\.\d+)?)\s*(CBM|M\s*3|M³)(?![A-Z])/i);
+  const match = value.match(/([\d,]+(?:\.\d+)?)\s*(CBM|M\s*3|M³)(?![A-Z])/i);
   if (!match) return null;
   const amount = Number(match[1].replace(/,/g, ''));
   return Number.isFinite(amount) ? amount : null;
