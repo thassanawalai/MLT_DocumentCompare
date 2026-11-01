@@ -669,7 +669,7 @@ export const DocumentComparison: React.FC<DocumentComparisonProps> = ({
                               key={cIdx}
                               className={
                                 chunk.tag === 'delete'
-                                  ? 'bg-rose-600/30 text-rose-300 border-b-2 border-rose-500 font-bold px-0.5 rounded'
+                                  ? 'bg-rose-500/15 text-rose-200 font-medium px-1 rounded box-decoration-clone'
                                   : ''
                               }
                             >
@@ -685,7 +685,7 @@ export const DocumentComparison: React.FC<DocumentComparisonProps> = ({
                               key={cIdx}
                               className={
                                 chunk.tag === 'insert'
-                                  ? 'bg-emerald-600/30 text-emerald-300 border-b-2 border-emerald-500 font-bold px-0.5 rounded'
+                                  ? 'bg-rose-500/15 text-rose-200 font-medium px-1 rounded box-decoration-clone'
                                   : ''
                               }
                             >
