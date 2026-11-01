@@ -147,7 +147,7 @@ def main() -> None:
     parser.add_argument(
         "--if-empty",
         action="store_true",
-        help="skip if both tables already match the source row counts",
+        help="skip importing when either target table already contains data",
     )
     args = parser.parse_args()
     if not HS_CSV.is_file():
@@ -164,10 +164,11 @@ def main() -> None:
         hs_count = db.scalar(select(func.count()).select_from(HSCodeRecord))
         freetime_count = db.scalar(select(func.count()).select_from(FreetimeRecord))
         if hs_count or freetime_count:
-            if args.if_empty and hs_count == len(hs_records) and freetime_count == len(freetime_records):
+            if args.if_empty:
                 print(
-                    "Import skipped: target tables already match the source row counts "
-                    f"(hs_code_records={hs_count}, freetime_records={freetime_count})."
+                    "Import skipped: at least one target table already contains data "
+                    f"(hs_code_records={hs_count}, freetime_records={freetime_count}); "
+                    "existing rows were left unchanged."
                 )
                 return
             raise RuntimeError(
