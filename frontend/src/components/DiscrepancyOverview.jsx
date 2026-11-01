@@ -33,6 +33,41 @@ const findMeasurement = (value) => {
 
 const findLongNumbers = (value) => value.match(/\d{8,}/g) || [];
 
+const getIdDifference = (leftText, rightText, isTh) => {
+  const leftIds = findLongNumbers(leftText);
+  const rightIds = findLongNumbers(rightText);
+
+  const missingFromRight = leftIds.find((id) => !rightIds.includes(id));
+  if (missingFromRight) {
+    const shortenedInRight = rightIds.find((id) => missingFromRight.startsWith(id) && id.length < missingFromRight.length);
+    if (shortenedInRight) {
+      const missingDigits = missingFromRight.length - shortenedInRight.length;
+      return isTh
+        ? 'Draft B/L ขาดเลขท้าย ' + missingDigits + ' หลักเมื่อเทียบกับ SI'
+        : 'Draft B/L is missing the final ' + missingDigits + ' digit(s) shown in the SI.';
+    }
+    return isTh
+      ? 'เลขประจำตัวใน SI ไม่พบหรือไม่ตรงกับ Draft B/L'
+      : 'An identification number in the SI is missing or different in the Draft B/L.';
+  }
+
+  const missingFromLeft = rightIds.find((id) => !leftIds.includes(id));
+  if (missingFromLeft) {
+    const shortenedInLeft = leftIds.find((id) => missingFromLeft.startsWith(id) && id.length < missingFromLeft.length);
+    if (shortenedInLeft) {
+      const missingDigits = missingFromLeft.length - shortenedInLeft.length;
+      return isTh
+        ? 'SI ขาดเลขท้าย ' + missingDigits + ' หลักเมื่อเทียบกับ Draft B/L'
+        : 'The SI is missing the final ' + missingDigits + ' digit(s) shown in the Draft B/L.';
+    }
+    return isTh
+      ? 'เลขประจำตัวใน Draft B/L ไม่พบหรือไม่ตรงกับ SI'
+      : 'An identification number in the Draft B/L is missing or different in the SI.';
+  }
+
+  return null;
+};
+
 const summarizeDifference = (item, leftText, rightText, isTh) => {
   if (!leftText.trim() || !rightText.trim()) {
     if (isTh) return !leftText.trim() ? 'ไม่มีข้อมูลในเอกสาร SI' : 'ไม่มีข้อมูลใน Draft B/L';
@@ -52,21 +87,8 @@ const summarizeDifference = (item, leftText, rightText, isTh) => {
   }
 
   if (['shipper', 'consignee', 'notify_party'].includes(item.field)) {
-    const leftIds = findLongNumbers(leftText);
-    const rightIds = findLongNumbers(rightText);
-    const missingId = leftIds.find((id) => !rightIds.includes(id));
-    if (missingId) {
-      const truncated = rightIds.find((id) => missingId.startsWith(id) && id.length < missingId.length);
-      if (truncated) {
-        const missingDigits = missingId.length - truncated.length;
-        return isTh
-          ? `Draft B/L ขาดเลขท้าย ${missingDigits} หลักเมื่อเทียบกับ SI`
-          : `Draft B/L is missing the final ${missingDigits} digit(s) shown in the SI.`;
-      }
-      return isTh
-        ? 'เลขประจำตัวใน SI ไม่พบหรือไม่ตรงกับ Draft B/L'
-        : 'An identification number in the SI is missing or different in the Draft B/L.';
-    }
+    const idDifference = getIdDifference(leftText, rightText, isTh);
+    if (idDifference) return idDifference;
   }
 
   return isTh
@@ -84,9 +106,8 @@ const getBadge = (item, leftText, rightText, isTh) => {
     return isTh ? 'ข้อมูลไม่ครบ' : 'Missing value';
   }
   if (item.field === 'measurement') return isTh ? 'ตัวเลขไม่ตรง' : 'Value mismatch';
-  if (['shipper', 'consignee', 'notify_party'].includes(item.field) && (
-    findLongNumbers(leftText).length || findLongNumbers(rightText).length
-  )) {
+  if (['shipper', 'consignee', 'notify_party'].includes(item.field) &&
+    getIdDifference(leftText, rightText, isTh)) {
     return isTh ? 'ตรวจสอบเลขประจำตัว' : 'Check ID number';
   }
   return isTh ? 'ข้อมูลไม่ตรง' : 'Mismatch';
