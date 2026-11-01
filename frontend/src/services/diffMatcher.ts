@@ -29,9 +29,6 @@ export function generateStructuredDiff(
   const diff2: DiffChunk[] = [];
 
   for (const { tag, i1, i2, j1, j2 } of opcodes) {
-    const val1 = tokens1.slice(i1, i2).join('');
-    const val2 = tokens2.slice(j1, j2).join('');
-
     if (tag === 'equal') {
       appendChunks(diff1, 'equal', tokens1.slice(i1, i2));
       appendChunks(diff2, 'equal', tokens2.slice(j1, j2));
@@ -50,12 +47,12 @@ export function generateStructuredDiff(
 
 function tokenize(text: string): string[] {
   // Preserve whitespace and punctuation so reconstructed text remains exact.
-  return text.match(/[\\p{L}\\p{N}_]+|[^\\p{L}\\p{N}_\\s]+|\\s+/gu) || [];
+  return text.match(/[\p{L}\p{N}_]+|[^\p{L}\p{N}_\s]+|\s+/gu) || [];
 }
 
 function appendChunks(target: DiffChunk[], tag: DiffChunk['tag'], tokens: string[]) {
   for (const value of tokens) {
-    const tokenTag = /^\\s+$/u.test(value) ? 'equal' : tag;
+    const tokenTag = /^\s+$/u.test(value) ? 'equal' : tag;
     const previous = target[target.length - 1];
     if (previous?.tag === tokenTag) {
       previous.value += value;
