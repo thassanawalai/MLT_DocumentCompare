@@ -56,7 +56,7 @@ export const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
     if (!chunks || chunks.length === 0) return <span className="text-slate-400 italic">EMPTY</span>;
 
     return (
-      <span className="font-mono text-xs leading-relaxed whitespace-pre-wrap">
+      <span className="font-sans text-sm leading-relaxed whitespace-pre-wrap">
         {chunks.map((chunk, idx) => {
           if (chunk.tag === 'equal') {
             return (
@@ -68,7 +68,7 @@ export const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
             return (
               <span
                 key={idx}
-                className="bg-rose-100 text-rose-800 line-through decoration-rose-500 font-bold px-1 py-0.5 rounded mx-0.5"
+                className="bg-rose-50 text-rose-800 font-medium px-1 rounded box-decoration-clone ring-1 ring-inset ring-rose-200"
                 title="Removed from SI"
               >
                 {chunk.value}
@@ -78,7 +78,7 @@ export const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
             return (
               <span
                 key={idx}
-                className="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-1 py-0.5 rounded mx-0.5"
+                className="bg-rose-50 text-rose-800 font-medium px-1 rounded box-decoration-clone ring-1 ring-inset ring-rose-200"
                 title="Added in B/L Draft"
               >
                 {chunk.value}
