@@ -16,7 +16,7 @@ services:
   - type: web
     runtime: static
     name: mlt-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: dist
     rootDir: frontend
     routes:
