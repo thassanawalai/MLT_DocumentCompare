@@ -1,26 +1,51 @@
 import difflib
+import re
+
 from app.core.normalizer import normalize_text
+
+
+def _tokenize_for_diff(value: str) -> list[str]:
+    """Keep words, numbers, punctuation, and whitespace as separate tokens."""
+    return re.findall(r"\w+|[^\w\s]+|\s+", value, flags=re.UNICODE)
+
+
+def _append_diff_chunks(chunks: list[dict], tag: str, value: str) -> None:
+    """Keep changed words highlighted while leaving whitespace unstyled."""
+    for part in re.findall(r"\s+|\S+", value, flags=re.UNICODE):
+        part_tag = "equal" if part.isspace() else tag
+        if chunks and chunks[-1]["tag"] == part_tag:
+            chunks[-1]["value"] += part
+        else:
+            chunks.append({"tag": part_tag, "value": part})
+
 
 def _generate_structured_diff(text1: str, text2: str) -> tuple[list[dict], list[dict]]:
     """
-    Compares two strings and returns a structured diff for UI rendering.
+    Compare word and punctuation tokens instead of individual characters.
 
-    Returns a tuple of two lists of dictionaries, one for each input string.
-    Each dictionary contains a 'tag' ('equal', 'delete', 'insert') and a 'value'.
+    Returns corresponding chunks for each input string. Changed tokens are
+    highlighted as complete words; whitespace stays readable and unhighlighted.
     """
-    matcher = difflib.SequenceMatcher(None, text1, text2, autojunk=False)
-    diff1, diff2 = [], []
-    
+    tokens1 = _tokenize_for_diff(text1)
+    tokens2 = _tokenize_for_diff(text2)
+    matcher = difflib.SequenceMatcher(None, tokens1, tokens2, autojunk=False)
+    diff1: list[dict] = []
+    diff2: list[dict] = []
+
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == 'equal':
-            diff1.append({'tag': 'equal', 'value': text1[i1:i2]})
-            diff2.append({'tag': 'equal', 'value': text2[j1:j2]})
-        else:
-            if text1[i1:i2]:
-                diff1.append({'tag': 'delete', 'value': text1[i1:i2]})
-            if text2[j1:j2]:
-                diff2.append({'tag': 'insert', 'value': text2[j1:j2]})
-                
+        value1 = "".join(tokens1[i1:i2])
+        value2 = "".join(tokens2[j1:j2])
+        if tag == "equal":
+            _append_diff_chunks(diff1, "equal", value1)
+            _append_diff_chunks(diff2, "equal", value2)
+        elif tag == "replace":
+            _append_diff_chunks(diff1, "delete", value1)
+            _append_diff_chunks(diff2, "insert", value2)
+        elif tag == "delete":
+            _append_diff_chunks(diff1, "delete", value1)
+        elif tag == "insert":
+            _append_diff_chunks(diff2, "insert", value2)
+
     return diff1, diff2
 
 def _combine_shipper_fields(data: dict) -> dict:
