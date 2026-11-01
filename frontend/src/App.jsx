@@ -842,10 +842,6 @@ const ComparisonPage = ({
                         const isSelectedRow = selectedField === diff.field;
                         const programDiffData = diff.program_value.diff;
                         const originalDiffData = diff.original_value.diff;
-                        const programRawText = programDiffData 
-                          ? programDiffData.map(p => p.value).join('') 
-                          : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)');
-
                         return (
                           <tr
                             key={idx}
@@ -858,10 +854,10 @@ const ComparisonPage = ({
                               {diff.field.replace(/_/g, ' ')}
                             </td>
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'break-word', fontSize: '0.88em' }}>
-                              {programRawText || '(ว่าง)'}
+                              {programDiffData?.length ? <DiffText diffData={programDiffData} /> : (parseDisplayFieldData(diff.program_value).text || '(ว่าง)')}
                             </td>
                             <td style={{ borderBottom: `1px solid ${theme.border}`, padding: '12px 16px', whiteSpace: 'pre-wrap', overflowWrap: 'break-word', fontSize: '0.88em' }}>
-                              {originalDiffData ? <DiffText diffData={originalDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
+                              {originalDiffData?.length ? <DiffText diffData={originalDiffData} /> : (parseDisplayFieldData(diff.original_value).text || '(ว่าง)')}
                             </td>
                           </tr>
                         );
