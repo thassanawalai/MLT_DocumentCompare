@@ -54,8 +54,8 @@ export const ArchitectureView: React.FC<ArchitectureViewProps> = ({ language }) 
       num: 4,
       title: isTh ? 'เปรียบเทียบความต่างระดับคำ (Sequence Diff Matcher)' : 'Sequence Diff Matcher',
       desc: isTh
-        ? 'พอร์ตอัลกอริทึม difflib.SequenceMatcher ทำการเปรียบเทียบระดับตัวอักษรและคำ ชี้จุดผิดพลาดอย่างแม่นยำ'
-        : 'Character and token level longest common subsequence calculation showing precise deletions & insertions.',
+        ? 'ใช้ difflib.SequenceMatcher เปรียบเทียบเป็นคำและเครื่องหมาย แสดงคำที่ต่างทั้งคำโดยไม่ขีดคั่นทีละตัวอักษร'
+        : 'Compares words and punctuation tokens, highlighting complete changed words while keeping matching text easy to read.',
       icon: Cpu,
       tag: 'Diff Engine',
     },
