@@ -272,10 +272,19 @@ export default function CustomerDirectory() {
         ])),
       };
       const created = await apiRequest('/api/v1/customers', jsonRequest('POST', payload));
-      setCustomers((current) => [...current, { ...payload, ...created }]);
+      const savedCustomer = { ...payload, ...created };
+      setCustomers((current) => [...current, savedCustomer]);
       setKeyword('');
       setAddingCompany(false);
       setSuccessMessage(`${created.customer_name} was added successfully.`);
+
+      // Read the committed record back so the list always reflects database values.
+      try {
+        const refreshedCustomers = await apiRequest('/api/v1/customers/search');
+        if (Array.isArray(refreshedCustomers)) setCustomers(refreshedCustomers);
+      } catch {
+        // The create request already succeeded; keep the saved record visible if refresh is unavailable.
+      }
     } catch (requestError) {
       setActionError(requestError.message || 'Unable to add company.');
     } finally {
@@ -288,25 +297,42 @@ export default function CustomerDirectory() {
     setActionBusy(true);
     setActionError('');
     try {
+      const payload = {
+        customer_name: editForm.customer_name,
+        country: editForm.country || null,
+        status: editForm.status || null,
+        ...Object.fromEntries(COMPANY_FIELDS.map(([key]) => [key, editForm[key]?.trim() || null])),
+        ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
+          key,
+          (editForm[key] || []).filter((item) => key === 'contacts'
+            ? String(getContactDetails(item) ?? '').trim()
+            : Object.values(item).some((value) => String(value ?? '').trim())),
+        ])),
+      };
       const updated = await apiRequest(
         `/api/v1/customers/${selectedCustomer.customer_id}`,
-        jsonRequest('PATCH', {
-          customer_name: editForm.customer_name,
-          country: editForm.country || null,
-          status: editForm.status || null,
-          ...Object.fromEntries(COMPANY_FIELDS.map(([key]) => [key, editForm[key]?.trim() || null])),
-          ...Object.fromEntries(EDIT_SECTIONS.map(({ key }) => [
-            key,
-            (editForm[key] || []).filter((item) => key === 'contacts'
-              ? String(getContactDetails(item) ?? '').trim()
-              : Object.values(item).some((value) => String(value ?? '').trim())),
-          ])),
-        })
+        jsonRequest('PATCH', payload)
       );
-      const refreshedCustomers = await apiRequest('/api/v1/customers/search');
-      setCustomers(refreshedCustomers);
-      setSelectedCustomer(refreshedCustomers.find((customer) => customer.customer_id === updated.customer_id) || null);
+      const savedCustomer = { ...selectedCustomer, ...payload, ...updated };
+      setCustomers((current) => current.map((customer) => (
+        String(customer.customer_id) === String(updated.customer_id) ? savedCustomer : customer
+      )));
+      setSelectedCustomer(savedCustomer);
       setEditing(false);
+      setSuccessMessage(`${updated.customer_name || payload.customer_name} was updated successfully.`);
+
+      // Confirm the saved values with a fresh database read after PATCH commits.
+      try {
+        const refreshedCustomers = await apiRequest('/api/v1/customers/search');
+        if (!Array.isArray(refreshedCustomers)) throw new Error('Customer API returned an unexpected response.');
+        setCustomers(refreshedCustomers);
+        const persistedCustomer = refreshedCustomers.find(
+          (customer) => String(customer.customer_id) === String(updated.customer_id)
+        );
+        if (persistedCustomer) setSelectedCustomer(persistedCustomer);
+      } catch (refreshError) {
+        setActionError('Changes were saved, but the company list could not be refreshed: ' + (refreshError.message || 'Unknown error'));
+      }
     } catch (requestError) {
       setActionError(requestError.message || 'Unable to save customer changes.');
     } finally {
@@ -372,10 +398,10 @@ export default function CustomerDirectory() {
           <label style={{ display: 'grid', gap: 5, color: '#475569', fontSize: 12, fontWeight: 650 }}>Status
             <input value={addForm.status} onChange={(event) => setAddForm((current) => ({ ...current, status: event.target.value }))} placeholder="Active" style={contactInputStyle} />
           </label>
-          <CompanyInformationFields values={addForm} onChange={(key, value) => setAddForm((current) => ({ ...current, [key]: value }))} />
           {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
             ? <EditableContactsSection key={key} items={addForm[key]} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />
             : <EditableListSection key={key} title={title} items={addForm[key]} fields={fields} onChange={(items) => setAddForm((current) => ({ ...current, [key]: items }))} />)}
+          <CompanyInformationFields values={addForm} onChange={(key, value) => setAddForm((current) => ({ ...current, [key]: value }))} />
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 9, paddingTop: 4 }}>
             <button type="button" onClick={() => { setAddingCompany(false); setActionError(''); }} disabled={actionBusy} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '9px 13px', background: '#fff', color: '#475569', fontSize: 13, cursor: actionBusy ? 'wait' : 'pointer' }}>Cancel</button>
             <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 15px', background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Adding...' : 'Add Company'}</button>
@@ -488,18 +514,18 @@ export default function CustomerDirectory() {
                     <button type="submit" disabled={actionBusy} style={{ border: 0, borderRadius: 7, padding: '9px 13px', background: '#2563eb', color: '#fff', fontSize: 12, fontWeight: 700, cursor: actionBusy ? 'wait' : 'pointer' }}>{actionBusy ? 'Saving...' : 'Save'}</button>
                     <button type="button" disabled={actionBusy} onClick={() => { setEditing(false); setActionError(''); }} style={{ border: '1px solid #cbd5e1', borderRadius: 7, padding: '8px 12px', background: '#fff', color: '#475569', fontSize: 12, cursor: actionBusy ? 'wait' : 'pointer' }}>Cancel</button>
                   </div>
-                  <CompanyInformationFields values={editForm} onChange={(key, value) => setEditForm((current) => ({ ...current, [key]: value }))} />
                   {EDIT_SECTIONS.map(({ key, title, fields }) => key === 'contacts'
                     ? <EditableContactsSection key={key} items={editForm[key] || []} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />
                     : <EditableListSection key={key} title={title} items={editForm[key] || []} fields={fields} onChange={(items) => setEditForm((current) => ({ ...current, [key]: items }))} />)}
+                  <CompanyInformationFields values={editForm} onChange={(key, value) => setEditForm((current) => ({ ...current, [key]: value }))} />
                 </form>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: 16 }}>
-                <CompanyInformationDetails customer={selectedCustomer} />
                 <DetailSection title="Address" icon="address" items={selectedCustomer.addresses} fields={[["raw_address", "Full address"], ["address_line1", "Address line 1"], ["address_line2", "Address line 2"], ["city", "City"], ["state", "State"], ["postal_code", "Postal code"], ["country", "Country"]]} />
                 <DetailSection title="Contact information" icon="contact" items={selectedCustomer.contacts} fields={[["contact_name", "Contact"], ["job_title", "Title"], ["email", "Email"], ["phone", "Phone"], ["fax", "Fax"]]} />
                 <DetailSection title="Bank details" icon="bank" items={selectedCustomer.banks} fields={[["bank_name", "Bank name"], ["branch_name", "Branch"], ["bank_country", "Country"], ["swift_bic_code", "SWIFT / BIC"]]} />
                 <DetailSection title="Identifiers" icon="identifier" items={selectedCustomer.identifiers} fields={[["identifier_type", "Type"], ["identifier_value", "Value"], ["issuing_country", "Country"]]} />
+                <CompanyInformationDetails customer={selectedCustomer} />
               </div>
             </div>
           </section>
