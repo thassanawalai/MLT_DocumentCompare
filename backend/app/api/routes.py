@@ -225,6 +225,11 @@ def create_customer(payload: dict = Body(...), db: Session = Depends(get_db)):
         "customer_name": customer.customer_name,
         "country": customer.country,
         "status": customer.status,
+        "acid_no": customer.acid_no,
+        "importer_no": customer.importer_no,
+        "exporter_no": customer.exporter_no,
+        "uasc_no": customer.uasc_no,
+        "remark": customer.remark,
     }
 
 
@@ -322,6 +327,11 @@ def update_customer(
         "customer_name": customer.customer_name,
         "country": customer.country,
         "status": customer.status,
+        "acid_no": customer.acid_no,
+        "importer_no": customer.importer_no,
+        "exporter_no": customer.exporter_no,
+        "uasc_no": customer.uasc_no,
+        "remark": customer.remark,
     }
 
 
