@@ -68,7 +68,7 @@ export const DiscrepancyInspector: React.FC<DiscrepancyInspectorProps> = ({
     if (!diffChunks || diffChunks.length === 0) return <span className="text-slate-400 italic">-(Empty)-</span>;
 
     return (
-      <span className="font-mono text-xs whitespace-pre-wrap leading-relaxed break-words">
+      <span className="font-sans text-sm whitespace-pre-wrap leading-relaxed break-words">
         {diffChunks.map((chunk, idx) => {
           if (chunk.tag === 'equal') {
             return <span key={idx} className="text-slate-700">{chunk.value}</span>;
@@ -77,7 +77,7 @@ export const DiscrepancyInspector: React.FC<DiscrepancyInspectorProps> = ({
             return (
               <span
                 key={idx}
-                className="bg-rose-100 text-rose-800 font-semibold px-0.5 rounded border border-rose-300"
+                className="bg-rose-50 text-rose-800 font-medium px-1 rounded box-decoration-clone ring-1 ring-inset ring-rose-200"
                 title={isOriginal ? 'มีใน SI แต่ B/L ตัดออก' : 'ข้อความแตกต่าง'}
               >
                 {chunk.value}
@@ -88,7 +88,7 @@ export const DiscrepancyInspector: React.FC<DiscrepancyInspectorProps> = ({
             return (
               <span
                 key={idx}
-                className="bg-emerald-100 text-emerald-800 font-semibold px-0.5 rounded border border-emerald-300"
+                className="bg-rose-50 text-rose-800 font-medium px-1 rounded box-decoration-clone ring-1 ring-inset ring-rose-200"
                 title="B/L เพิ่มขึ้นมาหรือพิมพ์ต่างออกไป"
               >
                 {chunk.value}
