@@ -214,7 +214,7 @@ def main() -> None:
                 raise SystemExit(
                     "Only some Company Information columns exist. Database was not changed."
                 )
-        if target_index == 3 and "customer_trade_details" in actual_columns:
+        if target_index < 4 and "customer_trade_details" in actual_columns:
             raise SystemExit(
                 "customer_trade_details exists but does not match the known schema. "
                 "Database was not changed."
