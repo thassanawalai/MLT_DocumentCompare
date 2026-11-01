@@ -1,6 +1,6 @@
 /**
  * SequenceMatcher and Diff Engine
- * Faithfully ports Python's difflib.SequenceMatcher for character & token diffs
+ * Aligns words, numbers, punctuation, and spacing for readable document diffs
  */
 
 import { DiffChunk } from '../types/shipping';
@@ -19,9 +19,9 @@ export function generateStructuredDiff(
     ];
   }
 
-  // Tokenize by word and punctuation boundaries for readable diffing, or character fallback
-  const tokens1 = text1.length > 200 ? tokenize(text1) : text1.split('');
-  const tokens2 = text2.length > 200 ? tokenize(text2) : text2.split('');
+  // Always compare complete words/tokens so short fields are never split by character.
+  const tokens1 = tokenize(text1);
+  const tokens2 = tokenize(text2);
 
   const opcodes = computeOpcodes(tokens1, tokens2);
 
@@ -33,15 +33,15 @@ export function generateStructuredDiff(
     const val2 = tokens2.slice(j1, j2).join('');
 
     if (tag === 'equal') {
-      if (val1) diff1.push({ tag: 'equal', value: val1 });
-      if (val2) diff2.push({ tag: 'equal', value: val2 });
+      appendChunks(diff1, 'equal', tokens1.slice(i1, i2));
+      appendChunks(diff2, 'equal', tokens2.slice(j1, j2));
     } else if (tag === 'replace') {
-      if (val1) diff1.push({ tag: 'delete', value: val1 });
-      if (val2) diff2.push({ tag: 'insert', value: val2 });
+      appendChunks(diff1, 'delete', tokens1.slice(i1, i2));
+      appendChunks(diff2, 'insert', tokens2.slice(j1, j2));
     } else if (tag === 'delete') {
-      if (val1) diff1.push({ tag: 'delete', value: val1 });
+      appendChunks(diff1, 'delete', tokens1.slice(i1, i2));
     } else if (tag === 'insert') {
-      if (val2) diff2.push({ tag: 'insert', value: val2 });
+      appendChunks(diff2, 'insert', tokens2.slice(j1, j2));
     }
   }
 
@@ -49,8 +49,20 @@ export function generateStructuredDiff(
 }
 
 function tokenize(text: string): string[] {
-  // Split while keeping delimiters
-  return text.match(/([A-Za-z0-9]+|[^A-Za-z0-9\s]+|\s+)/g) || [text];
+  // Preserve whitespace and punctuation so reconstructed text remains exact.
+  return text.match(/[\\p{L}\\p{N}_]+|[^\\p{L}\\p{N}_\\s]+|\\s+/gu) || [];
+}
+
+function appendChunks(target: DiffChunk[], tag: DiffChunk['tag'], tokens: string[]) {
+  for (const value of tokens) {
+    const tokenTag = /^\\s+$/u.test(value) ? 'equal' : tag;
+    const previous = target[target.length - 1];
+    if (previous?.tag === tokenTag) {
+      previous.value += value;
+    } else {
+      target.push({ tag: tokenTag, value });
+    }
+  }
 }
 
 interface Opcode {
