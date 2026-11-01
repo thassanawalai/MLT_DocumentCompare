@@ -101,6 +101,33 @@ const getFieldLabel = (field, isTh) => {
   return definition ? (isTh ? definition.labelTh : definition.labelEn) : field.replace(/_/g, ' ').toUpperCase();
 };
 
+const renderDiffValue = (fieldValue, fallbackText, isTh) => {
+  const chunks = Array.isArray(fieldValue?.diff) ? fieldValue.diff : [];
+  if (!chunks.length) {
+    return fallbackText || (isTh ? '(ว่าง)' : '(Empty)');
+  }
+
+  return chunks.map((chunk, index) => {
+    const isChanged = chunk.tag === 'delete' || chunk.tag === 'insert';
+    return (
+      <span
+        key={index}
+        style={isChanged ? {
+          background: '#ffe4e6',
+          color: '#9f1239',
+          fontWeight: 800,
+          borderRadius: 5,
+          padding: '0.02em 0.16em',
+          boxDecorationBreak: 'clone',
+          WebkitBoxDecorationBreak: 'clone',
+        } : { color: '#0f172a' }}
+      >
+        {chunk.value}
+      </span>
+    );
+  });
+};
+
 const getBadge = (item, leftText, rightText, isTh) => {
   if (!leftText.trim() || !rightText.trim()) {
     return isTh ? 'ข้อมูลไม่ครบ' : 'Missing value';
@@ -142,15 +169,15 @@ export default function DiscrepancyOverview({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 12,
-        padding: '14px 18px',
+        padding: '20px 24px',
         background: '#fff7f7',
         borderBottom: '1px solid #fee2e2',
       }}>
         <div>
-          <h2 style={{ margin: 0, color: '#991b1b', fontSize: 17, fontWeight: 700 }}>
+          <h2 style={{ margin: 0, color: '#991b1b', fontSize: 34, fontWeight: 700 }}>
             {isTh ? 'สรุปจุดที่ข้อมูลไม่ตรงกัน' : 'Discrepancy Summary'}
           </h2>
-          <p style={{ margin: '3px 0 0', color: '#64748b', fontSize: 12 }}>
+          <p style={{ margin: '3px 0 0', color: '#64748b', fontSize: 24 }}>
             {isTh ? 'ตรวจรายการสำคัญก่อนเปิดดูรายละเอียดด้านล่าง' : 'Review these items first; detailed comparison is below.'}
           </p>
         </div>
@@ -159,8 +186,8 @@ export default function DiscrepancyOverview({
           borderRadius: 999,
           background: '#fee2e2',
           color: '#991b1b',
-          padding: '4px 10px',
-          fontSize: 12,
+          padding: '8px 16px',
+          fontSize: 24,
           fontWeight: 700,
         }}>
           {items.length} {isTh ? 'รายการ' : items.length === 1 ? 'issue' : 'issues'}
@@ -169,7 +196,7 @@ export default function DiscrepancyOverview({
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))',
+        gridTemplateColumns: '1fr',
         gap: 0,
       }}>
         {items.map((item, index) => {
@@ -184,7 +211,7 @@ export default function DiscrepancyOverview({
             <article
               key={item.field || index}
               style={{
-                padding: '16px 18px',
+                padding: '26px 30px',
                 borderBottom: '1px solid #e2e8f0',
                 borderRight: '1px solid #f1f5f9',
                 minWidth: 0,
@@ -195,59 +222,59 @@ export default function DiscrepancyOverview({
                 flexWrap: 'wrap',
                 alignItems: 'center',
                 gap: 8,
-                marginBottom: 12,
+                marginBottom: 20,
               }}>
-                <h3 style={{ margin: 0, color: '#0f172a', fontSize: 14, fontWeight: 700 }}>
+                <h3 style={{ margin: 0, color: '#0f172a', fontSize: 28, fontWeight: 700 }}>
                   {index + 1}. {getFieldLabel(item.field, isTh)}
                 </h3>
                 <span style={{
                   borderRadius: 999,
                   background: '#fff1f2',
                   color: '#9f1239',
-                  padding: '3px 8px',
-                  fontSize: 11,
+                  padding: '6px 14px',
+                  fontSize: 22,
                   fontWeight: 650,
                 }}>
                   {getBadge(item, leftText, rightText, isTh)}
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gap: 9 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
                 {[
-                  { title: leftTitle || (isTh ? 'Shipping Instruction (SI)' : 'Shipping Instruction (SI)'), value: leftText, page: leftPage },
-                  { title: rightTitle || (isTh ? 'Draft B/L' : 'Draft B/L'), value: rightText, page: rightPage },
+                  { title: leftTitle || 'Shipping Instruction (SI)', fieldValue: leftValue, value: leftText, page: leftPage },
+                  { title: rightTitle || 'Draft B/L', fieldValue: rightValue, value: rightText, page: rightPage },
                 ].map((row, rowIndex) => (
                   <div key={rowIndex} style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(110px, 0.38fr) minmax(0, 1fr)',
-                    gap: 12,
-                    alignItems: 'start',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    gap: 5,
+                    minWidth: 0,
                   }}>
-                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 600 }}>{row.title}</span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{
-                        color: row.value ? '#0f172a' : '#94a3b8',
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        overflowWrap: 'anywhere',
-                        whiteSpace: 'pre-wrap',
-                      }}>
-                        {row.value || (isTh ? '(ว่าง)' : '(Empty)')}
-                      </div>
-                      {row.page && <div style={{ marginTop: 2, color: '#64748b', fontSize: 11 }}>{row.page}</div>}
+                    <span style={{ color: '#64748b', fontSize: 24, fontWeight: 700 }}>{row.title}</span>
+                    <div style={{
+                      width: '100%',
+                      color: row.value ? '#0f172a' : '#94a3b8',
+                      fontSize: 26,
+                      lineHeight: 1.55,
+                      overflowWrap: 'anywhere',
+                      whiteSpace: 'pre-wrap',
+                    }}>
+                      {renderDiffValue(row.fieldValue, row.value, isTh)}
                     </div>
+                    {row.page && <div style={{ marginTop: 2, color: '#64748b', fontSize: 22 }}>{row.page}</div>}
                   </div>
                 ))}
               </div>
 
               <div style={{
-                marginTop: 12,
-                padding: '9px 11px',
+                marginTop: 20,
+                padding: '16px 20px',
                 borderRadius: 8,
                 background: '#fff7f7',
                 color: '#9f1239',
-                fontSize: 12,
-                fontWeight: 650,
+                fontSize: 24,
+                fontWeight: 700,
                 lineHeight: 1.5,
               }}>
                 {summarizeDifference(item, leftText, rightText, isTh)}
