@@ -186,7 +186,8 @@ const shippingInstructionTemplateOptions = [
   { value: 'BETAGRO', label: 'BETAGRO' },
   { value: 'FORTUNE', label: 'FORTUNE'},
   { value: 'GC-M', label: 'GC-M' },
-  { value: 'MITSUI', label: 'MITSUI'}
+  { value: 'MITSUI', label: 'MITSUI'},
+  { value: 'THAI_SEKISUI', label: 'THAI SEKISUI FOAM'}
 ];
 
 // ============================================================
