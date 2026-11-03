@@ -174,6 +174,7 @@ export const SHIPPER_LIST: ShipperTemplateInfo[] = [
   { code: 'FORTUNE', name: 'Fortune Frozen', fullName: 'Fortune Frozen Foods (Thailand) Co., Ltd.', commodityType: 'Frozen Seafood' },
   { code: 'GC-M', name: 'GC Marketing', fullName: 'GC Marketing Solutions (PTT Group)', commodityType: 'Polymer Resins' },
   { code: 'MITSUI', name: 'Mitsui & Co.', fullName: 'Mitsui & Co. (Thailand) Ltd.', commodityType: 'Chemicals & Minerals' },
+  { code: 'THAI_SEKISUI', name: 'Thai Sekisui Foam', fullName: 'Thai Sekisui Foam Co., Ltd.', commodityType: 'Polyethylene Foam' },
   { code: 'BFOODS_1', name: 'Better Foods (BFOODS 1)', fullName: 'Better Foods Co., Ltd. (Betagro Group)', commodityType: 'Agro-industry & Food' },
   { code: 'AJIMOMOTO', name: 'Ajinomoto', fullName: 'Ajinomoto (Thailand) Co., Ltd.', commodityType: 'Food Seasoning & Amino acids' },
   { code: 'SIAMCHAI', name: 'Siam Chai', fullName: 'Siam Chai Steel Co., Ltd.', commodityType: 'Steel & Construction' },

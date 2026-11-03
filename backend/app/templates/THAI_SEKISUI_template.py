@@ -1,0 +1,108 @@
+"""Anchor configuration for Thai Sekisui Foam Forwarding Instruction PDFs.
+
+Based on the supplied 1-page, A4 Forwarding Instruction sample. Repeated
+labels use anchor_occurrence (zero-based) so the extraction parser can select
+the intended party/destination block.
+"""
+
+TEMPLATE = {
+    "booking_no": {
+        "anchor_text": "SHIPMENT BKG. REF",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 90,
+        "height": 22,
+    },
+    "shipper": {
+        "anchor_text": "EXPORTER",
+        "anchor_occurrence": 0,
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 235,
+        "height": 75,
+    },
+    "consignee": {
+        "anchor_text": "CONSIGNEE",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 235,
+        "height": 65,
+    },
+    "notify_party": {
+        "anchor_text": "NOTIFY PARTY",
+        "anchor_occurrence": 1,
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 235,
+        "height": 65,
+    },
+    "place_of_receipt": {
+        "anchor_text": "PLACE OF RECEIPT",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 140,
+        "height": 22,
+    },
+    "port_of_loading": {
+        "anchor_text": "PORT OF LOADING",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 150,
+        "height": 25,
+    },
+    "port_of_discharge": {
+        "anchor_text": "PORT OF DISCHARGE",
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 135,
+        "height": 25,
+    },
+    "place_of_delivery": {
+        "anchor_text": "FINAL DESTINATION",
+        "anchor_occurrence": 1,
+        "anchor_point": "bottom_left",
+        "offset_x": 0,
+        "offset_y": 2,
+        "width": 150,
+        "height": 25,
+    },
+    "mark": {
+        "anchor_text": "MARKS",
+        "anchor_point": "bottom_left",
+        "offset_x": -25,
+        "offset_y": 2,
+        "width": 200,
+        "height": 105,
+    },
+    "quantity": {
+        "anchor_text": "No PKGS",
+        "anchor_point": "bottom_left",
+        "offset_x": -5,
+        "offset_y": 2,
+        "width": 90,
+        "height": 35,
+    },
+    "description_of_good": {
+        "anchor_text": "DESCRIPTION OF GOODS (GENERAL)",
+        "anchor_point": "bottom_left",
+        "offset_x": -10,
+        "offset_y": 2,
+        "width": 255,
+        "height": 110,
+    },
+    "gross_weight": {
+        "anchor_text": "GROSS WT.",
+        "anchor_point": "bottom_left",
+        "offset_x": -5,
+        "offset_y": 2,
+        "width": 90,
+        "height": 35,
+    },
+}

@@ -53,39 +53,49 @@ def _find_anchor_from_words(page: fitz.Page, anchor_text: str) -> fitz.Rect | No
     return None
 
 
-def find_anchor_case_sensitive(page: fitz.Page, anchor_text: str) -> fitz.Rect | None:
+def find_anchor_case_sensitive(
+    page: fitz.Page,
+    anchor_text: str,
+    occurrence: int = 0,
+) -> fitz.Rect | None:
     """
-    ค้นหา anchor_text ด้วยการตรวจจับพิมเล็กพิมใหญ่อย่างถูกต้อง
-    และใช้ Regex เพื่อเช็กไม่ให้จับคำที่เป็นส่วนหนึ่งของประโยคอื่น (เช่น "SAME AS CONSIGNEE")
+    Find a case-sensitive anchor, optionally selecting a repeated occurrence.
+    Occurrence is zero-based and defaults to the original first-match behavior.
     """
     try:
         all_instances = page.search_for(anchor_text)
-        
+        valid_rects = []
+
         for rect in all_instances:
             check_rect = rect + fitz.Rect(-40, -2, 2, 2)
             extracted_text = page.get_text("text", clip=check_rect).strip()
-            
-            if anchor_text in extracted_text:
+            if anchor_text not in extracted_text:
+                continue
 
-                prefix = extracted_text.split(anchor_text)[0].strip()
+            prefix = extracted_text.split(anchor_text)[0].strip()
+            if not re.search(r'[a-zA-Z0-9]', prefix):
+                valid_rects.append(rect)
+            else:
+                logger.debug(f"Ignored '{anchor_text}' because it has prefix: '{prefix}'")
 
-                if not re.search(r'[a-zA-Z0-9]', prefix):
-                    logger.debug(f"Found strict case-sensitive match for '{anchor_text}' at {rect}")
-                    return rect
-                else:
-                    logger.debug(f"Ignored '{anchor_text}' because it has prefix: '{prefix}'")
+        if occurrence < len(valid_rects):
+            rect = valid_rects[occurrence]
+            logger.debug(f"Found occurrence {occurrence} of anchor '{anchor_text}' at {rect}")
+            return rect
 
-        fallback_rect = _find_anchor_from_words(page, anchor_text)
-        if fallback_rect is not None:
-            logger.debug(f"Found normalized match for '{anchor_text}' at {fallback_rect}")
-            return fallback_rect
+        # Preserve normalized matching for existing templates. The fallback
+        # helper only returns one candidate, so it applies to the default match.
+        if occurrence == 0:
+            fallback_rect = _find_anchor_from_words(page, anchor_text)
+            if fallback_rect is not None:
+                logger.debug(f"Found normalized match for '{anchor_text}' at {fallback_rect}")
+                return fallback_rect
 
         return None
-        
+
     except Exception as e:
         logger.error(f"Error in case-sensitive anchor search: {e}")
         return None
-
 
 def extract_bl_with_hybrid_bbox(
     pdf_path: str,
@@ -121,7 +131,11 @@ def extract_bl_with_hybrid_bbox(
                 page_index = None
                 for index, candidate_page in enumerate(doc):
                     # Use case-sensitive search
-                    anchor_rect = find_anchor_case_sensitive(candidate_page, anchor_text)
+                    anchor_rect = find_anchor_case_sensitive(
+                        candidate_page,
+                        anchor_text,
+                        config.get("anchor_occurrence", 0),
+                    )
                     if anchor_rect is not None:
                         page = candidate_page
                         page_index = index

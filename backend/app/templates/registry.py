@@ -22,6 +22,7 @@ _template_map = {
     "PPI": "app.templates.PPI_template",
     "SUPER_SIERRA": "app.templates.SUPER_SIERRA_template",
     "BETAGRO": "app.templates.BETAGRO_template",
+    "THAI_SEKISUI": "app.templates.THAI_SEKISUI_template",
     "FORTUNE": "app.templates.FORTUNE_SI_template",
     "GC-M": "app.templates.GC-M_SI_template",
 
