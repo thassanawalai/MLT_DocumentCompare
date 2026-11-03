@@ -14,7 +14,8 @@ const fallbackTemplateOptions = [
   { value: 'BETAGRO', label: 'BETAGRO' },
   { value: 'FORTUNE', label: 'FORTUNE'},
   { value: 'GC-M', label: 'GC-M' },
-  { value: 'MITSUI', label: 'MITSUI'}
+  { value: 'MITSUI', label: 'MITSUI'},
+  { value: 'THAI_SEKISUI', label: 'THAI SEKISUI FOAM'}
 ];
 
 const parseFieldValue = (fieldObj) => {
@@ -54,7 +55,7 @@ const SIDataEntry = ({ copy }) => {
           const data = await response.json();
           if (data.templates && data.templates.length > 0) {
             
-            const allowedTemplates = ['MCKEY', 'BETAGRO', 'GC-M', 'OOCL', 'SUPER_SIERRA', 'BFOODS_1', 'BFOODS_3', 'PPI', 'AJIMOMOTO', 'SIAMCHAI', 'SURAPON', 'POLYPLEX', 'FORTUNE', 'MITSUI', 'SHANGHAI', 'WANHAI', 'HAPAG', 'ONE'];
+            const allowedTemplates = ['MCKEY', 'BETAGRO', 'GC-M', 'OOCL', 'SUPER_SIERRA', 'BFOODS_1', 'BFOODS_3', 'PPI', 'AJIMOMOTO', 'SIAMCHAI', 'SURAPON', 'POLYPLEX', 'FORTUNE', 'MITSUI', 'SHANGHAI', 'WANHAI', 'HAPAG', 'ONE', 'THAI_SEKISUI'];
             
             const options = data.templates
               .filter(t => allowedTemplates.includes(t))
