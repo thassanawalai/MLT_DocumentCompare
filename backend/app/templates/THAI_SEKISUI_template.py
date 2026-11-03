@@ -48,14 +48,6 @@ TEMPLATE = {
         "width": 140,
         "height": 22,
     },
-    "vessel": {
-        "anchor_text": "VESSEL/AIRCRAFT",
-        "anchor_point": "bottom_left",
-        "offset_x": 0,
-        "offset_y": 2,
-        "width": 150,
-        "height": 18,
-    },
     "port_of_loading": {
         "anchor_text": "PORT OF LOADING",
         "anchor_point": "bottom_left",
