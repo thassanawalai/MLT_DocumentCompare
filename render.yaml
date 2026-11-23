@@ -2,16 +2,14 @@ services:
   - type: web
     runtime: docker
     name: mlt-backend
-    plan: starter
+    plan: free
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    preDeployCommand: sh scripts/predeploy.sh
+    dockerCommand: sh -c 'sh scripts/predeploy.sh && exec uvicorn app.main:app --host 0.0.0.0 --port 10000'
     healthCheckPath: /api/v1/templates
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: mlt-documentcompare-db
-          property: connectionString
+        sync: false
 
   - type: web
     runtime: static
@@ -26,9 +24,3 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://mlt-backend-bufr.onrender.com
-
-databases:
-  - name: mlt-documentcompare-db
-    databaseName: mlt_documentcompare
-    user: mlt_user
-    plan: free
